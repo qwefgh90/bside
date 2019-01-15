@@ -56,7 +56,7 @@ describe('TreeComponent', () => {
     component.repository = repositoryDetails;
     fixture.detectChanges();
     let name = fixture.nativeElement.querySelector('.repository-title-box > span').textContent;
-    expect(repositoryDetails.name).toBe(name);
+    expect(repositoryDetails.name).toBe(name.trim());
   });
 
   it('render tree', () => {

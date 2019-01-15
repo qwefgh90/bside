@@ -85,7 +85,7 @@ describe('TabComponent', () => {
     fixture.detectChanges();
     tick(3000);
     
-    component.load(WorkspacePack.of(0,'','','','',[],[],['load1.txt', 'load2.txt'], 'load2.txt'));
+    component.load(WorkspacePack.of(0,'','','','',[],[],['load1.txt', 'load2.txt'], 'load2.txt', false));
     fixture.detectChanges();
     tick(3000);
 

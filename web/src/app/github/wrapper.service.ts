@@ -2125,7 +2125,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
     return reposResponse.toPromise();
   }
 
-  public async getResponse(url: string): Promise<HttpResponse<any>>{
+  async getResponse(url: string): Promise<HttpResponse<any>>{
     let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` }, observe: 'response'})
     return reposResponse.toPromise();
   }

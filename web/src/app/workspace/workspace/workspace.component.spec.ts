@@ -24,7 +24,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TreeModule } from 'angular-tree-component';
 import { convertToParamMap, ParamMap, Params } from '@angular/router';
 import { ReplaySubject } from 'rxjs';
-import { repositoryDetails, branches, tree, blob1, tree2 } from 'src/app/testing/mock-data';
+import { repositoryDetails, branches, tree, blob1, tree2, commit1 } from 'src/app/testing/mock-data';
 import { MonacoService } from '../editor/monaco.service';
 import { Component, Input, Output, EventEmitter, SimpleChange } from '@angular/core';
 import { GithubTreeNode, NodeStateAction } from '../tree/github-tree-node';
@@ -46,6 +46,7 @@ import { RemoveNodeAction } from '../core/action/user/remove-node-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { CreateAction } from '../core/action/user/create-action';
 import { NotifyContentChangeAction } from '../core/action/user/notify-content-change-action';
+import { MatCheckboxModule } from '@angular/material';
 
 @Component({selector: 'app-stage', template: ''})
 class StageComponent {
@@ -169,6 +170,7 @@ describe('WorkspaceComponent', () => {
   let treeSpy;
   let getBlobSpy;
   let getPageBranchSpy;
+  let getResponseSpy;
   let matDialogSpy;
   let dispatcher;
 
@@ -178,6 +180,7 @@ describe('WorkspaceComponent', () => {
     treeSpy.and.returnValue(Promise.resolve(tree));
     getBlobSpy.and.returnValue(Promise.resolve(blob1));
     getPageBranchSpy.and.returnValue(Promise.resolve());
+    getResponseSpy.and.returnValue(Promise.resolve({body: commit1}));
   }
 
   beforeEach(async(() => {
@@ -186,12 +189,13 @@ describe('WorkspaceComponent', () => {
     routeStub = new ActivatedRouteStub({});
     routeStub.setParamMap({userId: 'id', repositoryName: 'repo'});
     routeStub.setQueryParamMap( {branch:'master'});    
-    wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['repositoryDetails', 'branches', 'tree', 'getBlob', 'getPageBranch']);
+    wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['repositoryDetails', 'branches', 'tree', 'getBlob', 'getPageBranch', 'getResponse']);
     repositoryDetailsSpy = wrapperServiceSpy.repositoryDetails;
     branchesSpy = wrapperServiceSpy.branches;
     treeSpy = wrapperServiceSpy.tree;
     getBlobSpy = wrapperServiceSpy.getBlob;
     getPageBranchSpy = wrapperServiceSpy.getPageBranch;
+    getResponseSpy = wrapperServiceSpy.getResponse;
     matDialogSpy = jasmine.createSpyObj('MatDialog', ['closeAll']);
     mockWrapperServiceSpy();
     TestBed.configureTestingModule({
@@ -223,7 +227,8 @@ describe('WorkspaceComponent', () => {
         MatBadgeModule,
         MatTabsModule,
         DeviceDetectorModule.forRoot(),
-        FlexLayoutModule
+        FlexLayoutModule,
+        MatCheckboxModule
       ],
     }).compileComponents();
   }));
@@ -377,6 +382,7 @@ describe('WorkspaceComponent with Action', () => {
   let treeSpy;
   let getBlobSpy;
   let getPageBranchSpy;
+  let getResponseSpy;
   let matDialogSpy;
   let dispatcher;
 
@@ -386,6 +392,7 @@ describe('WorkspaceComponent with Action', () => {
     treeSpy.and.returnValue(Promise.resolve(tree));
     getBlobSpy.and.returnValue(Promise.resolve(blob1));
     getPageBranchSpy.and.returnValue(Promise.resolve());
+    getResponseSpy.and.returnValue(Promise.resolve({body: commit1}));
   }
 
   beforeEach(async(() => {
@@ -394,12 +401,13 @@ describe('WorkspaceComponent with Action', () => {
     routeStub = new ActivatedRouteStub({});
     routeStub.setParamMap({userId: 'id', repositoryName: 'repo'});
     routeStub.setQueryParamMap( {branch:'master'});    
-    wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['repositoryDetails', 'branches', 'tree', 'getBlob', 'getPageBranch']);
+    wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['repositoryDetails', 'branches', 'tree', 'getBlob', 'getPageBranch', 'getResponse']);
     repositoryDetailsSpy = wrapperServiceSpy.repositoryDetails;
     branchesSpy = wrapperServiceSpy.branches;
     treeSpy = wrapperServiceSpy.tree;
     getBlobSpy = wrapperServiceSpy.getBlob;
     getPageBranchSpy = wrapperServiceSpy.getPageBranch;
+    getResponseSpy = wrapperServiceSpy.getResponse;
     matDialogSpy = jasmine.createSpyObj('MatDialog', ['closeAll']);
     mockWrapperServiceSpy();
     TestBed.configureTestingModule({
@@ -431,7 +439,8 @@ describe('WorkspaceComponent with Action', () => {
         MatBadgeModule,
         MatTabsModule,
         DeviceDetectorModule.forRoot(),
-        FlexLayoutModule
+        FlexLayoutModule,
+        MatCheckboxModule
       ],
     }).compileComponents();
   }));
