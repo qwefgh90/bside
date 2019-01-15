@@ -46,7 +46,7 @@ import { WorkspaceClearMicroAction } from '../core/action/micro/workspace-clear-
 import { WorkspaceUndoMicroAction as WorkspaceUndoMicroAction } from '../core/action/micro/workspace-undo-micro-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { MatCheckbox } from '@angular/material';
-import { bufferCount } from 'rxjs/operators';
+import { bufferCount, bufferTime, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 
 declare const monaco;
 
@@ -155,6 +155,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       this.dispatchSaveAction(this.autoSaveRef.checked);
     }));
     this.subscriptions.push(this.saveActionSubject.pipe(bufferCount(10)).subscribe(() => {
+      new SaveAction(this, this.userActionDispatcher).start();
+    }));
+    this.subscriptions.push(this.saveActionSubject.pipe(debounceTime(15000)).subscribe(() => {
       new SaveAction(this, this.userActionDispatcher).start();
     }));
 
