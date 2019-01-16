@@ -294,6 +294,7 @@ describe('WorkspaceComponent', () => {
     let contentArg = setContentSpy.calls.first().args[1];
     expect(tree.tree[0].path).toBe(pathArg);
     expect(TextUtil.base64ToString(blob1.content)).toBe(contentArg);
+    tick(15000);
   }))
 
   it('nodeRemoved()', fakeAsync(() => {
@@ -360,6 +361,7 @@ describe('WorkspaceComponent', () => {
 
     expect(setContentSpy.calls.first().args[0]).toBe(arg.node.path);
     expect(setContentSpy.calls.first().args[1]).toBe('hello world!');
+    tick(16000);
 
     setContentSpy.calls.reset();
     arg = {base64: 'aGVsbG8gd29ybGQh', node: component.tree.root.children[5].children[1].children[0]};
@@ -367,7 +369,7 @@ describe('WorkspaceComponent', () => {
 
     expect(setContentSpy.calls.first().args[0]).toBe(arg.node.path);
     expect(setContentSpy.calls.first().args[1]).toBe('aGVsbG8gd29ybGQh');
-    tick(10000);
+    tick(16000);
   }))
 });
 
@@ -474,6 +476,7 @@ describe('WorkspaceComponent with Action', () => {
     tick(10000);
 
     expect(nodeSelectedSpy.calls.count()).toBe(1);
+    tick(15000);
   }))
   
   it('RemoveNode() from service', fakeAsync(() => {
@@ -490,6 +493,8 @@ describe('WorkspaceComponent with Action', () => {
     tick(10000);
 
     expect(nodeRemovedSpy.calls.count()).toBe(1);
+    
+    tick(15000);
   }))
 
   it('CreateNode() from service', fakeAsync(() => {
@@ -508,6 +513,8 @@ describe('WorkspaceComponent with Action', () => {
     tick(10000);
 
     expect(nodeCreatedSpy.calls.count()).toBe(1);
+    
+    tick(15000);
   }))
   
   it('MoveNodeInTree() from service', fakeAsync(() => {
@@ -526,6 +533,7 @@ describe('WorkspaceComponent with Action', () => {
     tick(10000);
 
     expect(nodeMovedSpy.calls.count()).toBe(1);
+    tick(15000);
   }))
   
   it('NotifyContentChange() from service', fakeAsync(() => {
