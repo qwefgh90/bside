@@ -7,7 +7,7 @@ export const environment = {
   get redirect_url(){
     return `${location.origin}/redirect`;
   },
-  apiServer: "",
+  apiServer: "/api",
   get authorizeOriginUrl(){
     return "https://github.com/login/oauth/authorize";//?client_id=c602a8bd54b1e774f864&scope=repo
   }
