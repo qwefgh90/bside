@@ -1,0 +1,5 @@
+.card {
+    max-width: 25em;
+    display: inline-block;
+    text-align: left
+  }

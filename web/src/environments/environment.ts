@@ -3,7 +3,14 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  get redirect_url(){
+    return `${location.origin}/redirect`;
+  },
+  apiServer: "",
+  get authorizeOriginUrl(){
+    return "https://github.com/login/oauth/authorize";//?client_id=c602a8bd54b1e774f864&scope=repo
+  }
 };
 
 /*

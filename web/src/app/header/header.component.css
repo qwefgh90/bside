@@ -1,0 +1,17 @@
+a {
+  text-decoration: none;
+  color: black;
+}
+
+.home{
+  font-size: 1.1em;
+}
+
+.signin{
+  font-size: 0.8em;
+}
+
+.spacer {
+    flex: 1 1 auto;
+  }
+  

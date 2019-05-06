@@ -1,0 +1,6 @@
+<mat-toolbar>
+  <a routerLink="/"><button class="home" mat-button>Writer</button></a>
+  <span class="spacer"></span>
+  <!-- <mat-icon class="example-icon" aria-hidden="false" aria-label="Example heart icon">favorite</mat-icon> -->
+  <a routerLink="/login"><button class="signin" mat-raised-button *ngIf="!oauth.isLogin">Sign in</button></a>
+</mat-toolbar>
