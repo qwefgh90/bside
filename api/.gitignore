@@ -27,3 +27,6 @@ HELP.md
 
 ### VS Code ###
 .vscode/
+
+### Security ###
+/src/main/resources/application-oauth.properties
