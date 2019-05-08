@@ -1,0 +1,40 @@
+<mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+  <!-- This is the tree node template for leaf nodes -->
+  <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+    <!-- use a disabled button to provide padding for tree leaf -->
+    <!-- <button mat-icon-button disabled></button>
+    {{node.name}}
+     -->
+    <div style="width: 100%; display: flex">
+        <button mat-button matTreeNodeToggle [attr.aria-label]="'toggle ' + node.name"
+          style="flex: 1; text-align: left">
+          {{node.name}}
+        </button>
+        <button mat-icon-button>
+            <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+  </mat-tree-node>
+  <!-- This is the tree node template for expandable nodes -->
+  <mat-tree-node *matTreeNodeDef="let node;when: hasChild" matTreeNodePadding>
+    <!-- <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'toggle ' + node.name">
+        <mat-icon class="mat-icon-rtl-mirror">
+          {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+        </mat-icon>
+      </button>
+      {{node.name}} -->
+    <div style="width: 100%; display: flex">
+      <button mat-button matTreeNodeToggle [attr.aria-label]="'toggle ' + node.name"
+        style="flex: 1; text-align: left">
+        <mat-icon class="mat-icon-rtl-mirror">
+          {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+        </mat-icon>
+        {{node.name}}
+      </button>
+      <button mat-icon-button>
+          <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+
+  </mat-tree-node>
+</mat-tree>

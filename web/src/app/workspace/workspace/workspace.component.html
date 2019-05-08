@@ -1,0 +1,39 @@
+<!-- <div class="workspace-pane">
+  <div class="workspace-left-pane"><app-tree></app-tree></div>
+  <div class="workspace-center-pane">center</div>
+  <div class="workspace-right-pane">right</div>
+</div> -->
+<!-- <mat-sidenav-container style="width: 100%">
+  <mat-sidenav opened mode="side">Start content</mat-sidenav>
+  <mat-sidenav opened mode="side" position="end">End content</mat-sidenav>
+  <div>
+    Implicit main content
+  </div>
+</mat-sidenav-container> -->
+
+<mat-drawer-container autosize style="width: 100%">
+  <mat-drawer #leftDrawer mode="side" style="padding-left: 2em; padding-right: 2em; padding-top: 2em">
+    <div style="display: flex">
+      <div style="flex: 1">{{repositoryDetails?.name}}</div>
+      <div>
+        <a href="{{repositoryDetails?.html_url}}" target="_blank">
+          <mat-icon>link</mat-icon>
+        </a>
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+    <app-tree [repository]="repositoryDetails"></app-tree>
+  </mat-drawer>
+
+  <mat-drawer #rightDrawer mode="side" position="end">
+    <p>Auto-resizing sidenav</p>
+    <p>Lorem, ipsum dolor sit amet consectetur.</p>
+  </mat-drawer>
+
+  <div>
+    content
+    <button type="button" mat-button (click)="toggle()">
+      Toggle sidenav
+    </button>
+  </div>
+</mat-drawer-container>

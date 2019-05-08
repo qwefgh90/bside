@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { ProjectsRoutingModule } from './projects-routing.module';
 import { RepositoriesComponent } from './repositories/repositories.component';
 import { MatListModule } from '@angular/material/list';
-import { MatIconModule, MatProgressSpinnerModule, MatDividerModule } from '@angular/material';
+import { MatIconModule, MatProgressSpinnerModule, MatDividerModule, MatInputModule } from '@angular/material';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 @NgModule({
   declarations: [RepositoriesComponent],
   imports: [
@@ -13,7 +14,10 @@ import { MatIconModule, MatProgressSpinnerModule, MatDividerModule } from '@angu
     MatListModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatDividerModule
+    MatDividerModule,
+    MatInputModule,
+    FormsModule,
+    ReactiveFormsModule,
   ]
 })
 export class ProjectsModule { }

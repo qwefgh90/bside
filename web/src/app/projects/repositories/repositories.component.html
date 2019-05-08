@@ -1,15 +1,26 @@
 <div class="repos-outer">
   <div class="repos">
     <mat-nav-list>
-      <h3 mat-subheader>Repositories</h3>
+      <div mat-subheader style="display:flex">
+        <h3>Repositories</h3>
+        <div class="spacer"></div>
+        <div class="filter">
+          <mat-form-field><input matInput placeholder="" [formControl]="searchInputFormControl" />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+        </div>
+      </div>
       <mat-divider></mat-divider>
-      <a mat-list-item href="..." *ngFor="let repo of repositories">
-        <mat-icon mat-list-icon>folder</mat-icon>
-        <h4 mat-line>{{repo.name}}</h4>
-        <p mat-line>{{repo.updated_at | date:'short'}}</p>
-      </a>
+      <div class="items">
+        <a mat-list-item [routerLink]="[repo.name]" *ngFor="let repo of getRepositories()">
+          <mat-icon mat-list-icon>folder</mat-icon>
+          <h4 mat-line>{{repo.name}}</h4>
+          <p mat-line>{{repo.updated_at | date:'short'}}</p>
+        </a>
+      </div>
       <div style="text-align: center; padding-top: 3em; padding-bottom: 3em" *ngIf="repositories.length == 0">
-        <mat-spinner style="display: inline-block"></mat-spinner>
+        <mat-spinner style="display: inline-block" [strokeWidth]="3"></mat-spinner>
       </div>
       <!-- <mat-divider></mat-divider>
   <h3 mat-subheader>Notes</h3>

@@ -1,0 +1,10 @@
+.frame {
+    flex-direction: column;
+    height: 100%;
+    display: flex;
+}
+
+router-outlet + ::ng-deep * {
+    flex-grow: 1;
+    display: flex;
+}

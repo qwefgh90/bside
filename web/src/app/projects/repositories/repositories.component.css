@@ -1,5 +1,10 @@
 .repos-outer{
-    padding-top: 5em; 
+    position: absolute;
+    top: 72px;
+    bottom: 64px;
+    left: 0;
+    right: 0;
+    padding-top: 2em; 
     text-align: center;
 }
 .repos{
@@ -7,7 +12,38 @@
     text-align: left;
     min-width: 30em;
     background-color: #efefef;
+    height: 100%;
 }
 .mat-list-item-content{
     cursor: pointer
+}
+.items{
+    overflow-y: scroll;
+    height: 100%;
+}
+.mat-nav-list{
+    overflow-y: hidden;
+    height: 100%;
+    flex-direction: column;
+    display: flex;
+}
+.mat-list-base .mat-subheader:first-child{
+    margin-top: 0;
+}
+.mat-list-base{
+    padding-top: 0;
+}
+.spacer{
+    flex-grow: 1;
+}
+.filter{
+    flex: 0.6;
+}
+
+.mat-form-field{
+    width: 100%;
+}
+
+::ng-deep .mat-form-field-infix{
+    width: 100% !important; 
 }

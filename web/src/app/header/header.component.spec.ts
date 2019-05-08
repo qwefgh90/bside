@@ -1,9 +1,11 @@
 import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HeaderComponent } from './header.component';
-import { MatButtonModule, MatIconModule, MatToolbarModule, MatMenuModule } from '@angular/material';
+import { MatButtonModule, MatIconModule, MatToolbarModule, MatMenuModule, MatProgressSpinnerModule } from '@angular/material';
 import { AuthModule } from '../oauth/auth.module';
 import { OAuthService } from '../oauth/service/o-auth.service';
-import { Router } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterLinkDirectiveStub } from '../testing/router-link-directive-stub';
+import { ActivatedRouteStub } from '../testing/activated-route-stub';
 
 describe('HeaderComponent', () => {
   let component: HeaderComponent;
@@ -15,16 +17,18 @@ describe('HeaderComponent', () => {
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     oauthServiceSpy.logout.and.returnValue(Promise.resolve());
     TestBed.configureTestingModule({
-      declarations: [HeaderComponent],
+      declarations: [HeaderComponent, RouterLinkDirectiveStub],
       imports: [
         AuthModule,
         MatToolbarModule,
         MatIconModule,
         MatButtonModule,
         MatIconModule,
-        MatMenuModule
+        MatMenuModule,
+        MatProgressSpinnerModule
       ], providers: [{provide: OAuthService, useValue: oauthServiceSpy},
-        {provide: Router, useValue: routerSpy}]
+        {provide: Router, useValue: routerSpy},
+        {provide: ActivatedRoute, useValue: new ActivatedRouteStub}]
     })
       .compileComponents();
   }));
@@ -46,4 +50,5 @@ describe('HeaderComponent', () => {
     tick(1000);
     expect((routerSpy.navigate as jasmine.Spy).calls.count()).toBe(1);
   }));
+
 });

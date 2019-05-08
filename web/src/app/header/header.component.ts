@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { OAuthService } from '../oauth/service/o-auth.service';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute, NavigationStart } from '@angular/router';
 import { WrapperService } from '../github/wrapper.service';
 import { Subscription } from 'rxjs';
 
@@ -11,12 +11,13 @@ import { Subscription } from 'rxjs';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
 
-  constructor(private oauth: OAuthService, private router: Router, private wrapperService: WrapperService) {
+  constructor(private oauth: OAuthService, private router: Router, private wrapperService: WrapperService, private activatedRoute: ActivatedRoute) {
   }
 
   subscriptions: Array<Subscription> = []
 
   user;
+  redirecting = false;
 
   ngOnInit() {
     var s = this.oauth.channel.login.subscribe((isLogin) => {
@@ -27,6 +28,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
          });
       }
     });
+    this.subscriptions.push(s);
+    s = this.router.events.subscribe(e =>{
+      if(e instanceof NavigationStart){
+        let navi = e as NavigationStart;
+        if(navi.url.startsWith("/redirect")){
+          this.redirecting = true;
+        }else{
+          this.redirecting = false;
+        }
+      }
+    })
     this.subscriptions.push(s);
   }
 

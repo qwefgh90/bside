@@ -13,5 +13,10 @@ a {
 
 .spacer {
     flex: 1 1 auto;
-  }
-  
+}
+
+.header{
+  position: static;
+  flex-direction: row;
+  display: flex;
+}

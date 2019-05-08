@@ -6,12 +6,13 @@ import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AuthModule } from './oauth/auth.module';
 import { HeaderComponent } from './header/header.component';
-import { MatIconModule, MatButtonModule, MatMenuModule } from '@angular/material';
+import { MatIconModule, MatButtonModule, MatMenuModule, MatProgressSpinnerModule } from '@angular/material';
 import { WelcomeComponent } from './welcome/welcome.component';
 import { HttpClientModule } from '@angular/common/http';
 import { ProjectsModule } from './projects/projects.module';
 import { GithubModule } from './github/github.module';
 import { OAuthService } from './oauth/service/o-auth.service';
+import { WorkspaceModule } from './workspace/workspace.module';
 
 export function initAuth(oauthService: OAuthService){
   return () => oauthService.initAccessTokenOnSession();
@@ -20,9 +21,10 @@ export function initAuth(oauthService: OAuthService){
   declarations: [
     AppComponent,
     HeaderComponent,
-    WelcomeComponent
+    WelcomeComponent,
   ],
   imports: [
+    WorkspaceModule,
     ProjectsModule,
     AuthModule,
     AppRoutingModule,
@@ -34,6 +36,7 @@ export function initAuth(oauthService: OAuthService){
     MatIconModule,
     MatMenuModule,
     GithubModule,
+    MatProgressSpinnerModule
   ],
   providers: [{ provide: APP_INITIALIZER, useFactory: initAuth, deps: [OAuthService], multi: true }],
   bootstrap: [AppComponent]

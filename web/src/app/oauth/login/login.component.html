@@ -1,47 +1,51 @@
-<div style="padding-top: 4em">
-  <div style="text-align: center" *ngIf="status == LoginStatus.Loading">
-    <mat-spinner style="display: inline-block"></mat-spinner>
-  </div>
-  <div style="text-align: center" *ngIf="status == LoginStatus.Failure" >
-    <mat-card class="card" [class.mat-elevation-z8]="true">
-      <mat-card-header>
-        <div mat-card-avatar class="example-header-image"></div>
-        <mat-card-title>We'll fix this problem soon.</mat-card-title>
-        <mat-card-subtitle></mat-card-subtitle>
-      </mat-card-header>
-      <!-- <img mat-card-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" alt="Photo of a Shiba Inu"> -->
-      <mat-card-content>
-        <p>
-          Easiest is platform to create and edit your static resources in Github
-        </p>
-        <br><br><br><br><br><br><br><br><br><br><br><br>
-      </mat-card-content>
-      <mat-card-actions>
-        <!-- <div style="text-align: center">
+<div style="display:flex; flex-direction: column; width: 100%">
+  <div style="flex: 0.5"></div>
+  <div style="align-items: center;justify-content:center; display: flex; width: 100%; flex: 8.5">
+    <div style="text-align: center; height: 100%; " *ngIf="status == LoginStatus.Loading">
+      <mat-spinner style="display: inline-block"></mat-spinner>
+    </div>
+    <div style="text-align: center; height: 100%; " *ngIf="status == LoginStatus.Failure">
+      <mat-card class="card" [class.mat-elevation-z8]="true">
+        <mat-card-header>
+          <div mat-card-avatar class="example-header-image"></div>
+          <mat-card-title>We'll fix this problem soon.</mat-card-title>
+          <mat-card-subtitle></mat-card-subtitle>
+        </mat-card-header>
+        <!-- <img mat-card-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" alt="Photo of a Shiba Inu"> -->
+        <mat-card-content>
+          <p>
+            Easiest is platform to create and edit your static resources in Github
+          </p>
+          <br><br><br><br><br>
+        </mat-card-content>
+        <mat-card-actions>
+          <!-- <div style="text-align: center">
           <button (click)="refresh()" mat-button>Refresh</button>
         </div> -->
-      </mat-card-actions>
-    </mat-card>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+    <div style="text-align: center;height: 100%; " *ngIf="status == LoginStatus.Initialized">
+      <mat-card class="card" [class.mat-elevation-z8]="true">
+        <mat-card-header>
+          <div mat-card-avatar class="example-header-image"></div>
+          <mat-card-title>Edit your blogs with easiest</mat-card-title>
+          <mat-card-subtitle></mat-card-subtitle>
+        </mat-card-header>
+        <!-- <img mat-card-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" alt="Photo of a Shiba Inu"> -->
+        <mat-card-content>
+          <p>
+            Easiest is platform to create and edit your static resources in Github
+          </p>
+          <br><br><br><br><br>
+        </mat-card-content>
+        <mat-card-actions>
+          <div style="text-align: center">
+            <button (click)="login()" mat-raised-button>Sign in with Github</button>
+          </div>
+        </mat-card-actions>
+      </mat-card>
+    </div>
   </div>
-  <div style="text-align: center" *ngIf="status == LoginStatus.Initialized">
-    <mat-card class="card" [class.mat-elevation-z8]="true">
-      <mat-card-header>
-        <div mat-card-avatar class="example-header-image"></div>
-        <mat-card-title>Edit your blogs with easiest</mat-card-title>
-        <mat-card-subtitle></mat-card-subtitle>
-      </mat-card-header>
-      <!-- <img mat-card-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" alt="Photo of a Shiba Inu"> -->
-      <mat-card-content>
-        <p>
-          Easiest is platform to create and edit your static resources in Github
-        </p>
-        <br><br><br><br><br><br><br><br><br><br><br><br>
-      </mat-card-content>
-      <mat-card-actions>
-        <div style="text-align: center">
-          <button (click)="login()" mat-button>Sign in with Github</button>
-        </div>
-      </mat-card-actions>
-    </mat-card>
-  </div>
+  <div style="flex: 1"></div>
 </div>

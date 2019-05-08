@@ -1,0 +1,18 @@
+.container {
+    display: flex;
+
+}
+.workspace-pane{
+    display: flex; flex-direction: row; flex-grow: 1
+}
+.workspace-left-pane{
+    display: flex; 
+    flex: 1;
+}
+.workspace-right-pane{
+    display: flex; flex: 1;
+}
+.workspace-center-pane{
+    display: flex; flex: 4;
+    background-color:gray;
+}
