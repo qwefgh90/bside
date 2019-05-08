@@ -31,7 +31,11 @@ export class LoginComponent implements OnInit {
       this.status = LoginStatus.Failure;
       console.error("We cannot get initial information from server.")
     })
-    this.redirect_uri = environment.redirect_url;
+    this.redirect_uri = this.makeRedirectUrl();
+  }
+
+  makeRedirectUrl(){
+    return `${environment.redirect_url}?route=${this.oauthService.redirectUrl ? this.oauthService.redirectUrl : ''}`;
   }
 
   login(){

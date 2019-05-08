@@ -1,0 +1,13 @@
+.repos-outer{
+    padding-top: 5em; 
+    text-align: center;
+}
+.repos{
+    display: inline-block;
+    text-align: left;
+    min-width: 30em;
+    background-color: #efefef;
+}
+.mat-list-item-content{
+    cursor: pointer
+}

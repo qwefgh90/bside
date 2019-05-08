@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { HeaderComponent } from './header.component';
-import { MatButtonModule, MatIconModule, MatToolbarModule } from '@angular/material';
+import { MatButtonModule, MatIconModule, MatToolbarModule, MatMenuModule } from '@angular/material';
 import { AuthModule } from '../oauth/auth.module';
 
 describe('HeaderComponent', () => {
@@ -14,7 +14,9 @@ describe('HeaderComponent', () => {
         AuthModule,
         MatToolbarModule,
         MatIconModule,
-        MatButtonModule
+        MatButtonModule,
+        MatIconModule,
+        MatMenuModule
       ]
     })
       .compileComponents();

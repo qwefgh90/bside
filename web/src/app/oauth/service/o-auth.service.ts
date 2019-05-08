@@ -9,6 +9,7 @@ export class OAuthService {
   constructor(private httpClient: HttpClient) { }
   isLogin = false;
   accessToken;
+  redirectUrl;
   intialOAuthInfo(): Promise<{state: string, client_id: string}> {
     return this.httpClient
       .get<{state: string, client_id: string}>(`${environment.apiServer}/login/github/initialdata`)

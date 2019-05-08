@@ -50,8 +50,8 @@ describe('LoginComponent', () => {
     let githubLocation: string = spy.calls.first().args[0];
     expect(githubLocation).toContain("state=state")
     expect(githubLocation).toContain("client_id=client_id")
-    expect(githubLocation).toContain(environment.redirect_url)
+    expect(githubLocation).toContain(component.makeRedirectUrl());
     expect(component.status).toBe(LoginStatus.Initialized)
-    console.debug(githubLocation);
+    console.debug('github location: ' + githubLocation);
   }));
 });
