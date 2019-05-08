@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ActivatedRouteStub } from 'src/app/testing/activated-route-stub';
 import { OAuthService } from '../service/o-auth.service';
 import { defer } from 'rxjs';
+import { MatProgressSpinnerModule } from '@angular/material';
 
 describe('RedirectComponent', () => {
   let component: RedirectComponent;
@@ -12,15 +13,16 @@ describe('RedirectComponent', () => {
   let routerSpy;
   let oauthServiceSpy;
   beforeEach(async(() => {
-    oauthServiceSpy = jasmine.createSpyObj('OAuthService', ['makeAccessToken'])
-    oauthServiceSpy.makeAccessToken.and.returnValue(asyncData({accessToken: ''}).toPromise())
+    oauthServiceSpy = jasmine.createSpyObj('OAuthService', ['login'])
+    oauthServiceSpy.login.and.returnValue(asyncData({accessToken: ''}).toPromise())
     routeStub = new ActivatedRouteStub();
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     TestBed.configureTestingModule({
       declarations: [ RedirectComponent ],
       providers: [{provide: ActivatedRoute, useValue: routeStub},
         {provide: Router, useValue: routerSpy},
-        {provide: OAuthService, useValue: oauthServiceSpy}]
+        {provide: OAuthService, useValue: oauthServiceSpy}],
+      imports: [MatProgressSpinnerModule]
     })
     .compileComponents();
   }));
@@ -49,8 +51,8 @@ describe('RedirectComponent', () => {
     let navigate = (routerSpy.navigate as jasmine.Spy);
     expect(navigate.calls.count()).toBe(0);
 
-    let makeAccessToken = (oauthServiceSpy.makeAccessToken as jasmine.Spy);
-    expect(makeAccessToken.calls.count()).toBe(1);
+    let login = (oauthServiceSpy.login as jasmine.Spy);
+    expect(login.calls.count()).toBe(1);
   });
 
 });

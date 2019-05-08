@@ -37,7 +37,7 @@ describe('RepositoriesComponent', () => {
   });
 
   it('show a list of repositories', fakeAsync(() => {
-    wrapperSpy.repositories.and.returnValue(Promise.resolve({data: [{ name: 'a', updated_at: '2019-05-07T02:22:34Z' }, { name: 'b', updated_at: '2019-05-07T02:22:34Z' }]}));
+    wrapperSpy.repositories.and.returnValue(Promise.resolve( [{ name: 'a', updated_at: '2019-05-07T02:22:34Z' }, { name: 'b', updated_at: '2019-05-07T02:22:34Z' }]));
     fixture.detectChanges();
     tick(1000);
     fixture.detectChanges();

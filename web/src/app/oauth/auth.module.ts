@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -42,6 +42,7 @@ import {
   MatTooltipModule,
   MatTreeModule,
 } from '@angular/material';
+import { OAuthService } from './service/o-auth.service';
 
 @NgModule({
   declarations: [LoginComponent, RedirectComponent],

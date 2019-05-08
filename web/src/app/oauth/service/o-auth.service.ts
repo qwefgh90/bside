@@ -1,22 +1,37 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { OAuthServiceChannel } from './o-auth-service-channel';
+import { Subject, ReplaySubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OAuthService {
-  constructor(private httpClient: HttpClient) { }
-  isLogin = false;
-  accessToken;
-  redirectUrl;
+  constructor(private httpClient: HttpClient) { this.isLogin = false; }
+
+  isLogin;
+
+  accessToken: string;
+
+  private updateLogin(isLogin, accessToken){
+    this.isLogin = isLogin;
+    this.accessToken = accessToken;
+    this.loginSubject.next(isLogin);
+  }
+
+  redirectUrl: string;
+
+  private loginSubject = new ReplaySubject<boolean>(1);
+  readonly channel = new OAuthServiceChannel(this.loginSubject);
+  
   intialOAuthInfo(): Promise<{state: string, client_id: string}> {
     return this.httpClient
       .get<{state: string, client_id: string}>(`${environment.apiServer}/login/github/initialdata`)
       .toPromise();
   }
 
-  makeAccessToken(state: string, code: string){
+  login(state: string, code: string){
     let httpParams = new FormData();
     httpParams.set("state", state);
     httpParams.set("code", code);
@@ -27,10 +42,24 @@ export class OAuthService {
 
     return this.httpClient
       .post<{access_token: string}>(`${environment.apiServer}/login/github/accesstoken`, httpParams)
-      .toPromise().then((value) => {
-        this.isLogin = true;
-        this.accessToken = value.access_token;
-        return value;
+      .toPromise().then<void>((value) => {
+        this.updateLogin(true, value.access_token);
       });
+  }
+
+  logout(){
+    return this.httpClient
+      .post<void>(`${environment.apiServer}/login/github/logout`, '')
+      .toPromise().then<void>(() => {
+        this.updateLogin(false, undefined);
+      });
+  }
+
+  initAccessTokenOnSession() {
+    return this.httpClient
+      .get<{access_token: string}>(`${environment.apiServer}/login/github/accesstoken`)
+      .toPromise().then<void>((value) => {
+        this.updateLogin(true, value.access_token);
+      }).catch(() => Promise.resolve());
   }
 }

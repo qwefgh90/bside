@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -11,7 +11,11 @@ import { WelcomeComponent } from './welcome/welcome.component';
 import { HttpClientModule } from '@angular/common/http';
 import { ProjectsModule } from './projects/projects.module';
 import { GithubModule } from './github/github.module';
+import { OAuthService } from './oauth/service/o-auth.service';
 
+export function initAuth(oauthService: OAuthService){
+  return () => oauthService.initAccessTokenOnSession();
+}
 @NgModule({
   declarations: [
     AppComponent,
@@ -31,7 +35,7 @@ import { GithubModule } from './github/github.module';
     MatMenuModule,
     GithubModule,
   ],
-  providers: [],
+  providers: [{ provide: APP_INITIALIZER, useFactory: initAuth, deps: [OAuthService], multi: true }],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

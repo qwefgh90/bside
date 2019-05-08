@@ -30,16 +30,14 @@ describe('OAuthService', () => {
     httpTestingController.verify();
   });
   
-
-  it('makeAccessToken()', (done: DoneFn) => {
+  it('login()', (done: DoneFn) => {
     const service: OAuthService = TestBed.get(OAuthService);
     expect(service.accessToken).toBeUndefined;
     expect(service.isLogin).toBeFalsy();
     expect(service).toBeTruthy();
     
-    service.makeAccessToken('','').then(v => {
-      expect(v.access_token).toBeDefined();
-      expect(service.accessToken).toBe(v.access_token);
+    service.login('','').then(v => {
+      expect(service.accessToken).toBeDefined();
       expect(service.isLogin).toBeTruthy();
       done();
     });
@@ -56,5 +54,54 @@ describe('OAuthService', () => {
     // Finally, assert that there are no outstanding requests.
     httpTestingController.verify();
   });
-  
+
+  it('logout()', (done: DoneFn) => {
+    const service: OAuthService = TestBed.get(OAuthService);
+    service.accessToken = "fake";
+    service.isLogin = true;
+    expect(service).toBeTruthy();
+    
+    service.logout().then(v => {
+      expect(service.accessToken).toBeUndefined;
+      expect(service.isLogin).toBeFalsy();
+      done();
+    });
+
+    const httpTestingController = TestBed.get(HttpTestingController);
+    const req = httpTestingController.expectOne('/api/login/github/logout');
+    // Assert that the request is a GET.
+    expect(req.request.method).toEqual('POST');
+
+    // Respond with mock data, causing Observable to resolve.
+    // Subscribe callback asserts that correct data was returned.
+    req.flush({});
+
+    // Finally, assert that there are no outstanding requests.
+    httpTestingController.verify();
+  });
+
+  it('initAccessTokenOnSession()', (done: DoneFn) => {
+    const service: OAuthService = TestBed.get(OAuthService);
+    expect(service.accessToken).toBeUndefined;
+    expect(service.isLogin).toBeFalsy();
+    expect(service).toBeTruthy();
+    
+    service.initAccessTokenOnSession().then(v => {
+      expect(service.accessToken).toBeDefined();
+      expect(service.isLogin).toBeTruthy();
+      done();
+    });
+
+    const httpTestingController = TestBed.get(HttpTestingController);
+    const req = httpTestingController.expectOne('/api/login/github/accesstoken');
+    // Assert that the request is a GET.
+    expect(req.request.method).toEqual('GET');
+
+    // Respond with mock data, causing Observable to resolve.
+    // Subscribe callback asserts that correct data was returned.
+    req.flush({access_token: ''});
+
+    // Finally, assert that there are no outstanding requests.
+    httpTestingController.verify();
+  });
 });

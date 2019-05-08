@@ -1,4 +1,4 @@
-package io.github.qwefgh90.easiest.security;
+package io.github.qwefgh90.easiest.config;
 
 public class InitialData {
     private String state;

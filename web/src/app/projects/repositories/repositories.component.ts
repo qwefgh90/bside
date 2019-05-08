@@ -13,14 +13,13 @@ export class RepositoriesComponent implements OnInit {
 
   repositories: Array<any> = [];
   userId;
-  repositoryId;
 
   ngOnInit() {
     this.route.paramMap.subscribe((p) => {
       if(p.has('userId')){
         this.userId = p.get('userId');
         this.wrapper.repositories(this.userId).then((result) => {
-          this.repositories = result.data;
+          this.repositories = result;
         }, () =>{
           console.error("Repositories can't be loaded.")
         });

@@ -23,8 +23,9 @@ export class RedirectComponent implements OnInit {
       }
       this.state = map.get("state");
       this.code = map.get("code");
-      this.oauth.makeAccessToken(this.state, this.code).then((value) => {
-        console.log("Succeed to get accessToken");
+
+      this.oauth.login(this.state, this.code).then((value) => {
+        console.log("success to login");
         if(this.oauth.redirectUrl != undefined){
           this.router.navigate([this.oauth.redirectUrl]);
           this.oauth.redirectUrl = undefined;
