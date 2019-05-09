@@ -1,40 +1,30 @@
-<mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
-  <!-- This is the tree node template for leaf nodes -->
-  <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
-    <!-- use a disabled button to provide padding for tree leaf -->
-    <!-- <button mat-icon-button disabled></button>
-    {{node.name}}
-     -->
+<mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="example-tree">
+  <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
     <div style="width: 100%; display: flex">
-        <button mat-button matTreeNodeToggle [attr.aria-label]="'toggle ' + node.name"
-          style="flex: 1; text-align: left">
-          {{node.name}}
-        </button>
-        <button mat-icon-button>
-            <mat-icon>delete</mat-icon>
-        </button>
+      <div class="node-title" (click)="selectNode(node)">
+        <mat-icon>note</mat-icon><span style="line-height: 24px;">{{node.name}}</span>
+        <div class="node-title-opacity"></div>
       </div>
+      <div>
+        <mat-icon>delete</mat-icon>
+      </div>
+    </div>
   </mat-tree-node>
   <!-- This is the tree node template for expandable nodes -->
-  <mat-tree-node *matTreeNodeDef="let node;when: hasChild" matTreeNodePadding>
-    <!-- <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'toggle ' + node.name">
-        <mat-icon class="mat-icon-rtl-mirror">
-          {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
-        </mat-icon>
-      </button>
-      {{node.name}} -->
-    <div style="width: 100%; display: flex">
-      <button mat-button matTreeNodeToggle [attr.aria-label]="'toggle ' + node.name"
-        style="flex: 1; text-align: left">
-        <mat-icon class="mat-icon-rtl-mirror">
-          {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
-        </mat-icon>
-        {{node.name}}
-      </button>
-      <button mat-icon-button>
-          <mat-icon>delete</mat-icon>
-      </button>
+  <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
+    <div style="width: 100%; display: flex; margin-bottom: 0.4em;">
+      <div class="node-title" matTreeNodeToggle (click)="selectNode(node)">
+        <mat-icon>
+          {{treeControl.isExpanded(node) ? 'folder' : 'folder_open'}}
+        </mat-icon><span style="line-height: 24px;">{{node.name}}</span>
+        <div class="node-title-opacity"></div>
+      </div>
+      <div>
+        <mat-icon>delete</mat-icon>
+      </div>
     </div>
-
-  </mat-tree-node>
+    <div [class.tree-invisible]="!treeControl.isExpanded(node)" style="margin-left: 1.5em;">
+      <ng-container matTreeNodeOutlet></ng-container>
+    </div>
+  </mat-nested-tree-node>
 </mat-tree>

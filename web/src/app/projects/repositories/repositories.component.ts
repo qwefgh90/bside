@@ -13,7 +13,7 @@ export class RepositoriesComponent implements OnInit, OnDestroy {
 
   constructor(private wrapper: WrapperService, private route: ActivatedRoute) { }
 
-  private repositories: Array<any> = [];
+  private repositories: Array<any>;
   userId;
   searchInputFormControl = new FormControl();
   subscribe: Array<Subscription> = []; 

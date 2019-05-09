@@ -1,0 +1,45 @@
+ .mat-tree-node{
+    min-height: unset;
+    margin-bottom: 0.4em;
+}
+
+.mat-tree-node:first-child{
+    margin-top: 0.4em;
+} 
+
+.tree-invisible {
+    display: none;
+  }
+/*   
+.example-tree ul,
+.example-tree li {
+  margin-top: 0;
+  margin-bottom: 0;
+  list-style-type: none;
+} */
+
+.node-title{
+    flex: 1;
+    text-align: left;
+    cursor: pointer; 
+    display: flex;   
+    position: relative;
+}
+.node-title-opacity{
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    position: absolute;
+}
+
+.node-title-opacity:hover{
+    opacity: 0.1;
+    background: black;
+}
+
+
+.node-title-opacity:active{
+    opacity: 0.2;
+    background: black;
+}

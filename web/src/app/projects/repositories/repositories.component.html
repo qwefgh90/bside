@@ -12,15 +12,18 @@
         </div>
       </div>
       <mat-divider></mat-divider>
-      <div class="items">
-        <a mat-list-item [routerLink]="[repo.name]" *ngFor="let repo of getRepositories()">
+      <div class="items" *ngIf="repositories">
+        <a mat-list-item [routerLink]="[repo.name]" *ngFor="let repo of getRepositories()"
+          >
           <mat-icon mat-list-icon>folder</mat-icon>
           <h4 mat-line>{{repo.name}}</h4>
           <p mat-line>{{repo.updated_at | date:'short'}}</p>
         </a>
       </div>
-      <div style="text-align: center; padding-top: 3em; padding-bottom: 3em" *ngIf="repositories.length == 0">
-        <mat-spinner style="display: inline-block" [strokeWidth]="3"></mat-spinner>
+      <div class="progress-box" *ngIf="!repositories">
+        <div style="text-align: center;">
+          <mat-spinner style="display: inline-block" [strokeWidth]="3"></mat-spinner>
+        </div>
       </div>
       <!-- <mat-divider></mat-divider>
   <h3 mat-subheader>Notes</h3>

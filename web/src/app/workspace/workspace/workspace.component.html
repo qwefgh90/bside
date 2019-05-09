@@ -12,9 +12,9 @@
 </mat-sidenav-container> -->
 
 <mat-drawer-container autosize style="width: 100%">
-  <mat-drawer #leftDrawer mode="side" style="padding-left: 2em; padding-right: 2em; padding-top: 2em">
-    <div style="display: flex">
-      <div style="flex: 1">{{repositoryDetails?.name}}</div>
+  <mat-drawer #leftDrawer mode="side" style="padding-left: 2em; padding-right: 0.5em; padding-top: 0.5em">
+    <div class="repository-title">
+      <div style="flex: 1;padding-left: 0.3em;"><h3 style="display:inline;">{{repositoryDetails?.name}}</h3></div>
       <div>
         <a href="{{repositoryDetails?.html_url}}" target="_blank">
           <mat-icon>link</mat-icon>
@@ -22,7 +22,7 @@
       </div>
     </div>
     <mat-divider></mat-divider>
-    <app-tree [repository]="repositoryDetails"></app-tree>
+    <app-tree [repository]="repositoryDetails" [tree]="tree" (nodeSelected)="selectNode($event)"></app-tree>
   </mat-drawer>
 
   <mat-drawer #rightDrawer mode="side" position="end">
@@ -31,7 +31,7 @@
   </mat-drawer>
 
   <div>
-    content
+    content {{selectedNode?.name}}
     <button type="button" mat-button (click)="toggle()">
       Toggle sidenav
     </button>

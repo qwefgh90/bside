@@ -16,3 +16,9 @@
     display: flex; flex: 4;
     background-color:gray;
 }
+.mat-drawer-left{
+    padding-right: 0;
+}
+.repository-title{
+    display: flex; min-width: 12vw; padding-bottom: 0.5em;
+}

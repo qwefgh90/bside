@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { OAuthService } from '../oauth/service/o-auth.service';
 import Github from 'github-api';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 /**
  * A returned data should be stored in each component;
  */
@@ -8,7 +9,7 @@ import Github from 'github-api';
   providedIn: 'root'
 })
 export class WrapperService {
-  constructor(private oauth: OAuthService) { }
+  constructor(private oauth: OAuthService, private http: HttpClient) { }
 
   // myProfile;
 
@@ -114,7 +115,7 @@ export class WrapperService {
     }
   },
    */
-  repositories(login: string): Promise<any> {
+  repositories(login: string): Promise<Array<any>> {
     if (this.hasToken()) {
       const gh = new Github({
         token: this.token()
@@ -473,14 +474,395 @@ export class WrapperService {
     "subscribers_count": 42,
     "network_count": 0
   }
-}
-   */
-  repository(login: string, repositoryName: string): Promise<any> {
+}*/
+  repositoryDetails(login: string, repositoryName: string): Promise<any> {
     if (this.hasToken()) {
       const repo = new Github({
         token: this.token()
       });
       let promise: Promise<any> = repo.getRepo(login, repositoryName).getDetails();
+      return promise.then(result => result.data);
+    } else {
+      return Promise.reject();
+    }
+  }
+
+  /**
+   * {
+  "sha": "af24baf129c486558e37d797e54c9fd81c9c3407",
+  "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/af24baf129c486558e37d797e54c9fd81c9c3407",
+  "tree": [
+    {
+      "path": ".buildinfo",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "910ab6d5a9cb4de8551bec37eb60847f258d742c",
+      "size": 230,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/910ab6d5a9cb4de8551bec37eb60847f258d742c"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0afe7c5b8833f794f4e4d71964864eeda31a0906",
+      "size": 97,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/0afe7c5b8833f794f4e4d71964864eeda31a0906"
+    },
+    {
+      "path": ".nojekyll",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": ".travis.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "79d5d01e1bd3ac1e2e548b920c90859ee26cf5b6",
+      "size": 337,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/79d5d01e1bd3ac1e2e548b920c90859ee26cf5b6"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d8fe5b0573ccab1832d40101372b31c1633af6d8",
+      "size": 153,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/d8fe5b0573ccab1832d40101372b31c1633af6d8"
+    },
+    {
+      "path": "_downloads",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "08a42951647aef299e7c6587362b4e154ac55b57",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/08a42951647aef299e7c6587362b4e154ac55b57"
+    },
+    {
+      "path": "_downloads/376fff9bd23db6ea14d201f2479fb500",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "eb7e518eded9c95282497b82bb27ac4bf9cc6b24",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/eb7e518eded9c95282497b82bb27ac4bf9cc6b24"
+    },
+    {
+      "path": "_downloads/376fff9bd23db6ea14d201f2479fb500/HashMap.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2d1c1f7e0759b29753575395a340ce4f2001cb9",
+      "size": 90987,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/f2d1c1f7e0759b29753575395a340ce4f2001cb9"
+    },
+    {
+      "path": "_downloads/3b9595f7ebd1ba74268e278ba32a6d2d",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c1699e1fdb3ca93a03ff3cda873dac4760052ca4",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/c1699e1fdb3ca93a03ff3cda873dac4760052ca4"
+    },
+    {
+      "path": "_downloads/3b9595f7ebd1ba74268e278ba32a6d2d/PythonCExtension.pdf",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "043e1775df7055a05d025703ef2e6f61e56f309b",
+      "size": 281438,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/043e1775df7055a05d025703ef2e6f61e56f309b"
+    },
+    {
+      "path": "_downloads/4a87751efe99b1b8e03b89acd744c96e",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c1699e1fdb3ca93a03ff3cda873dac4760052ca4",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/c1699e1fdb3ca93a03ff3cda873dac4760052ca4"
+    },
+    {
+      "path": "_downloads/4a87751efe99b1b8e03b89acd744c96e/PythonCExtension.pdf",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "043e1775df7055a05d025703ef2e6f61e56f309b",
+      "size": 281438,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/043e1775df7055a05d025703ef2e6f61e56f309b"
+    },
+    {
+      "path": "_downloads/5a68946e4061b31b566527c296903ae8",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "750ae599a276488a8049e1b1c6b58a8dc740ec6b",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/750ae599a276488a8049e1b1c6b58a8dc740ec6b"
+    },
+    {
+      "path": "_downloads/5a68946e4061b31b566527c296903ae8/PythonWebCrawler.pdf",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e6b9f2854a97460ba1d6d22637fce20040ace9e",
+      "size": 668713,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/1e6b9f2854a97460ba1d6d22637fce20040ace9e"
+    },
+    {
+      "path": "_downloads/637c7e107529ea218171ad116561d3ee",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b3fb57f4d4ac71d5e290f4cbe08a2ef63802ae4d",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/b3fb57f4d4ac71d5e290f4cbe08a2ef63802ae4d"
+    },
+    {
+      "path": "_downloads/637c7e107529ea218171ad116561d3ee/b+.ppt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2f2c490a28ee5bd30ef81619c987bfdc6d9b2af",
+      "size": 1143808,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/f2f2c490a28ee5bd30ef81619c987bfdc6d9b2af"
+    },
+    {
+      "path": "_downloads/85bbc05840f6872acd67c93511df2496",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "9125a11a02d8b21972531f3fbebd0a8c3e2355cd",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/9125a11a02d8b21972531f3fbebd0a8c3e2355cd"
+    },
+    {
+      "path": "_downloads/85bbc05840f6872acd67c93511df2496/btree.ppt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a377647f542f723b040454ab85c11a6d01d58171",
+      "size": 3026944,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/a377647f542f723b040454ab85c11a6d01d58171"
+    },
+    {
+      "path": "_downloads/8825ddd6db8aa8b0c53eb4aa45651d56",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "33e83ace532620f2bd70c9bd9f247b9ac444dd54",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/33e83ace532620f2bd70c9bd9f247b9ac444dd54"
+    },
+    {
+      "path": "_downloads/8825ddd6db8aa8b0c53eb4aa45651d56/정규화참고.pptx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f8ca99434fe17ce35dbb19f40434c141bf98185b",
+      "size": 2948499,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/f8ca99434fe17ce35dbb19f40434c141bf98185b"
+    },
+    {
+      "path": "_downloads/HashMap.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2d1c1f7e0759b29753575395a340ce4f2001cb9",
+      "size": 90987,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/f2d1c1f7e0759b29753575395a340ce4f2001cb9"
+    },
+    {
+      "path": "_downloads/PythonCExtension.pdf",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "043e1775df7055a05d025703ef2e6f61e56f309b",
+      "size": 281438,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/043e1775df7055a05d025703ef2e6f61e56f309b"
+    },
+    {
+      "path": "_downloads/PythonWebCrawler.pdf",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e6b9f2854a97460ba1d6d22637fce20040ace9e",
+      "size": 668713,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/1e6b9f2854a97460ba1d6d22637fce20040ace9e"
+    },
+    {
+      "path": "_downloads/b+.ppt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2f2c490a28ee5bd30ef81619c987bfdc6d9b2af",
+      "size": 1143808,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/f2f2c490a28ee5bd30ef81619c987bfdc6d9b2af"
+    },
+    {
+      "path": "_downloads/b6c78c844144c4ecb8435a097cd06fe8",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "33e83ace532620f2bd70c9bd9f247b9ac444dd54",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/33e83ace532620f2bd70c9bd9f247b9ac444dd54"
+    },
+    {
+      "path": "_downloads/b6c78c844144c4ecb8435a097cd06fe8/정규화참고.pptx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f8ca99434fe17ce35dbb19f40434c141bf98185b",
+      "size": 2948499,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/f8ca99434fe17ce35dbb19f40434c141bf98185b"
+    },
+    {
+      "path": "_downloads/ba2925f9dfaf320a90c3aeacbf640ac0",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "9125a11a02d8b21972531f3fbebd0a8c3e2355cd",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/9125a11a02d8b21972531f3fbebd0a8c3e2355cd"
+    },
+    {
+      "path": "_downloads/ba2925f9dfaf320a90c3aeacbf640ac0/btree.ppt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a377647f542f723b040454ab85c11a6d01d58171",
+      "size": 3026944,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/a377647f542f723b040454ab85c11a6d01d58171"
+    },
+    {
+      "path": "_downloads/btree.ppt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a377647f542f723b040454ab85c11a6d01d58171",
+      "size": 3026944,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/a377647f542f723b040454ab85c11a6d01d58171"
+    },
+    {
+      "path": "_downloads/c1387b5df4bc00af4a857c3318cb01b0",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b3fb57f4d4ac71d5e290f4cbe08a2ef63802ae4d",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/b3fb57f4d4ac71d5e290f4cbe08a2ef63802ae4d"
+    },
+    {
+      "path": "_downloads/c1387b5df4bc00af4a857c3318cb01b0/b+.ppt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2f2c490a28ee5bd30ef81619c987bfdc6d9b2af",
+      "size": 1143808,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/f2f2c490a28ee5bd30ef81619c987bfdc6d9b2af"
+    },
+    {
+      "path": "_downloads/ca7075c2a6bc77c735b4459e70769700",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "eb7e518eded9c95282497b82bb27ac4bf9cc6b24",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/eb7e518eded9c95282497b82bb27ac4bf9cc6b24"
+    },
+    {
+      "path": "_downloads/ca7075c2a6bc77c735b4459e70769700/HashMap.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2d1c1f7e0759b29753575395a340ce4f2001cb9",
+      "size": 90987,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/f2d1c1f7e0759b29753575395a340ce4f2001cb9"
+    },
+    {
+      "path": "_downloads/f73413959063f0008d59694c7814108b",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "750ae599a276488a8049e1b1c6b58a8dc740ec6b",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/750ae599a276488a8049e1b1c6b58a8dc740ec6b"
+    },
+    {
+      "path": "_downloads/f73413959063f0008d59694c7814108b/PythonWebCrawler.pdf",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e6b9f2854a97460ba1d6d22637fce20040ace9e",
+      "size": 668713,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/1e6b9f2854a97460ba1d6d22637fce20040ace9e"
+    },
+    {
+      "path": "_downloads/정규화참고.pptx",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f8ca99434fe17ce35dbb19f40434c141bf98185b",
+      "size": 2948499,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/f8ca99434fe17ce35dbb19f40434c141bf98185b"
+    },
+    {
+      "path": "_images",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b8bcaac16dc2b17fc6c73bbb8dc4676bcf50f36d",
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/b8bcaac16dc2b17fc6c73bbb8dc4676bcf50f36d"
+    },
+    {
+      "path": "_images/B-TREE.gif",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "353f849824991c8bc35bbcda7dcdb81743cb8216",
+      "size": 10343,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/353f849824991c8bc35bbcda7dcdb81743cb8216"
+    },
+    {
+      "path": "_images/B-TREE2.JPG",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ca66b801991789320683313195ec730358b4fcc3",
+      "size": 58229,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/ca66b801991789320683313195ec730358b4fcc3"
+    },
+    {
+      "path": "_images/SQL_FLOW.JPG",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4e27ac6d183069c15c43d622290b85b31707cdaf",
+      "size": 86919,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/4e27ac6d183069c15c43d622290b85b31707cdaf"
+    },
+    {
+      "path": "_images/aes.jpg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "75be8506750a45dcfb6a06e743b9a10b56e00415",
+      "size": 171853,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/75be8506750a45dcfb6a06e743b9a10b56e00415"
+    },
+    {
+      "path": "_images/ah.jpg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d48856ad3b60a30e04df97b1eaf34a3e77487285",
+      "size": 16214,
+      "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/d48856ad3b60a30e04df97b1eaf34a3e77487285"
+    },
+   */
+  // https://api.github.com/repos/qwefgh90/sphinx/git/trees/af24baf?recursive=1
+  tree(login: string, repositoryName: string, sha: string): Promise<any> {
+    if (this.hasToken()) {
+      const repo = new Github({
+        token: this.token()
+      });
+      let promise: Promise<any> = this.treeRecursive(login, repositoryName, sha);//repo.getRepo(login, repositoryName).getTree(sha);
+      return promise.then(result => result);
+    } else {
+      return Promise.reject();
+    }
+  }
+
+  private treeRecursive(login: string, repositoryName: string, sha: string) {
+    const url = `https://api.github.com/repos/${login}/${repositoryName}/git/trees/${sha}?recursive=1`;
+    let treeResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
+    return treeResponse.toPromise();
+  }
+
+  /**
+   * [
+      {
+        "name": "master",
+        "commit": {
+          "sha": "c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc",
+          "url": "https://api.github.com/repos/octocat/Hello-World/commits/c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc"
+        },
+        "protected": true,
+        "protection": {
+          "enabled": true,
+          "required_status_checks": {
+            "enforcement_level": "non_admins",
+            "contexts": [
+              "ci-test",
+              "linter"
+            ]
+          }
+        },
+        "protection_url": "https://api.github.com/repos/octocat/hello-world/branches/master/protection"
+      }
+    ]
+   */
+  branches(login: string, repositoryName: string): Promise<any> {
+    if (this.hasToken()) {
+      const repo = new Github({
+        token: this.token()
+      });
+      let promise: Promise<any> = repo.getRepo(login, repositoryName).listBranches();
       return promise.then(result => result.data);
     } else {
       return Promise.reject();
