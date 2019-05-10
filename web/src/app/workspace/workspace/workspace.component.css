@@ -22,3 +22,6 @@
 .repository-title{
     display: flex; min-width: 12vw; padding-bottom: 0.5em;
 }
+.shrink{
+    height: 100px;
+}

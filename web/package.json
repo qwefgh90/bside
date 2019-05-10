@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --proxy-config=proxy.conf.js",
+    "start": "ng serve --proxy-config=proxy.conf.js  --extra-webpack-config webpack.partial.js -o",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
@@ -21,8 +21,11 @@
     "@angular/platform-browser": "~7.2.0",
     "@angular/platform-browser-dynamic": "~7.2.0",
     "@angular/router": "~7.2.0",
+    "copy-webpack-plugin": "^4.6.0",
     "core-js": "^2.5.4",
     "github-api": "^3.2.0",
+    "monaco-editor": "^0.17.0",
+    "ngx-build-plus": "^7.5.0",
     "rxjs": "~6.3.3",
     "tslib": "^1.9.0",
     "zone.js": "~0.8.26"

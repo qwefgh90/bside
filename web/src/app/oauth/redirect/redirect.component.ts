@@ -9,7 +9,7 @@ import { OAuthService } from '../service/o-auth.service';
 })
 export class RedirectComponent implements OnInit {
 
-  constructor(private route: ActivatedRoute, private router: Router, private oauth: OAuthService) { }
+  constructor(private route: ActivatedRoute, private router: Router, public oauth: OAuthService) { }
   state: string;
   code: string;
   

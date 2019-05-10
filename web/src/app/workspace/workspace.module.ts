@@ -7,8 +7,9 @@ import { WorkspaceComponent } from './workspace/workspace.component';
 import { MatSidenavModule, MatIcon, MatIconModule, MatButtonModule, MatDividerModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {MatTreeModule} from '@angular/material/tree';
+import { EditorComponent } from './editor/editor.component';
 @NgModule({
-  declarations: [TreeComponent, WorkspaceComponent],
+  declarations: [TreeComponent, WorkspaceComponent, EditorComponent],
   imports: [
     CommonModule,
     WorkspaceRoutingModule,

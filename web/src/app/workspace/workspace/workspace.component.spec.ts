@@ -7,6 +7,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
 import { ActivatedRouteStub } from 'src/app/testing/activated-route-stub';
 import { WrapperService } from 'src/app/github/wrapper.service';
+import { EditorComponent } from '../editor/editor.component';
 
 describe('WorkspaceComponent', () => {
   let component: WorkspaceComponent;
@@ -14,7 +15,7 @@ describe('WorkspaceComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [WorkspaceComponent, TreeComponent],
+      declarations: [WorkspaceComponent, TreeComponent, EditorComponent],
       imports: [MatSidenavModule,
         BrowserAnimationsModule,
         MatDividerModule,

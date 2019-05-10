@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
 
-  constructor(private oauth: OAuthService, private router: Router, private wrapperService: WrapperService, private activatedRoute: ActivatedRoute) {
+  constructor(public oauth: OAuthService, private router: Router, private wrapperService: WrapperService, private activatedRoute: ActivatedRoute) {
   }
 
   subscriptions: Array<Subscription> = []

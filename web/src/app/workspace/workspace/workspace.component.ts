@@ -1,10 +1,12 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, AfterContentInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, AfterContentInit, ElementRef } from '@angular/core';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { MatDrawer } from '@angular/material';
-import { Tree } from '@angular/router/src/utils/tree';
 import { GithubTreeNode } from '../tree/github-tree-node';
+import { MonacoService } from '../editor/monaco.service';
+
+declare const monaco;
 
 @Component({
   selector: 'app-workspace',
@@ -13,7 +15,9 @@ import { GithubTreeNode } from '../tree/github-tree-node';
 })
 export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
-  constructor(private wrapper: WrapperService, private route: ActivatedRoute) { }
+
+  constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute) { 
+  }
 
   userId;
   repositoryName;
@@ -35,7 +39,20 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.repositoryName = p.get('repositoryName');
         this.initialzeWorkspace(this.userId, this.repositoryName);
       }
-    })
+    });
+    this.initalizeLoader();
+  }
+
+  private initalizeLoader(){
+    if (!(window as any).require) {
+      const loaderScript = document.createElement("script");
+      loaderScript.type = "text/javascript";
+      loaderScript.src = "vs/loader.js";
+      loaderScript.addEventListener("load", () => {
+        this.monacoService.loaded.next();
+      });
+      document.body.appendChild(loaderScript);
+    }
   }
 
   ngAfterContentInit() {
@@ -51,7 +68,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.rightPane.toggle();
   }
 
-  selectNode(node: GithubTreeNode){
+  selectNode(node: GithubTreeNode) {
     this.selectedNode = node;
   }
 
@@ -99,4 +116,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     });
     this.selectedBranch = branch;
   }
+ 
+ 
 }
