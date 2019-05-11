@@ -5,6 +5,8 @@ import { Subscription, Subject } from 'rxjs';
 import { MatDrawer } from '@angular/material';
 import { GithubTreeNode } from '../tree/github-tree-node';
 import { MonacoService } from '../editor/monaco.service';
+import { Editor } from '../editor/editor';
+import { Blob } from 'src/app/github/type/blob';
 
 declare const monaco;
 
@@ -14,10 +16,11 @@ declare const monaco;
   styleUrls: ['./workspace.component.css']
 })
 export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
-
-
+  
   constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute) { 
   }
+
+  @ViewChild("editor1") editor1: Editor;
 
   userId;
   repositoryName;
@@ -27,6 +30,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   tree: any
 
   selectedNode: GithubTreeNode;
+  selectedBlob: Blob
   subscribe: Subscription;
 
   @ViewChild("leftDrawer") leftPane: MatDrawer;
@@ -49,7 +53,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       loaderScript.type = "text/javascript";
       loaderScript.src = "vs/loader.js";
       loaderScript.addEventListener("load", () => {
-        this.monacoService.loaded.next();
+        (window as any).require(["vs/editor/editor.main"], () => {
+          this.monacoService.monaco.next(monaco);
+        });
       });
       document.body.appendChild(loaderScript);
     }
@@ -70,7 +76,29 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   selectNode(node: GithubTreeNode) {
     this.selectedNode = node;
+    this.wrapper.blob(this.userId, this.repositoryName, this.selectedNode.sha).then(
+      (blob: Blob) => {
+        this.selectedBlob = blob;
+        
+        if(this.editor1 != undefined){
+          if(!this.editor1.selectTabIfExists(this.selectedNode.path))
+            this.editor1.setContent(this.selectedNode.path, this.b64DecodeUnicode(blob.content))
+        }
+      }
+    ,(reason) => {
+      console.debug("An error during getting blob. Maybe selectedNode is a type of tree. ");
+      console.debug(this.selectedNode);
+    });
   }
+  
+  //https://developer.mozilla.org/ko/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
+  b64DecodeUnicode(str) {
+    // Going backwards: from bytestream, to percent-encoding, to original string.
+    return decodeURIComponent(atob(str).split('').map(function (c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+  }
+
 
   async initialzeWorkspace(userId, repositoryName): Promise<void> {
     let details = this.wrapper.repositoryDetails(userId, repositoryName).then((result) => {

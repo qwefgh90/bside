@@ -5,6 +5,6 @@ import { Subject, ReplaySubject } from 'rxjs';
   providedIn: 'root'
 })
 export class MonacoService {
-  public loaded = new ReplaySubject<void>(1);
+  public monaco = new ReplaySubject<any>(1);
   constructor() { }
 }

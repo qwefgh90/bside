@@ -8,6 +8,7 @@ import { MatSidenavModule, MatIcon, MatIconModule, MatButtonModule, MatDividerMo
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {MatTreeModule} from '@angular/material/tree';
 import { EditorComponent } from './editor/editor.component';
+import { NgxMdModule } from 'ngx-md';
 @NgModule({
   declarations: [TreeComponent, WorkspaceComponent, EditorComponent],
   imports: [
@@ -18,7 +19,8 @@ import { EditorComponent } from './editor/editor.component';
     MatTreeModule,
     MatIconModule,
     MatButtonModule,
-    MatDividerModule
+    MatDividerModule,
+    NgxMdModule.forRoot()
   ]
 })
 export class WorkspaceModule { }

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { OAuthService } from '../oauth/service/o-auth.service';
 import Github from 'github-api';
 import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Blob } from './type/blob';
 /**
  * A returned data should be stored in each component;
  */
@@ -10,8 +11,6 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 })
 export class WrapperService {
   constructor(private oauth: OAuthService, private http: HttpClient) { }
-
-  // myProfile;
 
   /**
    * [
@@ -830,6 +829,34 @@ export class WrapperService {
 
   private treeRecursive(login: string, repositoryName: string, sha: string) {
     const url = `https://api.github.com/repos/${login}/${repositoryName}/git/trees/${sha}?recursive=1`;
+    let treeResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
+    return treeResponse.toPromise();
+  }
+
+  /**
+   * 
+   * @param login 
+   * @param repositoryName 
+   * @param sha 
+   */
+  blob(login: string, repositoryName: string, sha: string): Promise<Blob> {
+    if (this.hasToken()) {
+      const repo = new Github({
+        token: this.token()
+      });
+      let promise: Promise<any> = this.getBlob(login, repositoryName, sha);
+      // let promise: Promise<any> = this.treeRecursive(login, repositoryName, sha);//repo.getRepo(login, repositoryName).getTree(sha);
+      return promise.then(result => {
+        return result
+      })
+    } else {
+      return Promise.reject();
+    }
+  }
+
+  
+  getBlob(login: string, repositoryName: string, sha: string){
+    const url = `https://api.github.com/repos/${login}/${repositoryName}/git/blobs/${sha}`;
     let treeResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
     return treeResponse.toPromise();
   }
