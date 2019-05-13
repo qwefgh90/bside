@@ -12,7 +12,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:''
+        url:'', state:[], setName: undefined, delete: undefined
       },
       {
         path:'b',
@@ -20,7 +20,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:''
+        url:'', state:[], setName: undefined, delete: undefined
       },
       {
         path:'b/c',
@@ -28,7 +28,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:''
+        url:'', state:[], setName: undefined, delete: undefined
       },
       {
         path:'b/d',
@@ -36,7 +36,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:''
+        url:'', state:[], setName: undefined, delete: undefined
       },
       {
         path:'b/e',
@@ -44,7 +44,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:''
+        url:'', state:[], setName: undefined, delete: undefined
       },
       {
         path:'b/e/f',
@@ -52,7 +52,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:''
+        url:'', state:[], setName: undefined, delete: undefined
       },
       {
         path:'b/e/f/g',
@@ -60,7 +60,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:''
+        url:'', state:[], setName: undefined, delete: undefined
       },
       {
         path:'h',
@@ -68,11 +68,11 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:''
+        url:'', state:[], setName: undefined, delete: undefined
       }
     ]
     let transformer = new GithubTreeToTree(arr);
-    let result = transformer.getTree();
+    let result = transformer.getTree().children;
     expect(result.length).toBe(3);
     expect(result[0].children.length).toBe(0);
     expect(result[1].children.length).toBe(3);

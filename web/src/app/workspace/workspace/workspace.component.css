@@ -25,3 +25,7 @@
 .shrink{
     height: 100px;
 }
+.branches{
+    width: 100%;
+    margin-top: 1em
+}

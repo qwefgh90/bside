@@ -1,4 +1,4 @@
-import { GithubTreeNode } from './github-tree-node';
+import { GithubTreeNode, rootNode } from './github-tree-node';
 
 /**
  * Change flat model to hierachy model
@@ -6,18 +6,22 @@ import { GithubTreeNode } from './github-tree-node';
  */
 export class GithubTreeToTree {
     private stack: Array<GithubTreeNode> = [];
-    private rootChildren: Array<GithubTreeNode> = [];
+    // private rootChildren: Array<GithubTreeNode> = [];
+    private root: GithubTreeNode = rootNode();
+
     constructor(private beforeTree: Array<GithubTreeNode>){
         this.traverse();
     }
 
     private traverse(){
         this.beforeTree.forEach((v, i, arr) => {
+            v = this.copy(v); //interface to class
             v.children = []; //assign empty array
             v.name = this.getName(v); //assign node name
             if(this.stack.length == 0){
                 //inital extra operation 
-                this.rootChildren.push(v);
+                this.root.children.push(v);
+                v.parentNode = this.root;
                 //push stack
                 this.stack.push(v);
             }else{
@@ -37,15 +41,29 @@ export class GithubTreeToTree {
                     }
                 }
                 //extra operation
-                if(top == undefined)
-                    this.rootChildren.push(v);
-                else
+                if(top == undefined){
+                    this.root.children.push(v);
+                    v.parentNode = this.root;
+                }else{
                     top.children.push(v);
+                    v.parentNode = top;
+                }
 
                 //push stack
                 this.stack.push(v);
             }
         });
+    }
+
+    private copy(v: GithubTreeNode){
+        let real = new GithubTreeNode();
+        real.mode = v.mode;
+        real.path = v.path;
+        real.sha = v.sha;
+        real.size = v.size;
+        real.type = v.type;
+        real.url = v.url;
+        return real;
     }
 
     private getName(node: GithubTreeNode){
@@ -61,8 +79,8 @@ export class GithubTreeToTree {
         return count;
     }
 
-    public getTree(): Array<GithubTreeNode>{
-        return this.rootChildren;
+    public getTree(): GithubTreeNode{
+        return this.root;
     }
 }
 

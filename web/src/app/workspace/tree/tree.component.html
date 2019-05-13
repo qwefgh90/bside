@@ -1,12 +1,22 @@
 <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="example-tree">
-  <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
+  <mat-tree-node *matTreeNodeDef="let node; " matTreeNodeToggle>
     <div style="width: 100%; display: flex">
       <div class="node-title" (click)="selectNode(node)">
-        <mat-icon>note</mat-icon><span style="line-height: 24px;">{{node.name}}</span>
-        <div class="node-title-opacity"></div>
+        <mat-icon>note</mat-icon><span *ngIf="renamingNode != node" style="line-height: 24px;">{{node.name}}</span>
+        <input #blobRenamingInput *ngIf="renamingNode == node" [formControl]="renamingFormControl" (keydown.enter)="completeRenaming()" (blur)="completeRenaming()" />
+        <div *ngIf="renamingNode != node" class="node-title-opacity"></div>
+        <div *ngIf="selectedNode == node" class="selected"></div>
       </div>
       <div>
-        <mat-icon>delete</mat-icon>
+        <mat-icon [matMenuTriggerFor]="appMenu">arrow_drop_down</mat-icon>
+        <mat-menu #appMenu="matMenu" xPosition="before">
+            <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="rename(node)">
+              <mat-icon>edit</mat-icon>Rename
+            </button>
+          <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="delete(node)">
+            <mat-icon>delete</mat-icon>Delete
+          </button>
+        </mat-menu>
       </div>
     </div>
   </mat-tree-node>
@@ -16,11 +26,30 @@
       <div class="node-title" matTreeNodeToggle (click)="selectNode(node)">
         <mat-icon>
           {{treeControl.isExpanded(node) ? 'folder' : 'folder_open'}}
-        </mat-icon><span style="line-height: 24px;">{{node.name}}</span>
-        <div class="node-title-opacity"></div>
+        </mat-icon><span style="line-height: 24px;" *ngIf="renamingNode != node">{{node.name}}</span>
+        <input #treeRenamingInput *ngIf="renamingNode == node" [formControl]="renamingFormControl" (keydown.enter)="completeRenaming()" (blur)="completeRenaming()" />
+        <div *ngIf="renamingNode != node" class="node-title-opacity"></div>
+        <div *ngIf="selectedNode == node && renamingNode != node" class="selected"></div>
       </div>
       <div>
-        <mat-icon>delete</mat-icon>
+        <mat-icon [matMenuTriggerFor]="appMenuForTree">arrow_drop_down</mat-icon>
+        <mat-menu #appMenuForTree="matMenu" xPosition="before">
+          <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="newNode(node, 'blob')">
+            <mat-icon>fiber_new</mat-icon>New File
+          </button>
+          <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="newNode(node, 'tree')">
+            <mat-icon>fiber_new</mat-icon>New Folder
+          </button>
+          <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;">
+            <mat-icon>cloud_upload</mat-icon>Upload
+          </button>
+          <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="rename(node)">
+            <mat-icon>edit</mat-icon>Rename
+          </button>
+          <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="delete(node)">
+            <mat-icon>delete</mat-icon>Delete
+          </button>
+        </mat-menu>
       </div>
     </div>
     <div [class.tree-invisible]="!treeControl.isExpanded(node)" style="margin-left: 1.5em;">

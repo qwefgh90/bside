@@ -2,7 +2,7 @@ import { TestBed, async } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/header.component';
-import { MatButtonModule, MatIconModule, MatToolbarModule, MatMenuModule, MatProgressSpinnerModule, MatSpinner } from '@angular/material';
+import { MatButtonModule, MatIconModule, MatToolbarModule, MatMenuModule, MatProgressSpinnerModule, MatSpinner, MatDividerModule } from '@angular/material';
 import { AuthModule } from './oauth/auth.module';
 
 describe('AppComponent', () => {
@@ -15,7 +15,8 @@ describe('AppComponent', () => {
         MatIconModule,
         MatButtonModule,
         MatMenuModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        MatDividerModule
       ],
       declarations: [
         AppComponent, HeaderComponent

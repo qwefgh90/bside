@@ -42,7 +42,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
   onResize(event) {
     console.log(event);
     if (window.innerHeight <= this.beforeHeight) {
-      // console.log('shrink');
+      console.log('shrink and expand!');
       this.shrinkExpand();
     }
     this.beforeHeight = window.innerHeight;
@@ -57,7 +57,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
     this.shrink = true;
     setTimeout(() => {
       this.shrink = false;
-    });
+    }, 100);
   }
 
   // https://ngohungphuc.wordpress.com/2019/01/08/integrate-monaco-editor-with-angular/

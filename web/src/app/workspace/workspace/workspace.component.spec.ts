@@ -2,12 +2,14 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { WorkspaceComponent } from './workspace.component';
 import { TreeComponent } from '../tree/tree.component';
-import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule } from '@angular/material';
+import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule, MatExpansionModule, MatSelectModule, MatMenu, MatIcon } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
 import { ActivatedRouteStub } from 'src/app/testing/activated-route-stub';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { EditorComponent } from '../editor/editor.component';
+import { ActionComponent } from '../action/action/action.component';
+import { NgxMdModule } from 'ngx-md';
 
 describe('WorkspaceComponent', () => {
   let component: WorkspaceComponent;
@@ -15,14 +17,16 @@ describe('WorkspaceComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [WorkspaceComponent, TreeComponent, EditorComponent],
+      declarations: [WorkspaceComponent, TreeComponent, EditorComponent, ActionComponent],
       imports: [MatSidenavModule,
         BrowserAnimationsModule,
         MatDividerModule,
         MatTreeModule,
-        MatIconModule,
         MatButtonModule,
-        MatDividerModule
+        MatDividerModule,
+        NgxMdModule.forRoot(),
+        MatSelectModule,
+        MatIconModule
       ],
       providers: [{provide: ActivatedRoute, userValue: new ActivatedRouteStub()}, {provide: WrapperService}]
     })

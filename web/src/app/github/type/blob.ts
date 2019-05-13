@@ -8,7 +8,7 @@
 }
  */
 export class Blob {
-    content: string
+    content: string = ''
     encoding: string
     url: string
     sha: string
