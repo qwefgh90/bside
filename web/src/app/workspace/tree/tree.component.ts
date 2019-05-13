@@ -86,7 +86,7 @@ export class TreeComponent implements OnChanges, OnDestroy {
       this.refreshTree();
       this.treeControl.expand(parent);
       this.nodeCreated.emit(node);
-      this.selectNode(node);
+      this.rename(node);
     }
   }
 

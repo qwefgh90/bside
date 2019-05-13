@@ -29,7 +29,10 @@
   </mat-drawer>
   <div style="display: flex; flex-direction: column; height: 100%">
     <div>{{selectedNode != undefined ? selectedNode.name : 'title'}}</div>
-    <app-editor #editor1 style="flex:1; display: block"></app-editor>
+    <div style="flex:1; display: block" *ngIf="selectedFileType == FileType.None">NOTHING</div>
+    <app-editor #editor1 style="flex:1;" [class.block]="selectedFileType == FileType.Text" [class.none]="selectedFileType != FileType.Text"></app-editor>
+    <div style="flex:1; display: block" *ngIf="selectedFileType == FileType.Image">IMAGE</div>
+    <div style="flex:1; display: block" *ngIf="selectedFileType == FileType.Other">OTHER</div>
     <!-- <div style="height: 10px; margin-top: 5px; background-color: #9da5a2"></div>
     <div style="flex:1; display: block; overflow-y: scroll; background-color: white">
       <ngx-md [data]="editor1?.getContent()" style="display:block; height: 0px"></ngx-md>

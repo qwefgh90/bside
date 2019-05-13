@@ -10,6 +10,7 @@ import { WrapperService } from 'src/app/github/wrapper.service';
 import { EditorComponent } from '../editor/editor.component';
 import { ActionComponent } from '../action/action/action.component';
 import { NgxMdModule } from 'ngx-md';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 describe('WorkspaceComponent', () => {
   let component: WorkspaceComponent;
@@ -26,7 +27,9 @@ describe('WorkspaceComponent', () => {
         MatDividerModule,
         NgxMdModule.forRoot(),
         MatSelectModule,
-        MatIconModule
+        MatIconModule,
+        FormsModule,
+        ReactiveFormsModule
       ],
       providers: [{provide: ActivatedRoute, userValue: new ActivatedRouteStub()}, {provide: WrapperService}]
     })

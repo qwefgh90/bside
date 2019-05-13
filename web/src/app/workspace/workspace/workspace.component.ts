@@ -10,13 +10,17 @@ import { Blob } from 'src/app/github/type/blob';
 
 declare const monaco;
 
+export enum FileType{
+  Image, Text, Other, None
+}
+
 @Component({
   selector: 'app-workspace',
   templateUrl: './workspace.component.html',
   styleUrls: ['./workspace.component.css']
 })
 export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
-  
+  FileType = FileType;
   constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute, private router: Router) { 
   }
 
@@ -31,6 +35,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   selectedNode: GithubTreeNode;
   selectedBlob: Blob
+  selectedFileType: FileType = FileType.None;
 
   initialized = false;
 
@@ -125,10 +130,19 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.wrapper.blob(this.userId, this.repositoryName, this.selectedNode.sha).then(
           (blob: Blob) => {
             this.selectedBlob = blob;
+            let type = this.getFileType(this.selectedNode.name, this.selectedBlob.content);
 
-            if (this.editor1 != undefined) {
-              if (!this.editor1.selectTabIfExists(this.selectedNode.path))
-                this.editor1.setContent(this.selectedNode.path, this.b64DecodeUnicode(blob.content))
+            if(type == FileType.Image){
+              this.selectedFileType = FileType.Image;
+            } else if (type == FileType.Text) {
+              this.selectedFileType = FileType.Text;
+              if (this.editor1 != undefined) {
+                if (!this.editor1.selectTabIfExists(this.selectedNode.path)){
+                  this.editor1.setContent(this.selectedNode.path, this.b64DecodeUnicode(blob.content))
+                }
+              }
+            }else{
+              this.selectedFileType = FileType.Other;
             }
           }, (reason) => {
             console.debug("An error during getting blob. Maybe selectedNode is invalid.");
@@ -148,6 +162,26 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return decodeURIComponent(atob(str).split('').map(function (c) {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
+  }
+
+  getFileType(name: string, blob: string){
+    if(this.isImage(name))
+      return FileType.Image;
+    let decodedBlob;
+    try {
+      decodedBlob = this.b64DecodeUnicode(blob);
+      return FileType.Text;
+    } catch (e) {
+      console.debug(e);
+      return FileType.Other;
+    }
+  }
+
+  isImage(name: string){
+    let exts = ['.jpg', '.jpeg', '.gif', '.png'];
+    return exts.filter((ext) => {
+      return name.endsWith(ext);
+    }).length > 0;
   }
 
 
