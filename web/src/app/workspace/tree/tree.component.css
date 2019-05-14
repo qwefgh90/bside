@@ -53,3 +53,15 @@
     opacity: 0.2;
     background: black;
 }
+
+.repository-title{
+    display: flex; min-width: 12vw; padding-bottom: 0.5em;
+}
+
+.context-menu-button{
+    opacity: 0.4;
+}
+
+.context-menu-button:hover{
+    opacity: 1;
+}

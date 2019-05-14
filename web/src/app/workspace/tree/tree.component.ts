@@ -1,12 +1,13 @@
 import { Component, OnInit, Input, OnChanges, Output, EventEmitter, SimpleChanges, ViewChild, OnDestroy, ElementRef } from '@angular/core';
 import { FlatTreeControl, NestedTreeControl } from '@angular/cdk/tree';
-import { MatTreeFlattener, MatTreeFlatDataSource, MatTreeNestedDataSource, MatTree } from '@angular/material';
-import { GithubTreeNode, newNode } from './github-tree-node';
+import { MatTreeFlattener, MatTreeFlatDataSource, MatTreeNestedDataSource, MatTree, MatIconRegistry } from '@angular/material';
+import { GithubTreeNode, newNode, rootNode } from './github-tree-node';
 import { FlatNode } from './flat-node';
 import { GithubTreeToTree } from './github-tree-to-tree';
 import { FormControl } from '@angular/forms';
 import { Subscribable, Subscription } from 'rxjs';
 import { ITreeOptions, TreeNode, TreeComponent as AngularTreeComponent } from 'angular-tree-component';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-tree',
@@ -14,46 +15,8 @@ import { ITreeOptions, TreeNode, TreeComponent as AngularTreeComponent } from 'a
   styleUrls: ['./tree.component.css']
 })
 export class TreeComponent implements OnChanges, OnDestroy {
-
-  
-  nodes2 = [
-    {
-      title: 'root1',
-      className: 'root1Class'
-    },
-    {
-      title: 'root2',
-      className: 'root2Class',
-      children: [
-        { title: 'child1', className: 'child1Class' }
-      ]
-    }
-  ];
-
-  options1: ITreeOptions = {
-    getChildren: () => new Promise((resolve, reject) => { })
-  };
-
-  options0: ITreeOptions = {
-    displayField: 'title',
-    nodeClass: (node) => `${node.data.title}Class`
-  };
-
-
-
   @ViewChild(AngularTreeComponent)
   private treeComponent: AngularTreeComponent;
-
-
-
-
-
-
-
-
-
-
-
 
   @Input("repository") repository;
   @Input("tree") tree: any;
@@ -71,13 +34,17 @@ export class TreeComponent implements OnChanges, OnDestroy {
 
   subscriptions: Array<Subscription> = [];
 
-  constructor() {
+  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer) {
     let s = this.renamingFormControl.valueChanges.subscribe(v => {
       if (this.renamingNode != undefined) {
         this.renamingNode.data.setName(v);
       }
     })
     this.subscriptions.push(s);
+    
+    iconRegistry.addSvgIcon(
+      'outline-note',
+      sanitizer.bypassSecurityTrustResourceUrl('assets/outline-note-24px.svg'));
   }
 
   private transformer = (node: GithubTreeNode, level: number): FlatNode => {
@@ -119,10 +86,12 @@ export class TreeComponent implements OnChanges, OnDestroy {
   }
 
   /**
+   * 
+   * @param parentTreeNode if undefined, newNode is created below root node
    * type is 'tree' or 'blob'
    */
   newNode(parentTreeNode: TreeNode, type: string) {
-    let parent: GithubTreeNode = parentTreeNode.data;
+    let parent: GithubTreeNode = parentTreeNode != undefined ? parentTreeNode.data : this.root;
     let node;
     if (type == 'blob' || type == 'tree') {
       node = newNode(parent, type);
@@ -136,6 +105,15 @@ export class TreeComponent implements OnChanges, OnDestroy {
           return true;
         }else return false;
       });
+      
+      if (parentTreeNode != undefined) {
+        let parentFound = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => {
+          if (e.data == parent) {
+            return true;
+          } else return false;
+        });
+        parentFound.expand();
+      }
       this.rename(found);
     }
   }
@@ -159,9 +137,6 @@ export class TreeComponent implements OnChanges, OnDestroy {
 
   refreshTree() {
     this.treeComponent.treeModel.update();
-    // let _data = this.dataSource.data;
-    // this.dataSource.data = null;
-    // this.dataSource.data = _data;
   }
 
   hasChild = (_: number, node: GithubTreeNode) => !!node.children && node.type == 'tree' ;
