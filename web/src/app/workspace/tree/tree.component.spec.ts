@@ -4,6 +4,7 @@ import { TreeComponent } from './tree.component';
 import { MatTreeModule, MatIconModule, MatButtonModule, MatDividerModule, MatSelectModule, MatInputModule } from '@angular/material';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatMenuModule } from '@angular/material/menu';
+import { TreeModule } from 'angular-tree-component';
 describe('TreeComponent', () => {
   let component: TreeComponent;
   let fixture: ComponentFixture<TreeComponent>;
@@ -19,6 +20,7 @@ describe('TreeComponent', () => {
         FormsModule,
         ReactiveFormsModule,
         MatMenuModule,
+        TreeModule.forRoot()
         ]
     })
     .compileComponents();

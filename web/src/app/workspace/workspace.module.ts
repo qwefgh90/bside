@@ -12,6 +12,8 @@ import { NgxMdModule } from 'ngx-md';
 import { ActionComponent } from './action/action/action.component';
 import {MatExpansionModule} from '@angular/material/expansion';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { TreeModule } from 'angular-tree-component';
+
 @NgModule({
   declarations: [TreeComponent, WorkspaceComponent, EditorComponent, ActionComponent],
   imports: [
@@ -29,7 +31,8 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
     FormsModule,
     ReactiveFormsModule, 
     MatSelectModule,
-    MatMenuModule
+    MatMenuModule,
+    TreeModule.forRoot()
   ]
 })
 export class WorkspaceModule { }

@@ -1,12 +1,12 @@
 import { Component, OnInit, Input, OnChanges, Output, EventEmitter, SimpleChanges, ViewChild, OnDestroy, ElementRef } from '@angular/core';
 import { FlatTreeControl, NestedTreeControl } from '@angular/cdk/tree';
 import { MatTreeFlattener, MatTreeFlatDataSource, MatTreeNestedDataSource, MatTree } from '@angular/material';
-import { TreeNode } from '@angular/router/src/utils/tree';
 import { GithubTreeNode, newNode } from './github-tree-node';
 import { FlatNode } from './flat-node';
 import { GithubTreeToTree } from './github-tree-to-tree';
 import { FormControl } from '@angular/forms';
 import { Subscribable, Subscription } from 'rxjs';
+import { ITreeOptions, TreeNode, TreeComponent as AngularTreeComponent } from 'angular-tree-component';
 
 @Component({
   selector: 'app-tree',
@@ -14,6 +14,47 @@ import { Subscribable, Subscription } from 'rxjs';
   styleUrls: ['./tree.component.css']
 })
 export class TreeComponent implements OnChanges, OnDestroy {
+
+  
+  nodes2 = [
+    {
+      title: 'root1',
+      className: 'root1Class'
+    },
+    {
+      title: 'root2',
+      className: 'root2Class',
+      children: [
+        { title: 'child1', className: 'child1Class' }
+      ]
+    }
+  ];
+
+  options1: ITreeOptions = {
+    getChildren: () => new Promise((resolve, reject) => { })
+  };
+
+  options0: ITreeOptions = {
+    displayField: 'title',
+    nodeClass: (node) => `${node.data.title}Class`
+  };
+
+
+
+  @ViewChild(AngularTreeComponent)
+  private treeComponent: AngularTreeComponent;
+
+
+
+
+
+
+
+
+
+
+
+
   @Input("repository") repository;
   @Input("tree") tree: any;
   @Output("nodeSelected") nodeSelected = new EventEmitter<GithubTreeNode>();
@@ -25,15 +66,15 @@ export class TreeComponent implements OnChanges, OnDestroy {
 
   root: GithubTreeNode;
   renamingFormControl: FormControl = new FormControl();
-  renamingNode: GithubTreeNode;
-  selectedNode: GithubTreeNode;
+  renamingNode: TreeNode;
+  selectedNode: TreeNode;
 
   subscriptions: Array<Subscription> = [];
 
   constructor() {
     let s = this.renamingFormControl.valueChanges.subscribe(v => {
       if (this.renamingNode != undefined) {
-        this.renamingNode.setName(v);
+        this.renamingNode.data.setName(v);
       }
     })
     this.subscriptions.push(s);
@@ -65,9 +106,11 @@ export class TreeComponent implements OnChanges, OnDestroy {
     }
   }
 
-  selectNode(node: GithubTreeNode) {
-    this.selectedNode = node;
-    this.nodeSelected.emit(node);
+  selectNode(node: TreeNode) {
+    if(this.renamingNode != node){
+      this.selectedNode = node;
+      this.nodeSelected.emit(node.data);
+    }
   }
 
   completeRenaming() {
@@ -78,39 +121,47 @@ export class TreeComponent implements OnChanges, OnDestroy {
   /**
    * type is 'tree' or 'blob'
    */
-  newNode(parent: GithubTreeNode, type: string) {
+  newNode(parentTreeNode: TreeNode, type: string) {
+    let parent: GithubTreeNode = parentTreeNode.data;
     let node;
     if (type == 'blob' || type == 'tree') {
       node = newNode(parent, type);
       parent.children.push(node);
       this.refreshTree();
-      this.treeControl.expand(parent);
+      // this.treeControl.expand(parent);
       this.nodeCreated.emit(node);
-      this.rename(node);
+
+      let found = this.treeComponent.treeModel.getNodeBy((e:TreeNode) => {
+        if(e.data == node){
+          return true;
+        }else return false;
+      });
+      this.rename(found);
     }
   }
 
-  rename(node: GithubTreeNode) {
+  rename(node: TreeNode) {
     this.selectedNode = undefined;
     this.renamingNode = node;
-    this.renamingFormControl.setValue(node.name);
+    this.renamingFormControl.setValue(node.data.name);
     setTimeout(() => {
-      if (node.type == "tree")
+      if (node.data.type == "tree")
         this.treeRenamingInput.nativeElement.focus();
-      else if (node.type == "blob")
+      else if (node.data.type == "blob")
         this.blobRenamingInput.nativeElement.focus();
     }, 200);
   }
 
-  delete(node: GithubTreeNode){
-    node.delete();
+  delete(node: TreeNode){
+    node.data.delete();
     this.refreshTree();
   }
 
   refreshTree() {
-    let _data = this.dataSource.data;
-    this.dataSource.data = null;
-    this.dataSource.data = _data;
+    this.treeComponent.treeModel.update();
+    // let _data = this.dataSource.data;
+    // this.dataSource.data = null;
+    // this.dataSource.data = _data;
   }
 
   hasChild = (_: number, node: GithubTreeNode) => !!node.children && node.type == 'tree' ;

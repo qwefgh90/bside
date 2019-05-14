@@ -12,7 +12,7 @@
         </div>
       </div>
       <mat-divider></mat-divider>
-      <app-tree style="flex: 1;overflow-y: scroll" [repository]="repositoryDetails" [tree]="tree" (nodeSelected)="selectNode($event)" (nodeCreated)="nodeCreated($event)">
+      <app-tree style="flex: 1" [repository]="repositoryDetails" [tree]="tree" (nodeSelected)="selectNode($event)" (nodeCreated)="nodeCreated($event)">
       </app-tree>
       <mat-form-field class="branches">
         <mat-label>Branches</mat-label>
