@@ -1,18 +1,19 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TreeComponent } from './tree.component';
-import { MatTreeModule, MatIconModule, MatButtonModule, MatDividerModule, MatSelectModule, MatInputModule } from '@angular/material';
+import { GithubTreeComponent } from './github-tree.component';
+import {  MatIconModule, MatButtonModule, MatDividerModule, MatSelectModule, MatInputModule } from '@angular/material';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatMenuModule } from '@angular/material/menu';
 import { TreeModule } from 'angular-tree-component';
 describe('TreeComponent', () => {
-  let component: TreeComponent;
-  let fixture: ComponentFixture<TreeComponent>;
+  let component: GithubTreeComponent;
+  let fixture: ComponentFixture<GithubTreeComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ TreeComponent ],
-      imports: [MatTreeModule,
+      declarations: [ GithubTreeComponent ],
+      imports: [
+        TreeModule.forRoot(),
         MatIconModule,
         MatButtonModule,
         MatSelectModule,
@@ -20,14 +21,14 @@ describe('TreeComponent', () => {
         FormsModule,
         ReactiveFormsModule,
         MatMenuModule,
-        TreeModule.forRoot()
-        ]
+        MatDividerModule,
+      ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(TreeComponent);
+    fixture = TestBed.createComponent(GithubTreeComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

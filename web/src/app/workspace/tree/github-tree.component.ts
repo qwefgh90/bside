@@ -6,18 +6,18 @@ import { FlatNode } from './flat-node';
 import { GithubTreeToTree } from './github-tree-to-tree';
 import { FormControl } from '@angular/forms';
 import { Subscribable, Subscription } from 'rxjs';
-import { ITreeOptions, TreeNode, TreeComponent as AngularTreeComponent } from 'angular-tree-component';
+import { ITreeOptions, TreeNode, TreeComponent } from 'angular-tree-component';
 import { DomSanitizer } from '@angular/platform-browser';
 
 import { TREE_ACTIONS, IActionMapping } from 'angular-tree-component';
 @Component({
   selector: 'app-tree',
-  templateUrl: './tree.component.html',
-  styleUrls: ['./tree.component.css']
+  templateUrl: './github-tree.component.html',
+  styleUrls: ['./github-tree.component.css']
 })
-export class TreeComponent implements OnChanges, OnDestroy {
-  @ViewChild(AngularTreeComponent)
-  private treeComponent: AngularTreeComponent;
+export class GithubTreeComponent implements OnChanges, OnDestroy {
+  @ViewChild(TreeComponent)
+  private treeComponent: TreeComponent;
 
   actionMapping: IActionMapping = {
     mouse: {

@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { WorkspaceRoutingModule } from './workspace-routing.module';
-import { TreeComponent } from './tree/tree.component';
+import { GithubTreeComponent } from './tree/github-tree.component';
 import { WorkspaceComponent } from './workspace/workspace.component';
 import { MatSidenavModule, MatIcon, MatIconModule, MatButtonModule, MatDividerModule, MatInputModule, MatSelectModule, MatMenuModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -15,7 +15,7 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { TreeModule } from 'angular-tree-component';
 
 @NgModule({
-  declarations: [TreeComponent, WorkspaceComponent, EditorComponent, ActionComponent],
+  declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent],
   imports: [
     CommonModule,
     WorkspaceRoutingModule,

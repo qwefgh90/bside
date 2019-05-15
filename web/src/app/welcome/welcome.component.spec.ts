@@ -6,11 +6,11 @@ import { OAuthService } from '../oauth/service/o-auth.service';
 describe('WelcomeComponent', () => {
   let component: WelcomeComponent;
   let fixture: ComponentFixture<WelcomeComponent>;
-
   beforeEach(async(() => {
+    
     TestBed.configureTestingModule({
       declarations: [ WelcomeComponent ],
-      providers: [{provide: OAuthService}]
+      providers: [{provide: OAuthService, useValue: {isLogin: false}}]
     })
     .compileComponents();
   }));
