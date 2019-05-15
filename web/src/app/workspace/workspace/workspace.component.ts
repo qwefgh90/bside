@@ -22,6 +22,7 @@ export enum FileType{
 export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   FileType = FileType;
   constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute, private router: Router) { 
+    console.log("new comp");
   }
 
   @ViewChild("editor1") editor1: Editor;
@@ -56,7 +57,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.initialzeWorkspace(this.userId, this.repositoryName, branchName).then(() => { });
       }
     }
-    combineLatest(this.route.paramMap, this.route.queryParamMap).subscribe(([p, q]) => {
+    let s = combineLatest(this.route.paramMap, this.route.queryParamMap).subscribe(([p, q]) => {
       const branchName = this.route.snapshot.queryParams['branch'];
       if (p.has('userId') && p.has('repositoryName')) {
         this.userId = p.get('userId');
@@ -64,25 +65,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.initialzeWorkspace(this.userId, this.repositoryName, branchName).then(() => {});
       }
     });
-
-    // let subscribe = this.route.paramMap.subscribe((p) => {
-    //   if (p.has('userId') && p.has('repositoryName')) {
-    //     this.userId = p.get('userId');
-    //     this.repositoryName = p.get('repositoryName');
-    //     const branchName = this.route.snapshot.queryParams['branch'];
-    //     this.initialzeWorkspace(this.userId, this.repositoryName, branchName).then(() => {});
-    //   }
-    // });
-    // this.subscriptions.push(subscribe);
-    // subscribe = this.route.queryParamMap.subscribe((q) => {
-    //   if(q.has('branch')){
-    //     let branchName = q.get('branch')
-    //     if(this.selectedBranch.name != branchName){
-    //       // this.initialzeWorkspace(this.userId, this.repositoryName, branchName);
-    //     }
-    //   }
-    // });
-    // this.subscriptions.push(subscribe);
+    this.subscriptions.push(s);
   }
 
   private initalizeLoader(){

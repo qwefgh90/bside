@@ -84,13 +84,14 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
     if (this.editor != undefined) {
       console.debug("release resources of monaco editor");
       this.editor.dispose();
-
     }
   }
 
   private releaseGlobalResource(){
-    let models: Array<monacoNameSpace.editor.ITextModel> = this.monaco.editor.getModels()
-    models.forEach(m => m.dispose());
+    if (this.editor != undefined) {
+      let models: Array<monacoNameSpace.editor.ITextModel> = this.monaco.editor.getModels()
+      models.forEach(m => m.dispose());
+    }
   }
 
   ngOnDestroy() {
@@ -98,7 +99,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
     // const myDiv: HTMLDivElement = this.editorContent.nativeElement;
     // myDiv.childNodes.forEach((c) => c.remove());
     this.releaseGlobalResource();
-    this.subscription.unsubscribe();
+    if(this.subscription)
+      this.subscription.unsubscribe();
   }
 
   setContent(path: string, content: string) {
