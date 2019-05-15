@@ -7,7 +7,10 @@ import { GithubTreeNode, NodeStateAction } from '../tree/github-tree-node';
 import { MonacoService } from '../editor/monaco.service';
 import { Editor } from '../editor/editor';
 import { Blob } from 'src/app/github/type/blob';
-
+import { toByteArray } from 'base64-js';
+import { TextDecoderLite } from 'text-encoder-lite';
+import { TextDecoder } from 'text-encoding';
+import * as jschardet from 'jschardet';
 declare const monaco;
 
 export enum FileType{
@@ -107,7 +110,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.selectedBlob = new Blob();
         if (this.editor1 != undefined) {
           if (!this.editor1.selectTabIfExists(this.selectedNode.path))
-            this.editor1.setContent(this.selectedNode.path, this.b64DecodeUnicode(this.selectedBlob.content))
+            this.editor1.setContent(this.selectedNode.path, this.Base64Decode(this.selectedBlob.content))
         }
       } else {
         this.wrapper.blob(this.userId, this.repositoryName, this.selectedNode.sha).then(
@@ -121,7 +124,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
               this.selectedFileType = FileType.Text;
               if (this.editor1 != undefined) {
                 if (!this.editor1.selectTabIfExists(this.selectedNode.path)){
-                  this.editor1.setContent(this.selectedNode.path, this.b64DecodeUnicode(blob.content))
+                  this.editor1.setContent(this.selectedNode.path, this.Base64Decode(blob.content))
                 }
               }
             }else{
@@ -147,12 +150,28 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }).join(''));
   }
 
+  Base64Decode(str: string, encoding = 'utf-8') {
+    let decoder = new (typeof TextDecoder === "undefined" ? TextDecoderLite : TextDecoder)(encoding)
+    let arr = str.split("\n").map(v => {
+      return v;
+    });
+    
+
+    let bytes = toByteArray(arr.join(''));
+    let hexString = Array.prototype.map.call(new Uint8Array(bytes), x => '\\x' + ('00' + x.toString(16)).slice(-2)).join('');
+    console.log('hexString: ' + hexString);
+    console.log('detect: ' + jschardet.detect(hexString).encoding);
+    jschardet.enableDebug();
+    return decoder.decode(bytes);
+    // return ;
+  }
+
   getFileType(name: string, blob: string){
     if(this.isImage(name))
       return FileType.Image;
     let decodedBlob;
     try {
-      decodedBlob = this.b64DecodeUnicode(blob);
+      decodedBlob = this.Base64Decode(blob);
       return FileType.Text;
     } catch (e) {
       console.debug(e);
