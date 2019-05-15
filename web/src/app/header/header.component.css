@@ -5,6 +5,12 @@ a {
 
 .home{
   font-size: 1.1em;
+  color: white;
+}
+
+.menu-btn{
+  color: white;
+
 }
 
 .signin{
@@ -19,4 +25,5 @@ a {
   position: static;
   flex-direction: row;
   display: flex;
+  height: 50px;
 }

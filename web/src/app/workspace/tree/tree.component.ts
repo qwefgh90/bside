@@ -9,6 +9,7 @@ import { Subscribable, Subscription } from 'rxjs';
 import { ITreeOptions, TreeNode, TreeComponent as AngularTreeComponent } from 'angular-tree-component';
 import { DomSanitizer } from '@angular/platform-browser';
 
+import { TREE_ACTIONS, IActionMapping } from 'angular-tree-component';
 @Component({
   selector: 'app-tree',
   templateUrl: './tree.component.html',
@@ -17,6 +18,23 @@ import { DomSanitizer } from '@angular/platform-browser';
 export class TreeComponent implements OnChanges, OnDestroy {
   @ViewChild(AngularTreeComponent)
   private treeComponent: AngularTreeComponent;
+
+  actionMapping: IActionMapping = {
+    mouse: {
+      drop: (m, n, event, rest) => {
+        console.log("drop");
+        TREE_ACTIONS.MOVE_NODE(m, n, event, rest);
+      }
+    }
+  }
+  
+  options = {
+    allowDrag: true,
+    allowDrop: (element, { parent, index }) => {
+      return (element.parent != parent) && (parent.data.type == 'tree' || parent.parent == null);
+    },
+    actionMapping: this.actionMapping
+  };
 
   @Input("repository") repository;
   @Input("tree") tree: any;

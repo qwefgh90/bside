@@ -3,9 +3,10 @@ import { async, ComponentFixture, TestBed, fakeAsync, tick, flushMicrotasks } fr
 import { LoginComponent, LOCATION_TOKEN, LoginStatus } from './login.component';
 import { OAuthService } from '../service/o-auth.service';
 import { defer } from 'rxjs'
-import { MatButtonModule, MatCardModule, MatProgressSpinnerModule } from '@angular/material';
+import { MatButtonModule, MatCardModule, MatProgressSpinnerModule, MatIconModule, MatCheckboxModule, MatSlideToggleModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { environment } from 'src/environments/environment';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -25,7 +26,12 @@ describe('LoginComponent', () => {
           BrowserAnimationsModule,
           MatCardModule,
           MatButtonModule,
-          MatProgressSpinnerModule
+          MatProgressSpinnerModule,
+          MatIconModule,
+          MatCheckboxModule,
+          MatSlideToggleModule,
+          FormsModule,
+          ReactiveFormsModule
       ]
     })
     .compileComponents();

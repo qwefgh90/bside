@@ -1,0 +1,30 @@
+.layout-box{
+    display: flex;
+    height: 100%;
+    flex-flow: column;
+}
+.spacer{
+    flex: 1;
+}
+.layout-bottom{
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    display:flex;
+    flex: 9;
+}
+.outer-box{
+    height: 100%;
+    width: 100%;
+    max-width: 1060px;
+    display:flex;
+}
+.left{
+    flex:4.5;
+}
+.center-spacer{
+    flex: 0.5;
+}
+.right{
+    flex:4.5;
+}

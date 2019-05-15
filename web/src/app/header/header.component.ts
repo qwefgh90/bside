@@ -26,6 +26,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
          this.wrapperService.user().then(user => {
            this.user = user;
          });
+      }else{
+        this.user = undefined;
       }
     });
     this.subscriptions.push(s);

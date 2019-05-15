@@ -1,4 +1,4 @@
-<div style="display:flex; flex-direction: column; width: 100%">
+<div style="display:flex; flex-direction: column; width: 100%; height: 100%">
   <div style="flex: 0.5"></div>
   <div style="align-items: center;justify-content:center; display: flex; width: 100%; flex: 8.5">
     <div style="text-align: center; height: 100%; " *ngIf="status == LoginStatus.Loading">
@@ -6,11 +6,11 @@
     </div>
     <div style="text-align: center; height: 100%; " *ngIf="status == LoginStatus.Failure">
       <mat-card class="card" [class.mat-elevation-z8]="true">
-        <mat-card-header>
-          <div mat-card-avatar class="example-header-image"></div>
-          <mat-card-title>We'll fix this problem soon.</mat-card-title>
-          <mat-card-subtitle></mat-card-subtitle>
-        </mat-card-header>
+        <!-- <mat-card-header style="text-align: center;"> -->
+          <!-- <div mat-card-avatar class="example-header-image"></div> -->
+          <mat-card-title style="width: 100%; text-align: center">We'll fix this problem soon.</mat-card-title>
+          <!-- <mat-card-subtitle></mat-card-subtitle> -->
+        <!-- </mat-card-header> -->
         <!-- <img mat-card-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" alt="Photo of a Shiba Inu"> -->
         <mat-card-content>
           <p>
@@ -27,19 +27,22 @@
     </div>
     <div style="text-align: center;height: 100%; " *ngIf="status == LoginStatus.Initialized">
       <mat-card class="card" [class.mat-elevation-z8]="true">
-        <mat-card-header>
-          <div mat-card-avatar class="example-header-image"></div>
-          <mat-card-title>Edit your blogs with easiest</mat-card-title>
-          <mat-card-subtitle></mat-card-subtitle>
-        </mat-card-header>
+          <!-- <mat-card-header style="text-align: center;"> -->
+          <!-- <div mat-card-avatar class="example-header-image"></div> -->
+          <mat-card-title  style="width: 100%; text-align: center">Edit your contents</mat-card-title>
+          <!-- <mat-card-subtitle></mat-card-subtitle> -->
+        <!-- </mat-card-header> -->
         <!-- <img mat-card-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" alt="Photo of a Shiba Inu"> -->
         <mat-card-content>
           <p>
-            Easiest is platform to create and edit your static resources in Github
+            Gside is platform to create and edit your static resources in Github
           </p>
-          <br><br><br><br><br>
+          <br><br><br>
         </mat-card-content>
         <mat-card-actions>
+          <section style="text-align: right; margin-bottom: 1em;">
+            <mat-checkbox style="margin-bottom: 1em; font-size: 0.9em" [(ngModel)]="includingPrivate">private repos</mat-checkbox>
+          </section>
           <div style="text-align: center">
             <button (click)="login()" mat-raised-button>Sign in with Github</button>
           </div>

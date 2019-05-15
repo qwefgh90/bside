@@ -18,6 +18,8 @@ export class LoginComponent implements OnInit {
   state: string;
   redirect_uri: string;
   status: LoginStatus = LoginStatus.Loading;
+  
+  includingPrivate = false;
   constructor(private oauthService: OAuthService, @Inject(LOCATION_TOKEN) private location: Location) { 
   }
 

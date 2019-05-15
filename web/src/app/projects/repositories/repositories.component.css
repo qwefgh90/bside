@@ -5,13 +5,14 @@
     left: 0;
     right: 0;
     padding-top: 2em; 
+    padding-bottom: 2em; 
     text-align: center;
 }
 .repos{
     display: inline-block;
     text-align: left;
     min-width: 30em;
-    background-color: #efefef;
+    background-color: #f7f7f7;
     height: 100%;
 }
 .mat-list-item-content{

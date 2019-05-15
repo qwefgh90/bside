@@ -1,12 +1,20 @@
 .card {
-    max-width: 25em;
+    max-width: 18em;
     display: flex;
     text-align: left;
     flex-direction: column;
-    max-height: 25em;
+    max-height: 15em;
     height: 100%
   }
 
 .mat-card-content{
   flex:1;
+}
+
+.mat-card-header-text{
+  width: 100%
+}
+
+mat-card-header > .mat-card-header-text{
+  width: 100%
 }

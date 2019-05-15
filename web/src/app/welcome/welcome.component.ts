@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { OAuthService } from '../oauth/service/o-auth.service';
 
 @Component({
   selector: 'app-welcome',
@@ -7,7 +8,7 @@ import { Component, OnInit } from '@angular/core';
 })
 export class WelcomeComponent implements OnInit {
 
-  constructor() { }
+  constructor(public oauth: OAuthService) { }
 
   ngOnInit() {
   }

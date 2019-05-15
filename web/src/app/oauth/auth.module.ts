@@ -41,8 +41,10 @@ import {
   MatToolbarModule,
   MatTooltipModule,
   MatTreeModule,
+  MatIcon,
 } from '@angular/material';
 import { OAuthService } from './service/o-auth.service';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [LoginComponent, RedirectComponent],
@@ -53,7 +55,12 @@ import { OAuthService } from './service/o-auth.service';
     BrowserAnimationsModule,
     MatCardModule,
     MatButtonModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatIconModule,
+    MatCheckboxModule,
+    MatSlideToggleModule,
+    FormsModule,
+    ReactiveFormsModule,
   ],
   providers: [{provide: LOCATION_TOKEN, useValue: window.location}]
 })
