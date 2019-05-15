@@ -41,7 +41,8 @@ export class LoginComponent implements OnInit {
   }
 
   login(){
-    let authroizeUrl = `${environment.authorizeOriginUrl}?client_id=${this.client_id}&state=${this.state}&scope=repo&redirect_uri=${this.redirect_uri}`;
+    let scope = this.includingPrivate ?  'repo' : 'public_repo'
+    let authroizeUrl = `${environment.authorizeOriginUrl}?client_id=${this.client_id}&state=${this.state}&scope=${scope}&redirect_uri=${this.redirect_uri}`;
     this.location.assign(authroizeUrl);
   }
 }

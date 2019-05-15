@@ -114,17 +114,29 @@ export class WrapperService {
     }
   },
    */
-  repositories(login: string): Promise<Array<any>> {
+  async repositories(login: string): Promise<Array<any>> {
     if (this.hasToken()) {
       const gh = new Github({
         token: this.token()
       });
-      const user = gh.getUser(login);
-      let promise: Promise<any> = user.listRepos();
-      return promise.then(result => result.data);
+      let currentUser = await this.user();
+      let promise: Promise<any>;
+      if(currentUser.login != login){
+        const user = gh.getUser(login);
+        promise = user.listRepos().then(r => r.data);
+      }else{
+        promise = this.repositoriesOfCurrentUserWithHttp()
+      }
+      return promise.then(result => result);
     } else {
       return Promise.reject();
     }
+  }
+
+  private repositoriesOfCurrentUserWithHttp() {
+    const url = `https://api.github.com/user/repos?per_page=100`;
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
+    return reposResponse.toPromise();
   }
 
   /**
