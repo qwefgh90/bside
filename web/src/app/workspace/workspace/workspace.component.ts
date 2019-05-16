@@ -8,9 +8,12 @@ import { MonacoService } from '../editor/monaco.service';
 import { Editor } from '../editor/editor';
 import { Blob } from 'src/app/github/type/blob';
 import { toByteArray } from 'base64-js';
-import { TextDecoderLite } from 'text-encoder-lite';
 import { TextDecoder } from 'text-encoding';
 import * as jschardet from 'jschardet';
+import * as mime from 'mime';
+import * as mimeDb from 'mime-db'
+import { Content } from 'src/app/github/type/content';
+
 declare const monaco;
 
 export enum FileType{
@@ -38,7 +41,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   tree: any
 
   selectedNode: GithubTreeNode;
-  selectedBlob: Blob
+  selectedContent: Content;
+  mimeName: string;
   selectedFileType: FileType = FileType.None;
 
   initialized = false;
@@ -107,16 +111,19 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.selectedNode = node;
     if (this.selectedNode.type == 'blob') {
       if (this.selectedNode.state.filter((v) => v == NodeStateAction.Created).length > 0) {
-        this.selectedBlob = new Blob();
+        this.selectedContent = new Content();
+        this.mimeName = mime.getType(node.name);
+    
         if (this.editor1 != undefined) {
           if (!this.editor1.selectTabIfExists(this.selectedNode.path))
-            this.editor1.setContent(this.selectedNode.path, this.Base64Decode(this.selectedBlob.content))
+            this.editor1.setContent(this.selectedNode.path, this.base64Decode(this.selectedContent.content))
         }
       } else {
-        this.wrapper.blob(this.userId, this.repositoryName, this.selectedNode.sha).then(
-          (blob: Blob) => {
-            this.selectedBlob = blob;
-            let type = this.getFileType(this.selectedNode.name, this.selectedBlob.content);
+        this.wrapper.getContents(this.userId, this.repositoryName, this.selectedBranch.commit.sha, node.path).then(
+          (content: Content) => {
+            this.selectedContent = content;
+            this.mimeName = mime.getType(node.name);
+            let type = this.getFileType(this.selectedNode.name, this.selectedContent.content);
 
             if(type == FileType.Image){
               this.selectedFileType = FileType.Image;
@@ -124,7 +131,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
               this.selectedFileType = FileType.Text;
               if (this.editor1 != undefined) {
                 if (!this.editor1.selectTabIfExists(this.selectedNode.path)){
-                  this.editor1.setContent(this.selectedNode.path, this.Base64Decode(blob.content))
+                  this.editor1.setContent(this.selectedNode.path, this.base64Decode(content.content))
                 }
               }
             }else{
@@ -141,41 +148,36 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   nodeCreated(node: GithubTreeNode){
 
   }
-  
-  //https://developer.mozilla.org/ko/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
-  b64DecodeUnicode(str) {
-    // Going backwards: from bytestream, to percent-encoding, to original string.
-    return decodeURIComponent(atob(str).split('').map(function (c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-  }
 
-  Base64Decode(str: string, encoding = 'utf-8') {
-    let decoder = new (typeof TextDecoder === "undefined" ? TextDecoderLite : TextDecoder)(encoding)
+  base64Decode(str: string) {
     let arr = str.split("\n").map(v => {
       return v;
     });
-    
 
     let bytes = toByteArray(arr.join(''));
-    let hexString = Array.prototype.map.call(new Uint8Array(bytes), x => '\\x' + ('00' + x.toString(16)).slice(-2)).join('');
-    console.log('hexString: ' + hexString);
-    console.log('detect: ' + jschardet.detect(hexString).encoding);
-    jschardet.enableDebug();
+    let string = '';
+    for (var i = 0; i < bytes.length; ++i) {
+      string += String.fromCharCode(bytes[i]);
+    }
+    console.debug('encoding detected: ' + jschardet.detect(string).encoding);
+    let encoding = jschardet.detect(string).encoding
+    let decoder = new TextDecoder(encoding != null ? encoding : 'utf-8')
     return decoder.decode(bytes);
-    // return ;
   }
 
   getFileType(name: string, blob: string){
-    if(this.isImage(name))
+    const mimeName: string = mime.getType(name);
+    const mimeInfo = mimeDb[mime.getType(name)]
+    let compressible = (mimeInfo != undefined) && (mimeInfo.compressible != undefined) ? mimeInfo.compressible : true; // unknown is considered as compressible
+    console.debug(mime.getType(name));
+    console.debug(mimeInfo);
+    console.debug(compressible);
+    if(mimeName != null && mimeName.toLocaleLowerCase().startsWith('image/'))
       return FileType.Image;
-    let decodedBlob;
-    try {
-      decodedBlob = this.Base64Decode(blob);
-      return FileType.Text;
-    } catch (e) {
-      console.debug(e);
-      return FileType.Other;
+    else if((mimeName != null && mimeName.toLocaleLowerCase().startsWith('text/') || compressible)){
+      return FileType.Text
+    } else{
+      return FileType.Other
     }
   }
 

@@ -32,3 +32,16 @@
 .block{
     display: block;
 }
+.spacer{
+    flex: 1; 
+}
+.toolbar{
+    display: flex;
+    flex-direction: row; 
+    width: 100%;
+    padding-bottom: 1em;
+    padding-top: 1em;
+}
+.fileName{
+    font-size: 1.4em;
+}
