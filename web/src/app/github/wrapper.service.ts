@@ -3,6 +3,8 @@ import { OAuthService } from '../oauth/service/o-auth.service';
 import Github from 'github-api';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Blob } from './type/blob';
+import { ngContentDef } from '@angular/core/src/view';
+import { Content } from './type/content';
 /**
  * A returned data should be stored in each component;
  */
@@ -930,14 +932,21 @@ export class WrapperService {
   }
 ]
    */
-  getContents(login: string, repositoryName: string, commitSha: string, path: string): Promise<any> {
+  async getContents(login: string, repositoryName: string, commitSha: string, path: string): Promise<any> {
     if (this.hasToken()) {
       const github = new Github({
         token: this.token()
       });
-      let promise = github.getRepo(login, repositoryName).getContents(commitSha, path, false)
-      //let promise: Promise<any> = this.treeRecursive(login, repositoryName, sha);//repo.getRepo(login, repositoryName).getTree(sha);
-      return promise.then(result => result.data);
+      let content = (await github.getRepo(login, repositoryName).getContents(commitSha, path, false));
+      if (content.data != undefined) {
+        let c: Promise<Content> = this.getBlob(login, repositoryName, content.data.sha).then(b => {
+          content.data.content = b.content; // assign correct blob
+          return content.data;
+        });
+        return c;
+      } else {
+        return Promise.reject();
+      }
     } else {
       return Promise.reject();
     }

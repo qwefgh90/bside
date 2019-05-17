@@ -33,7 +33,7 @@
     <ng-template #treeNodeWrapperTemplate let-node let-index="index" let-templates="templates">
       <div class="node-wrapper" [style.padding-left]="node.getNodePadding()">
         <div class="node-content-wrapper" style="width: 100%; display: flex"
-          [class.node-content-wrapper-active]="node.isActive" [class.node-content-wrapper-focused]="node.isFocused"
+          [class.node-content-wrapper-active]="selectedNode == node" [class.node-content-wrapper-focused]="node.isFocused"
           (click)="node.mouseAction('click', $event)" (dblclick)="node.mouseAction('dblClick', $event)"
           (contextmenu)="node.mouseAction('contextMenu', $event)" (treeDrop)="node.onDrop($event)"
           [treeAllowDrop]="node.allowDrop" [treeDrag]="node" [treeDragEnabled]="node.allowDrag()">

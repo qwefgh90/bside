@@ -1,3 +1,4 @@
+
 <mat-drawer-container autosize style="width: 100%; height: 100%;">
   <mat-drawer #leftDrawer mode="side" style="padding-left: 1em; padding-right: 0.5em; padding-top: 0.5em;">
     <div style="width: 100%; height: 100%; display: flex; flex-flow: column">
@@ -21,14 +22,25 @@
       <span class="fileName">{{selectedNode != undefined ? selectedNode.path : ''}}</span>
       <div class="spacer"></div>
       <div *ngIf="selectedNode != undefined">
-        <a href="{{selectedContent.download_url}}" target="_blank" style="text-decoration: none;color: unset"><button mat-stroked-button style="margin-right: 1em"><mat-icon>open_in_new</mat-icon></button></a>
-        <a href="{{selectedContent.download_url}}" target="_blank" style="text-decoration: none;color: unset" download="{{selectedNode.name}}"><button mat-stroked-button style="margin-right: 1em"><mat-icon>cloud_download</mat-icon></button></a>
+        <a href="{{getRawUrl(selectedBlob)}}" target="_blank" style="text-decoration: none;color: unset"><button mat-stroked-button style="margin-right: 1em"><mat-icon>open_in_new</mat-icon></button></a>
+        <!-- <a href="{{selectedBlob?.download_url}}" style="text-decoration: none;color: unset" download><button mat-stroked-button style="margin-right: 1em"><mat-icon>cloud_download</mat-icon></button></a> -->
       </div>
     </div>
-    <div style="flex:1; display: block" *ngIf="selectedFileType == FileType.None">NOTHING</div>
+    <div style="flex:1; display: block" *ngIf="selectedFileType == FileType.None">
+      <div style="display: flex; justify-content: center; width: 100%; height: 100%;">
+        <div style="display:flex; flex-direction: row; align-items: center;  height: 100%;">
+          <div>Welcome to GSide</div>
+        </div>
+      </div></div>
     <app-editor #editor1 style="flex:1;" [class.block]="selectedFileType == FileType.Text" [class.none]="selectedFileType != FileType.Text"></app-editor>
-    <div style="flex:1; display: block; height: 100px " *ngIf="selectedFileType == FileType.Image"><div style="overflow-y: scroll; height: 100%;"><img [src]="selectedContent.download_url"/></div></div>
-    <div style="flex:1; display: block; " *ngIf="selectedFileType == FileType.Other">OTHER</div>
+    <div style="flex:1; display: block; height: 100px " *ngIf="selectedFileType == FileType.Image"><div style="overflow-y: scroll; height: 100%;"><img [src]="getRawUrl(selectedBlob)"/></div></div>
+    <div style="flex:1; display: block; " *ngIf="selectedFileType == FileType.Other">
+      <div style="display: flex; justify-content: center; width: 100%; height: 100%;">
+        <div style="display:flex; flex-direction: row; align-items: center;   height: 100%;">
+          <div>This content is not readable</div>
+        </div>
+      </div>
+    </div>
     <!-- <div style="height: 10px; margin-top: 5px; background-color: #9da5a2"></div>
     <div style="flex:1; display: block; overflow-y: scroll; background-color: white">
       <ngx-md [data]="editor1?.getContent()" style="display:block; height: 0px"></ngx-md>

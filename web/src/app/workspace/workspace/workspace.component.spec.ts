@@ -90,23 +90,15 @@ describe('WorkspaceComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('isImage()', () => {
-    expect(component.isImage('a.png')).toBeTruthy();
-    expect(component.isImage('a.jpg')).toBeTruthy();
-    expect(component.isImage('a.jpeg')).toBeTruthy();
-    expect(component.isImage('a.gif')).toBeTruthy();
-    expect(component.isImage('a')).toBeFalsy();
-  })
-
   it('getFileType()', () => {
-    expect(component.getFileType('a.png', '')).toBe(FileType.Image);
-    expect(component.getFileType('a.jpg', '')).toBe(FileType.Image);
-    expect(component.getFileType('a.jpeg', '')).toBe(FileType.Image);
-    expect(component.getFileType('a.gif', '')).toBe(FileType.Image);
-    expect(component.getFileType('a', 'asdfasd')).toBe(FileType.Other);
-    expect(component.getFileType('a', 'ㄱㄴㄷㄹ')).toBe(FileType.Other);
-    expect(component.getFileType('a', 'YXNkZmFzZGY=')).toBe(FileType.Text);
-    expect(component.getFileType('a', '7JWI64WV7ZWY7IS47JqpIQ==')).toBe(FileType.Text);
+    expect(component.getFileType('a.png')).toBe(FileType.Image);
+    expect(component.getFileType('a.jpg')).toBe(FileType.Image);
+    expect(component.getFileType('a.jpeg')).toBe(FileType.Image);
+    expect(component.getFileType('a.gif')).toBe(FileType.Image);
+    expect(component.getFileType('a.txt')).toBe(FileType.Text);
+    expect(component.getFileType('a.json')).toBe(FileType.Text);
+    expect(component.getFileType('a.pdf')).toBe(FileType.Other);
+    expect(component.getFileType('a.xlsx')).toBe(FileType.Other);
   })
 
   it('ngOnInit()', () => {
