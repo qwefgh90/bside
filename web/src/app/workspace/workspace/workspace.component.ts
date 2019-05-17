@@ -109,7 +109,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   getRawUrl(blob: Blob): string{
-    return `https://raw.githubusercontent.com/${this.repositoryDetails.full_name}/${this.selectedBranch.commit.sha}/${this.selectedNode.name}`;
+    return `https://raw.githubusercontent.com/${this.repositoryDetails.full_name}/${this.selectedBranch.commit.sha}/${this.selectedNode.path}`;
   }
 
   selectNode(node: GithubTreeNode) {
