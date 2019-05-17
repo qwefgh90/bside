@@ -40,7 +40,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
    * @param event 
    */
   onResize(event) {
-    console.log(event);
     if (window.innerHeight <= this.beforeHeight) {
       console.log('shrink and expand!');
       this.shrinkExpand();
@@ -96,8 +95,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
 
   ngOnDestroy() {
     this.releaseEditor();
-    // const myDiv: HTMLDivElement = this.editorContent.nativeElement;
-    // myDiv.childNodes.forEach((c) => c.remove());
     this.releaseGlobalResource();
     if(this.subscription)
       this.subscription.unsubscribe();
@@ -105,33 +102,73 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
 
   setContent(path: string, content: string) {
     if (this.monaco != undefined) {
-      let existsModel: monacoNameSpace.editor.ITextModel = this.monaco.editor.getModel(monacoNameSpace.Uri.file(path));
+      let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
       if (existsModel)
         existsModel.setValue(content);
       else {
         this.model = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(path));
-        this.editor.setModel(this.model);
+        this.model.onDidChangeContent((e) => {
+          console.log(e);
+        })
       }
-    }
+    }else
+      this.throwWhenNotInitialized();
   }
 
-  selectTabIfExists(path: string): boolean {
+  selectTab(path: string): boolean {
     if (this.monaco != undefined) {
-      let existsModel: monacoNameSpace.editor.ITextModel = this.monaco.editor.getModel(monacoNameSpace.Uri.file(path));
+      let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
       if (existsModel) {
         this.editor.setModel(existsModel);
         return true;
       }
       return false;
-    }
+    }else
+      this.throwWhenNotInitialized();
   }
 
-  getContent(): string {
+  exist(path: string): boolean{
     if (this.monaco != undefined) {
-      let v = this.editor.getModel().getValue();
-      return v;
+      let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
+      if (existsModel) {
+        return true;
+      }
+      return false;
     }else
-      return "";
+      this.throwWhenNotInitialized();
+  }
+
+  getContent(path?: string): string {
+    if (this.monaco != undefined) {
+      if(path == undefined){
+        let v = this.editor.getModel().getValue();
+        return v;
+      }else{
+        const uri = monacoNameSpace.Uri.file(path)
+        let m: monacoNameSpace.editor.ITextModel = this.monaco.editor.getModel(uri);
+        if(m == undefined)
+          return undefined
+        else
+          return m.getValue();
+      }
+    }else
+      this.throwWhenNotInitialized();
+  }
+
+  removeContent(path: string): boolean{
+    if (this.monaco != undefined) {
+      let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
+      if (existsModel) {
+        existsModel.dispose();
+        return true;
+      }
+      return false;
+    }else
+      this.throwWhenNotInitialized();
+  }
+
+  throwWhenNotInitialized(){
+    throw new Error("A monaco is not initalized");
   }
 
   changes: Observable<void>;

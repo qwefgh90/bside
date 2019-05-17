@@ -43,5 +43,10 @@
     padding-top: 1em;
 }
 .fileName{
+    margin-left: 1em;
     font-size: 1.4em;
+}
+.loading{
+    min-width: 15em;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;  width: 100%; height: 100%;
 }

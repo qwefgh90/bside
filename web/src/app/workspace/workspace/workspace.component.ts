@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, AfterContentInit, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, AfterContentInit, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription, Subject, Observable, combineLatest } from 'rxjs';
+import { Subscription, Subject, Observable, combineLatest, fromEventPattern } from 'rxjs';
 import { MatDrawer, MatSelectChange } from '@angular/material';
 import { GithubTreeNode, NodeStateAction } from '../tree/github-tree-node';
 import { MonacoService } from '../editor/monaco.service';
@@ -17,7 +17,15 @@ import { Blob } from 'src/app/github/type/blob';
 declare const monaco;
 
 export enum FileType{
-  Image, Text, Other, None
+  Image, Text, Other
+}
+
+export enum TreeStatus{
+  Loading, NotInitialized, Done, Fail
+}
+
+export enum ContentStatus{
+  Loading, NotInitialized, Done, Fail
 }
 
 @Component({
@@ -27,6 +35,8 @@ export enum FileType{
 })
 export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   FileType = FileType;
+  TreeStatus = TreeStatus;
+  ContentStatus = ContentStatus;
   constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute, private router: Router) { 
     console.log("new comp");
   }
@@ -41,12 +51,14 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   tree: any
 
   selectedNode: GithubTreeNode;
-  selectedBlob: Blob;
+  selectedImageUrl: string;
   mimeName: string;
   encoding: string;
-  selectedFileType: FileType = FileType.None;
+  selectedFileType: FileType;
 
   initialized = false;
+  contentStatus: ContentStatus = ContentStatus.NotInitialized;
+  treeStatus: TreeStatus = TreeStatus.NotInitialized;
 
   subscriptions: Array<Subscription> = []
 
@@ -62,15 +74,23 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       if(userId != undefined && repositoryName != undefined){
         this.userId = userId;
         this.repositoryName = repositoryName;
-        this.initialzeWorkspace(this.userId, this.repositoryName, branchName).then(() => { });
-      }
-    }
+        this.initialzeWorkspace(this.userId, this.repositoryName, branchName).finally(() => {
+          this.treeStatus = TreeStatus.Done;
+        })
+      }else
+        this.treeStatus = TreeStatus.Fail;
+    }else
+      this.treeStatus = TreeStatus.Fail;
     let s = combineLatest(this.route.paramMap, this.route.queryParamMap).subscribe(([p, q]) => {
       const branchName = this.route.snapshot.queryParams['branch'];
       if (p.has('userId') && p.has('repositoryName')) {
         this.userId = p.get('userId');
         this.repositoryName = p.get('repositoryName');
-        this.initialzeWorkspace(this.userId, this.repositoryName, branchName).then(() => {});
+        this.initialzeWorkspace(this.userId, this.repositoryName, branchName).finally(() => { 
+          this.treeStatus = TreeStatus.Done;
+        });
+      }else{
+        this.treeStatus = TreeStatus.Fail;
       }
     });
     this.subscriptions.push(s);
@@ -112,51 +132,64 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return `https://raw.githubusercontent.com/${this.repositoryDetails.full_name}/${this.selectedBranch.commit.sha}/${this.selectedNode.path}`;
   }
 
-  selectNode(node: GithubTreeNode) {
-    this.selectedNode = node;
-    if (this.selectedNode.type == 'blob') {
+  nodeSelected(node: GithubTreeNode) {
+    if (node.type == 'blob') {
+      this.selectedNode = node;
+      this.contentStatus = ContentStatus.Loading;
+      this.mimeName = mime.getType(node.name);
+      let type = this.getFileType(this.selectedNode.name);
+      this.selectedFileType = type;
       if (this.selectedNode.state.filter((v) => v == NodeStateAction.Created).length > 0) {
-        this.selectedBlob = new Blob();
-        let bytes = this.base64ToBytes('');
-        this.mimeName = mime.getType(node.name);
-        this.encoding = 'utf-8';
-        this.selectedFileType = FileType.Text;
-    
-        if (this.editor1 != undefined) {
-          if (!this.editor1.selectTabIfExists(this.selectedNode.path))
-            this.editor1.setContent(this.selectedNode.path, this.decode(bytes, this.encoding))
+        if (type == FileType.Text) {
+          let bytes = this.base64ToBytes('');
+          this.encoding = 'utf-8';
+          this.setContentAndFocusInEditor(this.selectedNode.path, bytes, this.encoding);
         }
+        this.contentStatus = ContentStatus.Done;
       } else {
-        this.wrapper.getBlob(this.userId, this.repositoryName, this.selectedNode.sha).then(//getContents(this.userId, this.repositoryName, this.selectedBranch.commit.sha, node.path).then(
+        this.wrapper.getBlob(this.userId, this.repositoryName, this.selectedNode.sha).then(
           (blob: Blob) => {
-            this.selectedBlob = blob;
-            let bytes = this.base64ToBytes(blob.content);
-            let type = this.getFileType(this.selectedNode.name);
-            this.mimeName = mime.getType(node.name);
-            this.encoding = this.getEncoding(bytes)
-
             if(type == FileType.Image){
-              this.selectedFileType = FileType.Image;
+              this.selectedImageUrl = this.getRawUrl(blob);
             } else if (type == FileType.Text) {
-              this.selectedFileType = FileType.Text;
-              if (this.editor1 != undefined) {
-                if (!this.editor1.selectTabIfExists(this.selectedNode.path)){
-                  this.editor1.setContent(this.selectedNode.path, this.decode(bytes, this.encoding))
-                }
-              }
-            }else{
-              this.selectedFileType = FileType.Other;
+              let bytes = this.base64ToBytes(blob.content);
+              this.encoding = this.getEncoding(bytes)
+              this.setContentAndFocusInEditor(this.selectedNode.path, bytes, this.encoding);
             }
           }, (reason) => {
             console.debug("An error during getting blob. Maybe selectedNode is invalid.");
             console.debug(this.selectedNode);
-          });
+          }
+        ).finally(() => {
+          this.contentStatus = ContentStatus.Done;
+        });
       }
     }
   }
 
-  nodeCreated(node: GithubTreeNode){
+  private setContentAndFocusInEditor(path: string, bytes: any, encoding: string){
+    if (this.editor1 != undefined) {
+      if (this.editor1.exist(path))
+        this.editor1.selectTab(path);
+      else{
+        this.editor1.setContent(path, this.decode(bytes, encoding))
+        this.editor1.selectTab(path);
+      }
+    }
+  }
 
+  nodeCreated(node: GithubTreeNode){ }
+
+  nodeRemoved(node: GithubTreeNode){
+    this.editor1.removeContent(node.path);
+  }
+
+  nodeMoved(e: {fromPath: string, to: GithubTreeNode}){
+    if(e.to.type == 'blob' && this.editor1.exist(e.fromPath)){
+      let content = this.editor1.getContent(e.fromPath);
+      this.editor1.removeContent(e.fromPath);
+      this.editor1.setContent(e.to.path, content);
+    }
   }
 
   decode(bytes, encoding: string) {
@@ -179,7 +212,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     for (var i = 0; i < bytes.length; ++i) {
       string += String.fromCharCode(bytes[i]);
     }
-    jschardet.enableDebug();
     let encoding = jschardet.detect(string).encoding;
     console.debug('detected encoding: ' + encoding);
     return encoding;
@@ -189,9 +221,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     const mimeName: string = mime.getType(name);
     const mimeInfo = mimeDb[mime.getType(name)]
     let compressible = (mimeInfo != undefined) && (mimeInfo.compressible != undefined) ? mimeInfo.compressible : true; // unknown is considered as compressible
-    console.debug(mime.getType(name));
-    console.debug(mimeInfo);
-    console.debug(compressible);
+    console.debug(`mimeInfo ${mimeInfo}`);
+    console.debug(`compressible: ${compressible}`);
     if(mimeName != null && mimeName.toLocaleLowerCase().startsWith('image/'))
       return FileType.Image;
     else if((mimeName != null && mimeName.toLocaleLowerCase().startsWith('text/') || compressible)){
@@ -221,7 +252,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       else
         this.setBranchByName(defaultBranchName);
     }, () => {
-      console.error("Default branch can't be loaded.")
+      console.error("Default branch can't be loaded.");
     });
 
     await defaultBranch;
@@ -250,6 +281,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   onBranchChange(event: MatSelectChange){
+    this.treeStatus = TreeStatus.Loading;
     const branch = event.value;
     this.router.navigate([], {queryParams: {branch: branch.name}})
   }

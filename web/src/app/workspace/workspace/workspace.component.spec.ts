@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { WorkspaceComponent, FileType } from './workspace.component';
 import { GithubTreeComponent } from '../tree/github-tree.component';
-import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule, MatExpansionModule, MatSelectModule, MatMenu, MatIcon, MatMenuModule } from '@angular/material';
+import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule, MatExpansionModule, MatSelectModule, MatMenu, MatIcon, MatMenuModule, MatProgressSpinnerModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WrapperService } from 'src/app/github/wrapper.service';
@@ -76,6 +76,7 @@ describe('WorkspaceComponent', () => {
         ReactiveFormsModule,
         MatMenuModule,
         TreeModule.forRoot(),
+        MatProgressSpinnerModule
       ],
     })
       .compileComponents();

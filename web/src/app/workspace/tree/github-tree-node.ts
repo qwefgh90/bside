@@ -7,7 +7,7 @@
         "url": "https://api.github.com/repos/qwefgh90/sphinx/git/blobs/910ab6d5a9cb4de8551bec37eb60847f258d742c"
     */
 export enum NodeStateAction {
-  Created, NameModified, Deleted
+  NodesChanged, NameModified, ContentModified, Created, Deleted
 }
 
 export class GithubTreeNode {
@@ -19,34 +19,80 @@ export class GithubTreeNode {
   url: string;
   //custom field
   state: Array<NodeStateAction> = [];
-  name?: string;
+  name?: string = '';
   children?: GithubTreeNode[];
-  isRoot?: boolean
-  parentNode?: GithubTreeNode;
+  isRoot: boolean = false;
+  parentNode: GithubTreeNode;
 
-  setName(name: string){
-    if(name.length != 0 && name != this.name){
-      this.state.push(NodeStateAction.NameModified);
-      this.name = name;
-      if(!this.isRoot)
-        this.path = `${this.parentNode.path}/${this.name}`;
-      else
-        this.path = this.name;
+  move(newParent: GithubTreeNode, postAction?: (node: GithubTreeNode, parent: GithubTreeNode, prePath: string, newPath: string) => void){
+    if(newParent != undefined && newParent.type.toLocaleLowerCase() == 'tree'){
+      const prePath = this.path;
+      this.path = newParent.isRoot ? this.name : `${newParent.path}/${this.name}`
+      console.debug(`Change of path: from ${prePath} to ${this.path}`);
+      this.parentNode.state.push(NodeStateAction.NodesChanged);
+      if(newParent != this.parentNode){
+        this.parentNode = newParent;
+        newParent.state.push(NodeStateAction.NodesChanged);
+      }
+      if(postAction)
+        postAction(this, newParent, prePath, this.path);
+      if(this.type == 'tree'){
+        this.children.forEach((child) => {
+          child.move(this, postAction);
+        });
+      }
     }
   }
 
   /**
-   * it can be deleted by itself
+   * it can be removed by itself
    */
-  delete(){
+  remove(postAction?: (node: GithubTreeNode) => void){
     let arr = this.parentNode.children;
-    let found = arr.findIndex((v) => {
-      return v.name == this.name;
+    let found = arr.findIndex((e) => {
+      return e.name == this.name;
     });
     if (found != -1) {
-      this.parentNode.children.splice(found, 1);
       this.state.push(NodeStateAction.Deleted);
+      this.parentNode.children.splice(found, 1);
+      this.parentNode.state.push(NodeStateAction.NodesChanged);
+      if(postAction)
+        postAction(this);
+      if(this.type == 'tree'){
+        Object.assign([], this.children).forEach((child) => {
+            child.remove(postAction);
+        })
+      }
     }
+  }
+
+  rename(name: string, postAction?: (node: GithubTreeNode, parent: GithubTreeNode, prePath: string, newPath: string) => void){
+    if(name.length != 0){
+      let prePath = this.path;
+      this.name = name;
+      if(!this.parentNode.isRoot)
+        this.path = `${this.parentNode.path}/${this.name}`;
+      else
+        this.path = this.name;
+      this.state.push(NodeStateAction.NameModified);
+      this.parentNode.state.push(NodeStateAction.NodesChanged);
+      if(postAction)
+        postAction(this, this.parentNode, prePath, this.path);
+      if(this.type == 'tree'){
+        Object.assign([], this.children).forEach((child) => {
+            child.rename(child.name, postAction);
+        })
+      }
+    }
+  }
+
+  setContentModifiedFlag(){
+    this.state.push(NodeStateAction.ContentModified);
+  }
+  
+  setSyncedFlag(sha: string){
+    this.sha = sha;
+    // this.state.push(NodeStateAction.Synced);
   }
 }
 
@@ -56,16 +102,16 @@ export function newNode(parentNode: GithubTreeNode, type: string){
   node.type = type;
   if(node.type == 'tree')
     node.children = [];
-  node.setName('name');
   node.state.push(NodeStateAction.Created);
+  parentNode.children.push(node);
+  parentNode.state.push(NodeStateAction.NodesChanged);
   return node;
 }
 
-export function rootNode(){
+export function rootNode(sha: string){
   let node = new GithubTreeNode();
-  node.path = '';
-  node.name = '';
   node.type = 'tree';
+  node.sha = sha;
   node.children = [];
   node.isRoot = true;
   return node;

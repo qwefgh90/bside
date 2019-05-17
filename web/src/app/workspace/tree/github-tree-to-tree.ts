@@ -7,14 +7,15 @@ import { GithubTreeNode, rootNode } from './github-tree-node';
 export class GithubTreeToTree {
     private stack: Array<GithubTreeNode> = [];
     // private rootChildren: Array<GithubTreeNode> = [];
-    private root: GithubTreeNode = rootNode();
+    private root: GithubTreeNode;
 
-    constructor(private beforeTree: Array<GithubTreeNode>){
+    constructor(private beforeTree: {sha: string, tree: Array<any>}){
+        this.root = rootNode(beforeTree.sha);
         this.traverse();
     }
 
     private traverse(){
-        this.beforeTree.forEach((v, i, arr) => {
+        this.beforeTree.tree.forEach((v, i, arr) => {
             v = this.copy(v); //interface to class
             v.children = []; //assign empty array
             v.name = this.getName(v); //assign node name

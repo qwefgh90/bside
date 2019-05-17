@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { WorkspaceRoutingModule } from './workspace-routing.module';
 import { GithubTreeComponent } from './tree/github-tree.component';
 import { WorkspaceComponent } from './workspace/workspace.component';
-import { MatSidenavModule, MatIcon, MatIconModule, MatButtonModule, MatDividerModule, MatInputModule, MatSelectModule, MatMenuModule } from '@angular/material';
+import { MatSidenavModule, MatIcon, MatIconModule, MatButtonModule, MatDividerModule, MatInputModule, MatSelectModule, MatMenuModule, MatProgressSpinnerModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {MatTreeModule} from '@angular/material/tree';
 import { EditorComponent } from './editor/editor.component';
@@ -32,7 +32,8 @@ import { TreeModule } from 'angular-tree-component';
     ReactiveFormsModule, 
     MatSelectModule,
     MatMenuModule,
-    TreeModule.forRoot()
+    TreeModule.forRoot(),
+    MatProgressSpinnerModule
   ]
 })
 export class WorkspaceModule { }
