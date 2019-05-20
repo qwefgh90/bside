@@ -94,6 +94,22 @@ export class GithubTreeNode {
     this.sha = sha;
     // this.state.push(NodeStateAction.Synced);
   }
+
+  isMyDescendant(node: GithubTreeNode){
+    let shortPathArr = this.path.split('/');
+    let longPathArr = node.path.split('/');
+    longPathArr.splice(shortPathArr.length, longPathArr.length);
+    let shortPathArrFromLong = longPathArr;
+    let right = true;
+    for(let i=0; i<shortPathArr.length; i++){
+      if(shortPathArrFromLong[i] != shortPathArr[i]){
+        right = false;
+        break;
+      }
+    }
+    return (node.path.length >= this.path.length) && right;
+  }
+
 }
 
 export function newNode(parentNode: GithubTreeNode, type: string){
@@ -110,6 +126,8 @@ export function newNode(parentNode: GithubTreeNode, type: string){
 
 export function rootNode(sha: string){
   let node = new GithubTreeNode();
+  node.path = '';
+  node.name = '';
   node.type = 'tree';
   node.sha = sha;
   node.children = [];

@@ -15,7 +15,7 @@ import { TREE_ACTIONS, IActionMapping } from 'angular-tree-component';
 })
 export class GithubTreeComponent implements OnChanges, OnDestroy {
   @ViewChild(TreeComponent)
-  private treeComponent: TreeComponent;
+  treeComponent: TreeComponent;
 
   @Input("repository") repository;
   @Input("tree") tree: {sha: string, tree: Array<any>};
@@ -45,11 +45,15 @@ export class GithubTreeComponent implements OnChanges, OnDestroy {
     mouse: {
       drop: (m, n, event, rest: {from: TreeNode, to: {dropOnNode: boolean, index: number, parent: TreeNode}}) => {
         console.log(`${rest.from.data.name} is dropped`);
-        let foundIndex = (rest.to.parent.data as GithubTreeNode).children.findIndex((v)=> v.name == rest.from.data.name )
-        if(foundIndex == -1){
+        let foundIndex = (rest.to.parent.data as GithubTreeNode).children.findIndex((v) => v.name == rest.from.data.name)
+        let newParent = rest.to.parent;
+        let nodeToMove = rest.from;
+        let invalid = nodeToMove.data.isMyDescendant(newParent.parent == null ? this.root : newParent.data);
+        if(invalid){
+          console.log(`${rest.from.data.path} can not move to ${newParent.data.path}.`);
+        }else if(foundIndex == -1){
           const fromPath = rest.from.data.path;
-          (rest.from.data as GithubTreeNode)
-            .move(rest.to.parent.index == 0 ? this.root : rest.to.parent.data,
+          (rest.from.data as GithubTreeNode).move(newParent.parent == null ? this.root : newParent.data,
               (node, parent, pre, newPath) => {
                 this.nodeMoved.emit({'fromPath': pre, 'to': node});
               });
@@ -60,7 +64,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy {
       }
     }
   }
-  
+
   options = {
     allowDrag: true,
     allowDrop: (element, { parent, index }) => {
@@ -149,9 +153,9 @@ export class GithubTreeComponent implements OnChanges, OnDestroy {
     this.renamingNode = node;
     this.renamingFormControl.setValue(node.data.name);
     setTimeout(() => {
-      if (node.data.type == "tree")
+      if (node.data.type == "tree" && this.treeRenamingInput != undefined)
         this.treeRenamingInput.nativeElement.focus();
-      else if (node.data.type == "blob")
+      else if (node.data.type == "blob" && this.blobRenamingInput != undefined)
         this.blobRenamingInput.nativeElement.focus();
     }, 200);
   }

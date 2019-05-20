@@ -11,8 +11,8 @@ import * as jschardet from 'jschardet';
 import { TextDecoderLite } from 'text-encoder-lite';
 import * as mime from 'mime';
 import * as mimeDb from 'mime-db'
-import { Content } from 'src/app/github/type/content';
 import { Blob } from 'src/app/github/type/blob';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 declare const monaco;
 
@@ -37,7 +37,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   FileType = FileType;
   TreeStatus = TreeStatus;
   ContentStatus = ContentStatus;
-  constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute, private router: Router) { 
+  constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer) { 
     console.log("new comp");
   }
 
@@ -51,10 +51,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   tree: any
 
   selectedNode: GithubTreeNode;
-  selectedImageUrl: string;
   mimeName: string;
   encoding: string;
   selectedFileType: FileType;
+  selectedImagePath: SafeResourceUrl;
 
   initialized = false;
   contentStatus: ContentStatus = ContentStatus.NotInitialized;
@@ -128,8 +128,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   }
 
-  getRawUrl(blob: Blob): string{
-    return `https://raw.githubusercontent.com/${this.repositoryDetails.full_name}/${this.selectedBranch.commit.sha}/${this.selectedNode.path}`;
+  getImage(base64: string, mediaType: string): SafeResourceUrl{
+    return this.sanitizer.bypassSecurityTrustResourceUrl(`data:${mediaType};base64,${base64}`);
+    // return `https://raw.githubusercontent.com/${this.repositoryDetails.full_name}/${this.selectedBranch.commit.sha}/${this.selectedNode.path}`;
   }
 
   nodeSelected(node: GithubTreeNode) {
@@ -150,7 +151,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.wrapper.getBlob(this.userId, this.repositoryName, this.selectedNode.sha).then(
           (blob: Blob) => {
             if(type == FileType.Image){
-              this.selectedImageUrl = this.getRawUrl(blob);
+              console.log('mimeName: '+ this.mimeName)
+              this.selectedImagePath = this.getImage(blob.content, this.mimeName);
             } else if (type == FileType.Text) {
               let bytes = this.base64ToBytes(blob.content);
               this.encoding = this.getEncoding(bytes)

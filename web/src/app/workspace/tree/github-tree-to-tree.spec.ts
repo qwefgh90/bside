@@ -13,7 +13,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, setSyncedFlag: undefined
+        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, isMyDescendant: undefined, setSyncedFlag: undefined
       },
       {
         path:'b',
@@ -21,7 +21,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, setSyncedFlag: undefined
+        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, isMyDescendant: undefined, setSyncedFlag: undefined
       },
       {
         path:'b/c',
@@ -29,7 +29,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, setSyncedFlag: undefined
+        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, isMyDescendant: undefined, setSyncedFlag: undefined
       },
       {
         path:'b/d',
@@ -37,7 +37,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, setSyncedFlag: undefined
+        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, isMyDescendant: undefined, setSyncedFlag: undefined
       },
       {
         path:'b/e',
@@ -45,7 +45,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, setSyncedFlag: undefined
+        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, isMyDescendant: undefined, setSyncedFlag: undefined
       },
       {
         path:'b/e/f',
@@ -53,7 +53,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, setSyncedFlag: undefined
+        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, isMyDescendant: undefined, setSyncedFlag: undefined
       },
       {
         path:'b/e/f/g',
@@ -61,7 +61,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, setSyncedFlag: undefined
+        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, isMyDescendant: undefined, setSyncedFlag: undefined
       },
       {
         path:'h',
@@ -69,7 +69,7 @@ describe('FlatToTree', () => {
         type:'',
         sha:'',
         size:0,
-        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, setSyncedFlag: undefined
+        url:'', state:[], rename: undefined, parentNode: undefined,  isRoot:false, move: undefined, remove: undefined, setContentModifiedFlag: undefined, isMyDescendant: undefined, setSyncedFlag: undefined
       }
     ]
     let transformer = new GithubTreeToTree({sha:'abcd', tree: arr});

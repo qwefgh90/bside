@@ -4,7 +4,7 @@ import { GithubTreeComponent } from './github-tree.component';
 import {  MatIconModule, MatButtonModule, MatDividerModule, MatSelectModule, MatInputModule } from '@angular/material';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatMenuModule } from '@angular/material/menu';
-import { TreeModule } from 'angular-tree-component';
+import { TreeModule, TreeNode } from 'angular-tree-component';
 import { tree, repositoryDetails } from 'src/app/testing/mock-data';
 import { SimpleChange } from '@angular/core';
 describe('TreeComponent', () => {
@@ -73,4 +73,44 @@ describe('TreeComponent', () => {
 
     expect(component.selectedNode.data.name).toBe(tree.tree[0].path);
   });
+
+  it('findInSiblings()', () => {
+    component.repository = repositoryDetails;
+    component.tree = tree;
+    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+    fixture.detectChanges();
+
+    let model = component.treeComponent.treeModel;
+    let node: TreeNode = model.roots[0];
+    let count = 0;
+    component.findInSiblings(node, (n) => {
+      count++;
+      return false;
+    });
+
+    expect(count).toBe(5);
+  });
+
+  it('newNode()', () => {
+    fixture.detectChanges();
+
+    component.repository = repositoryDetails;
+    component.tree = tree;
+    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+    fixture.detectChanges();
+
+    let model = component.treeComponent.treeModel;
+    let _downloads: TreeNode = model.roots[5];
+    let beforeLen = _downloads.data.children.length
+    try{
+      component.newNode('blob', _downloads);
+    }catch(e){}
+    component.renamingFormControl.setValue("newname");
+    component.completeRenaming();
+    fixture.detectChanges();
+    
+    expect(_downloads.data.children.length).toBe(beforeLen + 1);
+  });
+
+  
 });
