@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { WorkspaceComponent, FileType } from './workspace.component';
+import { WorkspaceComponent } from './workspace.component';
 import { GithubTreeComponent } from '../tree/github-tree.component';
 import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule, MatExpansionModule, MatSelectModule, MatMenu, MatIcon, MatMenuModule, MatProgressSpinnerModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -18,6 +18,7 @@ import { repositoryDetails, branches, tree } from 'src/app/testing/mock-data';
 import { MonacoService } from '../editor/monaco.service';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { GithubTreeNode } from '../tree/github-tree-node';
+import { FileType, TextUtil } from '../text/text-util';
 
 @Component({selector: 'app-editor', template: ''})
 class EditorStubComponent {}
@@ -90,18 +91,7 @@ describe('WorkspaceComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
-
-  it('getFileType()', () => {
-    expect(component.getFileType('a.png')).toBe(FileType.Image);
-    expect(component.getFileType('a.jpg')).toBe(FileType.Image);
-    expect(component.getFileType('a.jpeg')).toBe(FileType.Image);
-    expect(component.getFileType('a.gif')).toBe(FileType.Image);
-    expect(component.getFileType('a.txt')).toBe(FileType.Text);
-    expect(component.getFileType('a.json')).toBe(FileType.Text);
-    expect(component.getFileType('a.pdf')).toBe(FileType.Other);
-    expect(component.getFileType('a.xlsx')).toBe(FileType.Other);
-  })
-
+  
   it('ngOnInit()', () => {
     fixture.detectChanges();
   })

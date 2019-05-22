@@ -13,12 +13,9 @@ import * as mime from 'mime';
 import * as mimeDb from 'mime-db'
 import { Blob } from 'src/app/github/type/blob';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { FileType, TextUtil } from '../text/text-util';
 
 declare const monaco;
-
-export enum FileType{
-  Image, Text, Other
-}
 
 export enum TreeStatus{
   Loading, NotInitialized, Done, Fail
@@ -138,11 +135,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       this.selectedNode = node;
       this.contentStatus = ContentStatus.Loading;
       this.mimeName = mime.getType(node.name);
-      let type = this.getFileType(this.selectedNode.name);
+      let type = TextUtil.getFileType(this.selectedNode.name);
       this.selectedFileType = type;
       if (this.selectedNode.state.filter((v) => v == NodeStateAction.Created).length > 0) {
         if (type == FileType.Text) {
-          let bytes = this.base64ToBytes('');
+          let bytes = TextUtil.base64ToBytes('');
           this.encoding = 'utf-8';
           this.setContentAndFocusInEditor(this.selectedNode.path, bytes, this.encoding);
         }
@@ -154,8 +151,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
               console.log('mimeName: '+ this.mimeName)
               this.selectedImagePath = this.getImage(blob.content, this.mimeName);
             } else if (type == FileType.Text) {
-              let bytes = this.base64ToBytes(blob.content);
-              this.encoding = this.getEncoding(bytes)
+              let bytes = TextUtil.base64ToBytes(blob.content);
+              this.encoding = TextUtil.getEncoding(bytes)
               this.setContentAndFocusInEditor(this.selectedNode.path, bytes, this.encoding);
             }
           }, (reason) => {
@@ -174,7 +171,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       if (this.editor1.exist(path))
         this.editor1.selectTab(path);
       else{
-        this.editor1.setContent(path, this.decode(bytes, encoding))
+        this.editor1.setContent(path, TextUtil.decode(bytes, encoding))
         this.editor1.selectTab(path);
       }
     }
@@ -194,45 +191,45 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }
   }
 
-  decode(bytes, encoding: string) {
-    let decoder = new (TextDecoderLite == undefined ? TextDecoder : TextDecoderLite)(encoding != null ? encoding.toLowerCase() : 'utf-8')
-    let result = decoder.decode(bytes);
-    return result;
-  }
+  // decode(bytes, encoding: string) {
+  //   let decoder = new (TextDecoderLite == undefined ? TextDecoder : TextDecoderLite)(encoding != null ? encoding.toLowerCase() : 'utf-8')
+  //   let result = decoder.decode(bytes);
+  //   return result;
+  // }
 
-  base64ToBytes(str: string) {
-    let arr = str.split("\n").map(v => {
-      return v;
-    });
+  // base64ToBytes(str: string) {
+  //   let arr = str.split("\n").map(v => {
+  //     return v;
+  //   });
 
-    let bytes = toByteArray(arr.join(''));
-    return bytes;
-  }
+  //   let bytes = toByteArray(arr.join(''));
+  //   return bytes;
+  // }
 
-  getEncoding(bytes): string {
-    let string = '';
-    for (var i = 0; i < bytes.length; ++i) {
-      string += String.fromCharCode(bytes[i]);
-    }
-    let encoding = jschardet.detect(string).encoding;
-    console.debug('detected encoding: ' + encoding);
-    return encoding;
-  }
+  // getEncoding(bytes): string {
+  //   let string = '';
+  //   for (var i = 0; i < bytes.length; ++i) {
+  //     string += String.fromCharCode(bytes[i]);
+  //   }
+  //   let encoding = jschardet.detect(string).encoding;
+  //   console.debug('detected encoding: ' + encoding);
+  //   return encoding;
+  // }
 
-  getFileType(name: string){
-    const mimeName: string = mime.getType(name);
-    const mimeInfo = mimeDb[mime.getType(name)]
-    let compressible = (mimeInfo != undefined) && (mimeInfo.compressible != undefined) ? mimeInfo.compressible : true; // unknown is considered as compressible
-    console.debug(`mimeInfo ${mimeInfo}`);
-    console.debug(`compressible: ${compressible}`);
-    if(mimeName != null && mimeName.toLocaleLowerCase().startsWith('image/'))
-      return FileType.Image;
-    else if((mimeName != null && mimeName.toLocaleLowerCase().startsWith('text/') || compressible)){
-      return FileType.Text
-    } else{
-      return FileType.Other
-    }
-  }
+  // getFileType(name: string){
+  //   const mimeName: string = mime.getType(name);
+  //   const mimeInfo = mimeDb[mime.getType(name)]
+  //   let compressible = (mimeInfo != undefined) && (mimeInfo.compressible != undefined) ? mimeInfo.compressible : true; // unknown is considered as compressible
+  //   console.debug(`mimeInfo ${mimeInfo}`);
+  //   console.debug(`compressible: ${compressible}`);
+  //   if(mimeName != null && mimeName.toLocaleLowerCase().startsWith('image/'))
+  //     return FileType.Image;
+  //   else if((mimeName != null && mimeName.toLocaleLowerCase().startsWith('text/') || compressible)){
+  //     return FileType.Text
+  //   } else{
+  //     return FileType.Other
+  //   }
+  // }
 
   async initialzeWorkspace(userId, repositoryName, branchName?: string): Promise<void> {
     let details = this.wrapper.repositoryDetails(userId, repositoryName).then((result) => {

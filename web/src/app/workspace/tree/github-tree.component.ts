@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, OnChanges, Output, EventEmitter, SimpleChanges, ViewChild, OnDestroy, ElementRef } from '@angular/core';
 import { MatIconRegistry } from '@angular/material';
-import { GithubTreeNode, newNode, rootNode } from './github-tree-node';
+import { GithubTreeNode } from './github-tree-node';
 import { GithubTreeToTree } from './github-tree-to-tree';
 import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -48,10 +48,11 @@ export class GithubTreeComponent implements OnChanges, OnDestroy {
         let foundIndex = (rest.to.parent.data as GithubTreeNode).children.findIndex((v) => v.name == rest.from.data.name)
         let newParent = rest.to.parent;
         let nodeToMove = rest.from;
-        let invalid = nodeToMove.data.isMyDescendant(newParent.parent == null ? this.root : newParent.data);
-        if(invalid){
-          console.log(`${rest.from.data.path} can not move to ${newParent.data.path}.`);
-        }else if(foundIndex == -1){
+        // let invalid = nodeToMove.data.isMyDescendant(newParent.parent == null ? this.root : newParent.data);
+        // if(invalid){
+        //   console.log(`${rest.from.data.path} can not move to ${newParent.data.path}.`);
+        // }else 
+        if(foundIndex == -1){
           const fromPath = rest.from.data.path;
           (rest.from.data as GithubTreeNode).move(newParent.parent == null ? this.root : newParent.data,
               (node, parent, pre, newPath) => {
@@ -92,7 +93,6 @@ export class GithubTreeComponent implements OnChanges, OnDestroy {
 
   completeRenaming() {
     if (this.renamingNode != undefined) {
-      const prePath = this.renamingNode.data.path;
       let alreadyExist = this.findInSiblings(this.renamingNode, (node) => this.renamingFormControl.value == node.data.name);
 
       if (alreadyExist) {
@@ -104,7 +104,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy {
           this.nodeMoved.emit({ 'fromPath': pre, 'to': node });
         });
       }
-      if (this.renamingNode.data.name == '') {
+      if (this.renamingNode.data.name == undefined) {
         this.remove(this.renamingNode);
         console.log(`It will be removed because it doesn't have a name after renaming`);
       }
@@ -133,7 +133,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy {
     let parent: GithubTreeNode = parentTreeNode == undefined ? this.root : parentTreeNode.data;
     let node;
     if (type == 'blob' || type == 'tree') {
-      node = newNode(parent, type);
+      node = GithubTreeNode.githubTreeNodeFactory.createNewNode(parent, type);
       this.refreshTree();
       // this.treeControl.expand(parent);
       this.nodeCreated.emit(node);

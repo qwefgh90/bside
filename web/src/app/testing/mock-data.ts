@@ -1,3 +1,74 @@
+
+export let simpleTree = {
+  "sha": "xxxxxxf129c486558e37d797e54c9fd81c9c3407",
+  "url": "https://api.github.com/repos/xxxxxx/xxxxxx/git/trees/xxxxxxf129c486558e37d797e54c9fd81c9c3407",
+  "tree": [
+    {
+      path: 'a',
+      mode: '',
+      type: 'blob',
+      sha: '',
+      size: 0,
+      url: ''
+    },
+    {
+      path: 'b',
+      mode: '',
+      type: 'tree',
+      sha: '',
+      size: 0,
+      url: ''
+    },
+    {
+      path: 'b/c',
+      mode: '',
+      type: 'blob',
+      sha: '',
+      size: 0,
+      url: ''
+    },
+    {
+      path: 'b/d',
+      mode: '',
+      type: 'blob',
+      sha: '',
+      size: 0,
+      url: ''
+    },
+    {
+      path: 'b/e',
+      mode: '',
+      type: 'tree',
+      sha: '',
+      size: 0,
+      url: ''
+    },
+    {
+      path: 'b/e/f',
+      mode: '',
+      type: 'tree',
+      sha: '',
+      size: 0,
+      url: ''
+    },
+    {
+      path: 'b/e/f/g',
+      mode: '',
+      type: 'blob',
+      sha: '',
+      size: 0,
+      url: ''
+    },
+    {
+      path: 'h',
+      mode: '',
+      type: 'blob',
+      sha: '',
+      size: 0,
+      url: ''
+    }
+  ]
+};
 export let tree = {
   "sha": "af24baf129c486558e37d797e54c9fd81c9c3407",
   "url": "https://api.github.com/repos/qwefgh90/sphinx/git/trees/af24baf129c486558e37d797e54c9fd81c9c3407",

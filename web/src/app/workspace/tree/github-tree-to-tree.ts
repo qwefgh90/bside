@@ -1,4 +1,4 @@
-import { GithubTreeNode, rootNode } from './github-tree-node';
+import { GithubTreeNode, GithubNode } from './github-tree-node';
 
 /**
  * Change flat model to hierachy model
@@ -10,15 +10,14 @@ export class GithubTreeToTree {
     private root: GithubTreeNode;
 
     constructor(private beforeTree: {sha: string, tree: Array<any>}){
-        this.root = rootNode(beforeTree.sha);
+        this.root = GithubTreeNode.githubTreeNodeFactory.createRootNode(beforeTree.sha);
         this.traverse();
     }
 
     private traverse(){
         this.beforeTree.tree.forEach((v, i, arr) => {
-            v = this.copy(v); //interface to class
-            v.children = []; //assign empty array
-            v.name = this.getName(v); //assign node name
+            v = GithubTreeNode.githubTreeNodeFactory.of(v); //interface to class
+            // v.children = []; //assign empty array
             if(this.stack.length == 0){
                 //inital extra operation 
                 this.root.children.push(v);
@@ -54,21 +53,6 @@ export class GithubTreeToTree {
                 this.stack.push(v);
             }
         });
-    }
-
-    private copy(v: GithubTreeNode){
-        let real = new GithubTreeNode();
-        real.mode = v.mode;
-        real.path = v.path;
-        real.sha = v.sha;
-        real.size = v.size;
-        real.type = v.type;
-        real.url = v.url;
-        return real;
-    }
-
-    private getName(node: GithubTreeNode){
-        return node.path.match(new RegExp('[^/]*$'))[0];
     }
 
     private getLevel(node: GithubTreeNode){
