@@ -11,6 +11,7 @@ import { Stage } from './stage';
 export class StageComponent implements OnInit, OnChanges, Stage {
   @Input("repository") repository;
   @Input("tree") tree: GithubTreeNode;
+  NodeStateAction = NodeStateAction;
   items: Array<GithubTreeNode> = [];
   options = {
   };
@@ -45,19 +46,25 @@ export class StageComponent implements OnInit, OnChanges, Stage {
         p.set.add(c);
       }
       return p;
-    }, { set: new Set<NodeStateAction>(), acc: new Array<NodeStateAction>() }
+    },
+      { set: new Set<NodeStateAction>(), acc: new Array<NodeStateAction>() }
     );
-
-    
-    return result.acc.map((v: NodeStateAction) => {
-      if (v == NodeStateAction.Created)
-        return "C";
-      else if (v == NodeStateAction.ContentModified || v == NodeStateAction.Moved || v == NodeStateAction.NameModified)
-        return "M";
-      else if (v == NodeStateAction.Deleted)
-        return "D";
-      else if (v == NodeStateAction.NodesChanged)
-        return "T";
-    });
+    return result.acc;
   }
+
+  getLabel(v: NodeStateAction) {
+    if (v == NodeStateAction.Created)
+      return "C";
+    else if (v == NodeStateAction.ContentModified)
+      return "CM";
+    else if (v == NodeStateAction.Moved)
+      return "M";
+    else if (v == NodeStateAction.NameModified)
+      return "NM";
+    else if (v == NodeStateAction.Deleted)
+      return "D";
+    else if (v == NodeStateAction.NodesChanged)
+      return "T";
+  }
+
 }

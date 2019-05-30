@@ -34,7 +34,7 @@
                 {{!node.isExpanded ? 'folder' : 'folder_open'}}
               </mat-icon>
               <span style="line-height: 24px; flex: 1">{{node.data.name}}</span>
-              <div style="margin-left: 1em;" *ngIf="getLabels(node.data).length != 0"><span style="font-size: 0.5em" *ngFor="let l of getLabels(node.data)">{{l}}&nbsp;</span></div>
+              <div style="margin-left: 1em;" *ngIf="getLabels(node.data).length != 0"><span style="font-size: 0.5em" *ngFor="let l of getLabels(node.data)">{{getLabel(l)}}&nbsp;</span></div>
             </div>
             <div>
               <mat-icon [matMenuTriggerFor]="appMenu" class="context-menu-button">
