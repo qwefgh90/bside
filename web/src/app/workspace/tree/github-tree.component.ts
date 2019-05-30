@@ -15,7 +15,7 @@ import { GithubTree } from './github-tree';
   styleUrls: ['./github-tree.component.css']
 })
 export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
-  @ViewChild(TreeComponent)
+  @ViewChild("tree1")
   treeComponent: TreeComponent;
 
   @Input("repository") repository;

@@ -6,5 +6,4 @@ export interface Editor {
     exist(path: string): boolean;
     getContent(path?: string): string;
     removeContent(path: string): boolean; 
-    changes: Observable<void>;
 }

@@ -1,11 +1,13 @@
 <div style="height: 100%;display: flex; flex-flow: column">
-  <button mat-icon-button>
+  <button mat-icon-button class="mat-button-toggle-button">
     <mat-icon aria-label="view_agenda">view_agenda</mat-icon>
   </button>
-  <button mat-icon-button>
-    <mat-icon aria-label="edit">edit</mat-icon>
-  </button>
-  <button mat-icon-button>
-    <mat-icon aria-label="save">save</mat-icon>
-  </button>
+  <mat-button-toggle-group #group="matButtonToggleGroup" [vertical]="true">
+    <mat-button-toggle (click)="onEdit()" [checked]="true">
+      <mat-icon aria-label="edit">edit</mat-icon>
+    </mat-button-toggle>
+    <mat-button-toggle (click)="onSave()">
+      <mat-icon aria-label="save">save</mat-icon>
+    </mat-button-toggle>
+  </mat-button-toggle-group>
 </div>

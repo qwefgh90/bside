@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output } from '@angular/core';
 
 @Component({
   selector: 'app-action',
@@ -7,9 +7,22 @@ import { Component, OnInit } from '@angular/core';
 })
 export class ActionComponent implements OnInit {
 
+  
+  @Output("stage") stage = new EventEmitter<void>();
+  @Output("edit") edit = new EventEmitter<void>();
+
   constructor() { }
 
   ngOnInit() {
+  }
+
+  onSave(){
+    this.stage.emit();
+  }
+
+  onEdit(){
+    this.edit.emit();
+    
   }
 
 }

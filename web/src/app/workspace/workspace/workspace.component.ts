@@ -10,15 +10,20 @@ import { Blob } from 'src/app/github/type/blob';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FileType, TextUtil } from '../text/text-util';
 import { GithubTree } from '../tree/github-tree';
+import { Stage } from '../stage/stage';
 
 declare const monaco;
 
-export enum TreeStatus{
+export enum TreeStatusOnWorkspace{
   Loading, NotInitialized, Done, Fail
 }
 
-export enum ContentStatus{
+export enum ContentStatusOnWorkspace{
   Loading, NotInitialized, Done, Fail
+}
+
+export enum WorkspaceStatus{
+  View, Stage
 }
 
 @Component({
@@ -28,14 +33,16 @@ export enum ContentStatus{
 })
 export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   FileType = FileType;
-  TreeStatus = TreeStatus;
-  ContentStatus = ContentStatus;
+  TreeStatus = TreeStatusOnWorkspace;
+  ContentStatus = ContentStatusOnWorkspace;
+  WorkspaceStatus = WorkspaceStatus;
   constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer) { 
     console.log("new comp");
   }
 
   @ViewChild("tree") tree: GithubTree;
   @ViewChild("editor1") editor1: Editor;
+  @ViewChild("stage") stage: Stage;
 
   userId;
   repositoryName;
@@ -43,6 +50,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   branches: Array<any>;
   selectedBranch;
   flatTree: any
+  rootToStage: GithubTreeNode;
 
   selectedNode: GithubTreeNode;
   mimeName: string;
@@ -51,8 +59,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   selectedImagePath: SafeResourceUrl;
 
   initialized = false;
-  contentStatus: ContentStatus = ContentStatus.NotInitialized;
-  treeStatus: TreeStatus = TreeStatus.NotInitialized;
+  contentStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
+  treeStatus: TreeStatusOnWorkspace = TreeStatusOnWorkspace.NotInitialized;
+  workspaceStatus: WorkspaceStatus = WorkspaceStatus.View;
 
   subscriptions: Array<Subscription> = []
 
@@ -69,22 +78,22 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.userId = userId;
         this.repositoryName = repositoryName;
         this.initialzeWorkspace(this.userId, this.repositoryName, branchName).finally(() => {
-          this.treeStatus = TreeStatus.Done;
+          this.treeStatus = TreeStatusOnWorkspace.Done;
         })
       }else
-        this.treeStatus = TreeStatus.Fail;
+        this.treeStatus = TreeStatusOnWorkspace.Fail;
     }else
-      this.treeStatus = TreeStatus.Fail;
+      this.treeStatus = TreeStatusOnWorkspace.Fail;
     let s = combineLatest(this.route.paramMap, this.route.queryParamMap).subscribe(([p, q]) => {
       const branchName = this.route.snapshot.queryParams['branch'];
       if (p.has('userId') && p.has('repositoryName')) {
         this.userId = p.get('userId');
         this.repositoryName = p.get('repositoryName');
         this.initialzeWorkspace(this.userId, this.repositoryName, branchName).finally(() => { 
-          this.treeStatus = TreeStatus.Done;
+          this.treeStatus = TreeStatusOnWorkspace.Done;
         });
       }else{
-        this.treeStatus = TreeStatus.Fail;
+        this.treeStatus = TreeStatusOnWorkspace.Fail;
       }
     });
     this.subscriptions.push(s);
@@ -126,14 +135,14 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return this.sanitizer.bypassSecurityTrustResourceUrl(`data:${mediaType};base64,${base64}`);
   }
 
-  getRawImageUrl(fullName: string, commitSha: string, path: string): SafeResourceUrl{
+  getRawUrl(fullName: string, commitSha: string, path: string): SafeResourceUrl{
     return `https://raw.githubusercontent.com/${fullName}/${commitSha}/${path}`;
   }
 
   nodeSelected(node: GithubTreeNode) {
     if (node.type == 'blob') {
       this.selectedNode = node;
-      this.contentStatus = ContentStatus.Loading;
+      this.contentStatus = ContentStatusOnWorkspace.Loading;
       this.mimeName = TextUtil.getMime(node.name);
       let type = TextUtil.getFileType(this.selectedNode.name);
       this.selectedFileType = type;
@@ -143,14 +152,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           this.encoding = 'utf-8';
           this.setContentAndFocusInEditor(this.selectedNode.path, bytes, this.encoding);
         }
-        this.contentStatus = ContentStatus.Done;
+        this.contentStatus = ContentStatusOnWorkspace.Done;
       } else {
         this.wrapper.getBlob(this.userId, this.repositoryName, this.selectedNode.sha).then(
           (blob: Blob) => {
             console.log('mimeName: '+ this.mimeName)
             if(type == FileType.Image){
-              // this.selectedImagePath = this.getImage(blob.content, this.mimeName);
-              this.selectedImagePath = this.getRawImageUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, this.selectedNode.syncedNode.path);
+              this.selectedImagePath = this.getRawUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, this.selectedNode.syncedNode.path);
             } else if (type == FileType.Text) {
               let bytes = TextUtil.base64ToBytes(blob.content);
               this.encoding = TextUtil.getEncoding(bytes)
@@ -161,13 +169,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
             console.debug(this.selectedNode);
           }
         ).finally(() => {
-          this.contentStatus = ContentStatus.Done;
+          this.contentStatus = ContentStatusOnWorkspace.Done;
         });
       }
     }
   }
 
-  private setContentAndFocusInEditor(path: string, bytes: any, encoding: string){
+  private setContentAndFocusInEditor(path: string, bytes: any, encoding: string): void{
     if (this.editor1 != undefined) {
       if (this.editor1.exist(path))
         this.editor1.selectTab(path);
@@ -189,6 +197,15 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       let content = this.editor1.getContent(e.fromPath);
       this.editor1.removeContent(e.fromPath);
       this.editor1.setContent(e.to.path, content);
+      if(this.selectedNode == e.to)
+        this.nodeSelected(e.to);
+    }
+  }
+
+  contentChanged(path: string){
+    if(path == this.selectedNode.path){
+      this.selectedNode.setContentModifiedFlag();
+      console.debug(`The content of ${path} is modified.`)
     }
   }
 
@@ -241,9 +258,22 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   onBranchChange(event: MatSelectChange){
-    this.treeStatus = TreeStatus.Loading;
+    this.treeStatus = TreeStatusOnWorkspace.Loading;
     const branch = event.value;
     this.router.navigate([], {queryParams: {branch: branch.name}})
   }
- 
+
+  onStage(){
+    this.workspaceStatus = WorkspaceStatus.Stage;
+    this.rootToStage = this.tree.getRoot();
+    this.stage.invalidate();
+  }
+
+  onEdit(){
+    this.workspaceStatus = WorkspaceStatus.View;
+  }
+
+  onCommit(){
+    this.workspaceStatus = WorkspaceStatus.View;
+  }
 }

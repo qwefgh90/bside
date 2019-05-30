@@ -13,9 +13,11 @@ import { ActionComponent } from './action/action/action.component';
 import {MatExpansionModule} from '@angular/material/expansion';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { TreeModule } from 'angular-tree-component';
+import { StageComponent } from './stage/stage.component';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
 
 @NgModule({
-  declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent],
+  declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent],
   imports: [
     CommonModule,
     WorkspaceRoutingModule,
@@ -33,7 +35,8 @@ import { TreeModule } from 'angular-tree-component';
     MatSelectModule,
     MatMenuModule,
     TreeModule.forRoot(),
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatButtonToggleModule
   ]
 })
 export class WorkspaceModule { }

@@ -107,11 +107,11 @@ export class GithubTreeNode {
     return this.syncedNodeBackingField;
   }
 
-  constructor(isRoot: boolean = false){
+  constructor(isRoot: boolean = false) {
     this.isRoot = isRoot;
   }
 
-  getParentNode(){
+  getParentNode() {
     return this.parentNode;
   }
 
@@ -139,7 +139,7 @@ export class GithubTreeNode {
           });
         }
       }
-    }else 
+    } else
       console.log(`${this.path} can not move to ${newParent.path}.`);
   }
 
@@ -150,7 +150,7 @@ export class GithubTreeNode {
     let arr = this.parentNode.children;
     let found = arr.findIndex((e) => {
       return (e.name == this.name) ||
-       ((this.name == undefined) && (e.name == undefined))
+        ((this.name == undefined) && (e.name == undefined))
     });
     if (found != -1) {
       this.state.push(NodeStateAction.Deleted);
@@ -189,7 +189,7 @@ export class GithubTreeNode {
     }
   }
 
-  private reduceInnerLoop <A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A, acc: A, root: GithubTreeNode) {
+  private reduceInnerLoop<A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A, acc: A, root: GithubTreeNode) {
     // const root = this.isRoot ? this : undefined;
     let nextAcc = postAction(acc, this, root);
     if (this.type == 'tree') {
@@ -205,13 +205,14 @@ export class GithubTreeNode {
    * @param postAction 
    * @param initValue 
    */
-reduce <A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A, initValue: A) {
+  reduce<A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A, initValue: A) {
     const subRoot = this;
     return this.reduceInnerLoop(postAction, initValue, subRoot);
   }
 
   setContentModifiedFlag() {
-    this.state.push(NodeStateAction.ContentModified);
+    if(this.state[this.state.length-1] != NodeStateAction.ContentModified)
+      this.state.push(NodeStateAction.ContentModified);
   }
 
   setSyncedFlag(sha: string) {
@@ -219,7 +220,7 @@ reduce <A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A
     // this.state.push(NodeStateAction.Synced);
   }
 
-  private getNameFromPath(){
+  private getNameFromPath() {
     return this.path.match(new RegExp('[^/]*$'))[0];
   }
 
@@ -246,7 +247,7 @@ reduce <A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A
       let node = new GithubTreeNode();
       node.parentNode = parentNode;
       node._type = type;
-      if(node._type == 'tree'){
+      if (node._type == 'tree') {
         node.children = [];
         node.removedChildren = [];
       }
@@ -276,7 +277,7 @@ reduce <A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A
       real._url = v.url;
       real._syncedNode = v;
       real._name = real.getNameFromPath();
-      if(real._type == 'tree'){
+      if (real._type == 'tree') {
         real.children = [];
         real.removedChildren = [];
       }

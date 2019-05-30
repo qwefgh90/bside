@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input, OnChanges, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input, OnChanges, OnDestroy, Output, EventEmitter } from '@angular/core';
 import * as monacoNameSpace from 'monaco-editor';
 import { MonacoService } from './monaco.service';
 import { Subscription, Observable } from 'rxjs';
@@ -10,6 +10,8 @@ import { Editor } from './editor';
   styleUrls: ['./editor.component.css']
 })
 export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy, Editor {
+
+  @Output("changeContent") changeContent: EventEmitter<string> = new EventEmitter<string>();
 
   editor: monacoNameSpace.editor.IStandaloneCodeEditor;
   model: monacoNameSpace.editor.ITextModel
@@ -108,7 +110,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
       else {
         this.model = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(path));
         this.model.onDidChangeContent((e) => {
-          console.log(e);
+          // console.log(e);
+          this.changeContent.emit(path);
         })
       }
     }else
@@ -170,6 +173,4 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
   throwWhenNotInitialized(){
     throw new Error("A monaco is not initalized");
   }
-
-  changes: Observable<void>;
 }

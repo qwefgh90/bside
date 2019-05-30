@@ -1,4 +1,3 @@
-
 <div style="width: 100%; height: 100%; display: flex; flex-flow: column">
 
   <div class="repository-title">
@@ -28,59 +27,62 @@
     </div>
   </div>
   <mat-divider></mat-divider>
-  <tree-root id="tree" [nodes]="dataSource" [options]="options" [focused]="true">
-    <ng-template #treeNodeWrapperTemplate let-node let-index="index" let-templates="templates">
-      <div class="node-wrapper" [style.padding-left]="node.getNodePadding()">
-        <div class="node-content-wrapper" style="width: 100%; display: flex"
-          [class.node-content-wrapper-active]="selectedNode == node"
-          [class.node-content-wrapper-focused]="node.isFocused" (click)="node.mouseAction('click', $event)"
-          (dblclick)="node.mouseAction('dblClick', $event)" (contextmenu)="node.mouseAction('contextMenu', $event)"
-          (treeDrop)="node.onDrop($event)" [treeAllowDrop]="node.allowDrop" [treeDrag]="node"
-          [treeDragEnabled]="node.allowDrag()">
-          <div class="node-title" (click)="node.isExpanded ? node.collapse() : node.expand(); selectNode(node)">
-            <mat-icon *ngIf="!(node.data.type == 'tree')">description</mat-icon>
-            <mat-icon *ngIf="node.data.type == 'tree'">
-              {{!node.isExpanded ? 'folder' : 'folder_open'}}
-            </mat-icon>
-            <span *ngIf="renamingNode != node" style="line-height: 24px;">{{node.data.name}}</span>
-            <input #blobRenamingInput *ngIf="renamingNode == node && node.data.type == 'blob'"
-              [formControl]="renamingFormControl" (keydown.enter)="completeRenaming()" (blur)="completeRenaming()" />
-            <input #treeRenamingInput *ngIf="renamingNode == node && node.data.type == 'tree'"
-              [formControl]="renamingFormControl" (keydown.enter)="completeRenaming()" (blur)="completeRenaming()" />
-          </div>
-          <div>
-            <mat-icon [matMenuTriggerFor]="appMenu" *ngIf="!(node.data.type == 'tree')" class="context-menu-button">
-              arrow_drop_down</mat-icon>
-            <mat-icon [matMenuTriggerFor]="appMenuForTree" *ngIf="node.data.type == 'tree'" class="context-menu-button">
-              arrow_drop_down</mat-icon>
-            <mat-menu #appMenu="matMenu" xPosition="before">
-              <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="rename(node)">
-                <mat-icon>edit</mat-icon>Rename
-              </button>
-              <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="remove(node)">
-                <mat-icon>delete</mat-icon>Delete
-              </button>
-            </mat-menu>
-            <mat-menu #appMenuForTree="matMenu" xPosition="before">
-              <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="newNode('blob', node)">
-                <mat-icon>note_add</mat-icon>New File
-              </button>
-              <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="newNode('tree', node)">
-                <mat-icon>fiber_new</mat-icon>New Folder
-              </button>
-              <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;">
-                <mat-icon>cloud_upload</mat-icon>Upload
-              </button>
-              <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="rename(node)">
-                <mat-icon>edit</mat-icon>Rename
-              </button>
-              <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="remove(node)">
-                <mat-icon>delete</mat-icon>Delete
-              </button>
-            </mat-menu>
+  <div class="tree-box">
+    <tree-root #tree1 id="tree" [nodes]="dataSource" [options]="options" [focused]="true">
+      <ng-template #treeNodeWrapperTemplate let-node let-index="index" let-templates="templates">
+        <div class="node-wrapper" [style.padding-left]="node.getNodePadding()">
+          <div class="node-content-wrapper" style="width: 100%; display: flex"
+            [class.node-content-wrapper-active]="selectedNode == node"
+            [class.node-content-wrapper-focused]="node.isFocused" (click)="node.mouseAction('click', $event)"
+            (dblclick)="node.mouseAction('dblClick', $event)" (contextmenu)="node.mouseAction('contextMenu', $event)"
+            (treeDrop)="node.onDrop($event)" [treeAllowDrop]="node.allowDrop" [treeDrag]="node"
+            [treeDragEnabled]="node.allowDrag()">
+            <div class="node-title" (click)="node.isExpanded ? node.collapse() : node.expand(); selectNode(node)">
+              <mat-icon *ngIf="!(node.data.type == 'tree')">description</mat-icon>
+              <mat-icon *ngIf="node.data.type == 'tree'">
+                {{!node.isExpanded ? 'folder' : 'folder_open'}}
+              </mat-icon>
+              <span *ngIf="renamingNode != node" style="line-height: 24px; flex: 1">{{node.data.name}}</span>
+              <input #blobRenamingInput *ngIf="renamingNode == node && node.data.type == 'blob'"
+                [formControl]="renamingFormControl" (keydown.enter)="completeRenaming()" (blur)="completeRenaming()" />
+              <input #treeRenamingInput *ngIf="renamingNode == node && node.data.type == 'tree'"
+                [formControl]="renamingFormControl" (keydown.enter)="completeRenaming()" (blur)="completeRenaming()" />
+            </div>
+            <div>
+              <mat-icon [matMenuTriggerFor]="appMenu" *ngIf="!(node.data.type == 'tree')" class="context-menu-button">
+                arrow_drop_down</mat-icon>
+              <mat-icon [matMenuTriggerFor]="appMenuForTree" *ngIf="node.data.type == 'tree'"
+                class="context-menu-button">
+                arrow_drop_down</mat-icon>
+              <mat-menu #appMenu="matMenu" xPosition="before">
+                <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="rename(node)">
+                  <mat-icon>edit</mat-icon>Rename
+                </button>
+                <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="remove(node)">
+                  <mat-icon>delete</mat-icon>Delete
+                </button>
+              </mat-menu>
+              <mat-menu #appMenuForTree="matMenu" xPosition="before">
+                <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="newNode('blob', node)">
+                  <mat-icon>note_add</mat-icon>New File
+                </button>
+                <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="newNode('tree', node)">
+                  <mat-icon>fiber_new</mat-icon>New Folder
+                </button>
+                <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;">
+                  <mat-icon>cloud_upload</mat-icon>Upload
+                </button>
+                <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="rename(node)">
+                  <mat-icon>edit</mat-icon>Rename
+                </button>
+                <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="remove(node)">
+                  <mat-icon>delete</mat-icon>Delete
+                </button>
+              </mat-menu>
+            </div>
           </div>
         </div>
-      </div>
-    </ng-template>
-  </tree-root>
+      </ng-template>
+    </tree-root>
+  </div>
 </div>
