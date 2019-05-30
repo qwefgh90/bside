@@ -6,14 +6,10 @@ import { MatDrawer, MatSelectChange } from '@angular/material';
 import { GithubTreeNode, NodeStateAction } from '../tree/github-tree-node';
 import { MonacoService } from '../editor/monaco.service';
 import { Editor } from '../editor/editor';
-import { toByteArray } from 'base64-js';
-import * as jschardet from 'jschardet';
-import { TextDecoderLite } from 'text-encoder-lite';
-import * as mime from 'mime';
-import * as mimeDb from 'mime-db'
 import { Blob } from 'src/app/github/type/blob';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FileType, TextUtil } from '../text/text-util';
+import { GithubTree } from '../tree/github-tree';
 
 declare const monaco;
 
@@ -38,6 +34,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     console.log("new comp");
   }
 
+  @ViewChild("tree") tree: GithubTree;
   @ViewChild("editor1") editor1: Editor;
 
   userId;
@@ -45,7 +42,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   repositoryDetails;
   branches: Array<any>;
   selectedBranch;
-  tree: any
+  flatTree: any
 
   selectedNode: GithubTreeNode;
   mimeName: string;
@@ -127,14 +124,17 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   getImage(base64: string, mediaType: string): SafeResourceUrl{
     return this.sanitizer.bypassSecurityTrustResourceUrl(`data:${mediaType};base64,${base64}`);
-    // return `https://raw.githubusercontent.com/${this.repositoryDetails.full_name}/${this.selectedBranch.commit.sha}/${this.selectedNode.path}`;
+  }
+
+  getRawImageUrl(fullName: string, commitSha: string, path: string): SafeResourceUrl{
+    return `https://raw.githubusercontent.com/${fullName}/${commitSha}/${path}`;
   }
 
   nodeSelected(node: GithubTreeNode) {
     if (node.type == 'blob') {
       this.selectedNode = node;
       this.contentStatus = ContentStatus.Loading;
-      this.mimeName = mime.getType(node.name);
+      this.mimeName = TextUtil.getMime(node.name);
       let type = TextUtil.getFileType(this.selectedNode.name);
       this.selectedFileType = type;
       if (this.selectedNode.state.filter((v) => v == NodeStateAction.Created).length > 0) {
@@ -147,9 +147,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       } else {
         this.wrapper.getBlob(this.userId, this.repositoryName, this.selectedNode.sha).then(
           (blob: Blob) => {
+            console.log('mimeName: '+ this.mimeName)
             if(type == FileType.Image){
-              console.log('mimeName: '+ this.mimeName)
-              this.selectedImagePath = this.getImage(blob.content, this.mimeName);
+              // this.selectedImagePath = this.getImage(blob.content, this.mimeName);
+              this.selectedImagePath = this.getRawImageUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, this.selectedNode.syncedNode.path);
             } else if (type == FileType.Text) {
               let bytes = TextUtil.base64ToBytes(blob.content);
               this.encoding = TextUtil.getEncoding(bytes)
@@ -191,46 +192,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }
   }
 
-  // decode(bytes, encoding: string) {
-  //   let decoder = new (TextDecoderLite == undefined ? TextDecoder : TextDecoderLite)(encoding != null ? encoding.toLowerCase() : 'utf-8')
-  //   let result = decoder.decode(bytes);
-  //   return result;
-  // }
-
-  // base64ToBytes(str: string) {
-  //   let arr = str.split("\n").map(v => {
-  //     return v;
-  //   });
-
-  //   let bytes = toByteArray(arr.join(''));
-  //   return bytes;
-  // }
-
-  // getEncoding(bytes): string {
-  //   let string = '';
-  //   for (var i = 0; i < bytes.length; ++i) {
-  //     string += String.fromCharCode(bytes[i]);
-  //   }
-  //   let encoding = jschardet.detect(string).encoding;
-  //   console.debug('detected encoding: ' + encoding);
-  //   return encoding;
-  // }
-
-  // getFileType(name: string){
-  //   const mimeName: string = mime.getType(name);
-  //   const mimeInfo = mimeDb[mime.getType(name)]
-  //   let compressible = (mimeInfo != undefined) && (mimeInfo.compressible != undefined) ? mimeInfo.compressible : true; // unknown is considered as compressible
-  //   console.debug(`mimeInfo ${mimeInfo}`);
-  //   console.debug(`compressible: ${compressible}`);
-  //   if(mimeName != null && mimeName.toLocaleLowerCase().startsWith('image/'))
-  //     return FileType.Image;
-  //   else if((mimeName != null && mimeName.toLocaleLowerCase().startsWith('text/') || compressible)){
-  //     return FileType.Text
-  //   } else{
-  //     return FileType.Other
-  //   }
-  // }
-
   async initialzeWorkspace(userId, repositoryName, branchName?: string): Promise<void> {
     let details = this.wrapper.repositoryDetails(userId, repositoryName).then((result) => {
       this.repositoryDetails = result;
@@ -266,7 +227,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   setTree(): Promise<void> {
     const tree = this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha);
     return tree.then(tree => {
-      this.tree = tree;
+      this.flatTree = tree;
     });
   }
 

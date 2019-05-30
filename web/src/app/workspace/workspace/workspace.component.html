@@ -8,7 +8,7 @@
           <div>Loading...</div>
         </div>
       </div>
-      <app-tree style="flex: 1" [repository]="repositoryDetails" [tree]="tree" (nodeSelected)="nodeSelected($event)" (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)" (nodeRemoved)="nodeRemoved($event)" *ngIf="(treeStatus == TreeStatus.Done)">
+      <app-tree #tree style="flex: 1" [repository]="repositoryDetails" [tree]="flatTree" (nodeSelected)="nodeSelected($event)" (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)" (nodeRemoved)="nodeRemoved($event)" *ngIf="(treeStatus == TreeStatus.Done)">
       </app-tree>
       <mat-form-field class="branches">
         <mat-label>Branches</mat-label>

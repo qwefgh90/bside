@@ -1,3 +1,5 @@
+import { Blob } from './blob';
+
 export class Content {
     type: string //: "file",
     encoding: string //: "base64",
@@ -15,4 +17,5 @@ export class Content {
       self: string
       html: string
     }
+    blob: Blob
 }

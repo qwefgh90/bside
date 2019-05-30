@@ -52,7 +52,7 @@ export class TextUtil {
         const mimeName: string = mime.getType(name);
         const mimeInfo = mimeDb[mime.getType(name)]
         let compressible = (mimeInfo != undefined) && (mimeInfo.compressible != undefined) ? mimeInfo.compressible : true; // unknown is considered as compressible
-        console.debug(`mimeInfo ${mimeInfo}`);
+        console.debug(`mimeInfo ${JSON.stringify(mimeInfo)}`);
         console.debug(`compressible: ${compressible}`);
         if (mimeName != null && mimeName.toLocaleLowerCase().startsWith('image/'))
             return FileType.Image;
@@ -61,5 +61,9 @@ export class TextUtil {
         } else {
             return FileType.Other
         }
+    }
+
+    static getMime(fileName: string){
+        return mime.getType(fileName);
     }
 }

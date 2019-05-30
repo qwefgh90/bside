@@ -1,5 +1,5 @@
 export enum NodeStateAction {
-  NodesChanged, NameModified, ContentModified, Created, Deleted
+  NodesChanged, NameModified, ContentModified, Created, Deleted, Moved
 }
 
 export interface GithubNode {
@@ -80,6 +80,7 @@ export class GithubTreeNode {
 
   //custom field
   children: GithubTreeNode[];
+  removedChildren: GithubTreeNode[];
   readonly state: Array<NodeStateAction> = [];
   readonly isRoot: boolean;
   private parentNode: GithubTreeNode;
@@ -123,6 +124,7 @@ export class GithubTreeNode {
       if (newParent != undefined && newParent.type.toLocaleLowerCase() == 'tree') {
         const prePath = this.path;
         this._path = newParent.isRoot ? this.name : `${newParent.path}/${this.name}`
+        this.state.push(NodeStateAction.Moved)
         console.debug(`Change of path: from ${prePath} to ${this.path}`);
         this.parentNode.state.push(NodeStateAction.NodesChanged);
         if (newParent != this.parentNode) {
@@ -152,7 +154,7 @@ export class GithubTreeNode {
     });
     if (found != -1) {
       this.state.push(NodeStateAction.Deleted);
-      this.parentNode.children.splice(found, 1);
+      this.parentNode.removedChildren = this.parentNode.removedChildren.concat(this.parentNode.children.splice(found, 1));
       this.parentNode.state.push(NodeStateAction.NodesChanged);
       if (postAction)
         postAction(this);
@@ -180,11 +182,32 @@ export class GithubTreeNode {
       if (postAction)
         postAction(this, this.parentNode, prePath, this.path);
       if (this.type == 'tree') {
-        Object.assign([], this.children).forEach((child) => {
+        this.children.forEach((child) => {
           child.rename(child.name, postAction);
         })
       }
     }
+  }
+
+  private reduceInnerLoop <A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A, acc: A, root: GithubTreeNode) {
+    // const root = this.isRoot ? this : undefined;
+    let nextAcc = postAction(acc, this, root);
+    if (this.type == 'tree') {
+      this.children.concat(this.removedChildren).forEach((child) => {
+        nextAcc = child.reduceInnerLoop(postAction, nextAcc, root);
+      })
+    }
+    return nextAcc;
+  }
+
+  /**
+   * reduce tree with DFS
+   * @param postAction 
+   * @param initValue 
+   */
+reduce <A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A, initValue: A) {
+    const subRoot = this;
+    return this.reduceInnerLoop(postAction, initValue, subRoot);
   }
 
   setContentModifiedFlag() {
@@ -201,18 +224,21 @@ export class GithubTreeNode {
   }
 
   isMyDescendant(node: GithubTreeNode) {
-    let shortPathArr = this.path.split('/');
-    let longPathArr = node.path.split('/');
+    let shortPathArr = this.isRoot ? [] : this.path.split('/');
+    let longPathArr = node.isRoot ? [] : node.path.split('/');
+    const firstLength = shortPathArr.length;
+    const secondLength = longPathArr.length;
+    const shortestEqualLength = Math.min(shortPathArr.length, longPathArr.length);
     longPathArr.splice(shortPathArr.length, longPathArr.length);
-    let shortPathArrFromLong = longPathArr;
+    let trimmedLongArr = longPathArr;
     let isEqualPath = true;
-    for (let i = 0; i < shortPathArr.length; i++) {
-      if (shortPathArrFromLong[i] != shortPathArr[i]) {
+    for (let i = 0; i < shortestEqualLength; i++) {
+      if (shortPathArr[i] != trimmedLongArr[i]) {
         isEqualPath = false;
         break;
       }
     }
-    return (node.path.length >= this.path.length) && isEqualPath;
+    return (firstLength <= secondLength) && isEqualPath;
   }
 
   static readonly githubTreeNodeFactory = new class {
@@ -220,8 +246,10 @@ export class GithubTreeNode {
       let node = new GithubTreeNode();
       node.parentNode = parentNode;
       node._type = type;
-      if (node.type == 'tree')
+      if(node._type == 'tree'){
         node.children = [];
+        node.removedChildren = [];
+      }
       node.state.push(NodeStateAction.Created);
       parentNode.children.push(node);
       parentNode.state.push(NodeStateAction.NodesChanged);
@@ -232,7 +260,9 @@ export class GithubTreeNode {
       let node = new GithubTreeNode(true);
       node._type = 'tree';
       node._sha = sha;
+      node._path = '';
       node.children = [];
+      node.removedChildren = [];
       return node;
     }
 
@@ -246,8 +276,10 @@ export class GithubTreeNode {
       real._url = v.url;
       real._syncedNode = v;
       real._name = real.getNameFromPath();
-      if(real._type == 'tree')
+      if(real._type == 'tree'){
         real.children = [];
+        real.removedChildren = [];
+      }
 
       return real;
     }

@@ -8,12 +8,13 @@ import { ITreeOptions, TreeNode, TreeComponent } from 'angular-tree-component';
 import { DomSanitizer } from '@angular/platform-browser';
 
 import { TREE_ACTIONS, IActionMapping } from 'angular-tree-component';
+import { GithubTree } from './github-tree';
 @Component({
   selector: 'app-tree',
   templateUrl: './github-tree.component.html',
   styleUrls: ['./github-tree.component.css']
 })
-export class GithubTreeComponent implements OnChanges, OnDestroy {
+export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
   @ViewChild(TreeComponent)
   treeComponent: TreeComponent;
 
@@ -39,6 +40,10 @@ export class GithubTreeComponent implements OnChanges, OnDestroy {
     iconRegistry.addSvgIcon(
       'outline-note',
       sanitizer.bypassSecurityTrustResourceUrl('assets/outline-note-24px.svg'));
+  }
+
+  getRoot(){
+    return this.root;
   }
 
   actionMapping: IActionMapping = {
@@ -106,7 +111,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy {
       }
       if (this.renamingNode.data.name == undefined) {
         this.remove(this.renamingNode);
-        console.log(`It will be removed because it doesn't have a name after renaming`);
+        console.log(`It will be removed because it doesn't have any name`);
       }
     }
     this.renamingNode = undefined;

@@ -932,7 +932,7 @@ export class WrapperService {
   }
 ]
    */
-  async getContents(login: string, repositoryName: string, commitSha: string, path: string): Promise<any> {
+  async getContents(login: string, repositoryName: string, commitSha: string, path: string): Promise<Content> {
     if (this.hasToken()) {
       const github = new Github({
         token: this.token()
@@ -941,6 +941,7 @@ export class WrapperService {
       if (content.data != undefined) {
         let c: Promise<Content> = this.getBlob(login, repositoryName, content.data.sha).then(b => {
           content.data.content = b.content; // assign correct blob
+          content.data.blob = b;
           return content.data;
         });
         return c;
