@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { WorkspaceComponent } from './workspace.component';
 import { GithubTreeComponent } from '../tree/github-tree.component';
-import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule, MatExpansionModule, MatSelectModule, MatMenu, MatIcon, MatMenuModule, MatProgressSpinnerModule } from '@angular/material';
+import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule, MatExpansionModule, MatSelectModule, MatMenu, MatIcon, MatMenuModule, MatProgressSpinnerModule, MatButtonToggleModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WrapperService } from 'src/app/github/wrapper.service';
@@ -19,6 +19,12 @@ import { MonacoService } from '../editor/monaco.service';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { GithubTreeNode } from '../tree/github-tree-node';
 import { FileType, TextUtil } from '../text/text-util';
+
+@Component({selector: 'app-stage', template: ''})
+class StageComponent {
+  @Input("repository") repository;
+  @Input("tree") tree: GithubTreeNode;
+}
 
 @Component({selector: 'app-editor', template: ''})
 class EditorStubComponent {}
@@ -59,7 +65,7 @@ describe('WorkspaceComponent', () => {
     treeSpy = wrapperServiceSpy.tree;
     mockWrapperServiceSpy();
     TestBed.configureTestingModule({
-      declarations: [WorkspaceComponent, GithubTreeStubComponent, EditorStubComponent, ActionComponent],
+      declarations: [WorkspaceComponent, GithubTreeStubComponent, EditorStubComponent, ActionComponent, StageComponent],
       providers: [{provide: ActivatedRoute, useValue: routeStub}, 
         {provide: WrapperService, useValue: wrapperServiceSpy}, 
         {provide: Router, useValue: routerSpy},
@@ -77,7 +83,8 @@ describe('WorkspaceComponent', () => {
         ReactiveFormsModule,
         MatMenuModule,
         TreeModule.forRoot(),
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        MatButtonToggleModule
       ],
     })
       .compileComponents();

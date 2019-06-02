@@ -868,10 +868,57 @@ export class WrapperService {
     }
   }
 
+  /**
+   * curl -H "Authorization: token oauthtoken" https://api.github.com/repos/qwefgh90/test/git/blobs -X POST -d '{"content": "SGVsbG8=", "encoding": "base64"}'
+    {
+    "sha": "5ab2f8a4323abafb10abb68657d9d39f1a775057",
+    "url": "https://api.github.com/repos/qwefgh90/test/git/blobs/5ab2f8a4323abafb10abb68657d9d39f1a775057"
+    }
+   */
+  createBlob(login: string, repositoryName: string, contentAsBase64: string){
+    const url = `https://api.github.com/repos/${login}/${repositoryName}/git/blobs`;
+    const data = {"content": contentAsBase64, "encoding": "base64"};
+    let treeResponse = this.http.post<{sha: string, url: string}>(url, data, { headers: { Authorization: `token ${this.token()}` } })
+    return treeResponse.toPromise();
+  }
   
   getBlob(login: string, repositoryName: string, sha: string){
     const url = `https://api.github.com/repos/${login}/${repositoryName}/git/blobs/${sha}`;
     let treeResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
+    return treeResponse.toPromise();
+  }
+
+  /**
+   * 
+   * curl -i -H "Authorization: token oauthtoken" 
+      -d '{ "base_tree": "90c0ea2ac21d52e9164f8b57a68768cd6d9290b8", "tree" : [ { "path": "src/hello3.java", "mode": "100644", "type": "blob", "sha": "5ab2f8a4323abafb10abb68657d9d39f1a775057" } ] }' 
+      https://api.github.com/repos/qwefgh90/test/git/trees
+      {
+        "sha": "312260ddb183ab19a719856ecb6719098a304a6c",
+        "url": "https://api.github.com/repos/qwefgh90/test/git/trees/312260ddb183ab19a719856ecb6719098a304a6c",
+        "tree": [
+          {
+            "path": "newfolder",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "1b05319144c206e70279a21c4a4e656d1c28b297",
+            "url": "https://api.github.com/repos/qwefgh90/test/git/trees/1b05319144c206e70279a21c4a4e656d1c28b297"
+          },
+          {
+            "path": "src",
+            "mode": "040000",
+            "type": "tree",
+            "sha": "37321d9eb287bf0b92e390cdaf2d8e1b83a28904",
+            "url": "https://api.github.com/repos/qwefgh90/test/git/trees/37321d9eb287bf0b92e390cdaf2d8e1b83a28904"
+          }
+        ],
+        "truncated": false
+      }
+   */
+  createTree(login: string, repositoryName: string, arr: Array<{path: string, mode: string, type: string, sha: string}>){
+    const url = `https://api.github.com/repos/${login}/${repositoryName}/git/trees`;
+    const data = {"tree": arr };
+    let treeResponse = this.http.post<{sha: string, url: string, tree: Array<any>}>(url, data, { headers: { Authorization: `token ${this.token()}` } })
     return treeResponse.toPromise();
   }
 

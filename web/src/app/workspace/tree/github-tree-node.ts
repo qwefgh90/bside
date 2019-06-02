@@ -126,10 +126,10 @@ export class GithubTreeNode {
         this._path = newParent.isRoot ? this.name : `${newParent.path}/${this.name}`
         this.state.push(NodeStateAction.Moved)
         console.debug(`Change of path: from ${prePath} to ${this.path}`);
-        this.parentNode.state.push(NodeStateAction.NodesChanged);
+        this.changeAllParents(this.parentNode);
         if (newParent != this.parentNode) {
           this.parentNode = newParent;
-          newParent.state.push(NodeStateAction.NodesChanged);
+          this.changeAllParents(this.parentNode);
         }
         if (postAction)
           postAction(this, newParent, prePath, this.path);
@@ -155,7 +155,7 @@ export class GithubTreeNode {
     if (found != -1) {
       this.state.push(NodeStateAction.Deleted);
       this.parentNode.removedChildren = this.parentNode.removedChildren.concat(this.parentNode.children.splice(found, 1));
-      this.parentNode.state.push(NodeStateAction.NodesChanged);
+      this.changeAllParents(this.parentNode);
       if (postAction)
         postAction(this);
       if (this.type == 'tree') {
@@ -178,7 +178,7 @@ export class GithubTreeNode {
       else
         this._path = this.name;
       this.state.push(NodeStateAction.NameModified);
-      this.parentNode.state.push(NodeStateAction.NodesChanged);
+      this.changeAllParents(this.parentNode);
       if (postAction)
         postAction(this, this.parentNode, prePath, this.path);
       if (this.type == 'tree') {
@@ -189,12 +189,12 @@ export class GithubTreeNode {
     }
   }
 
-  private reduceInnerLoop<A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A, acc: A, root: GithubTreeNode) {
+  private reduceInnerLoop<A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A, acc: A, root: GithubTreeNode, removeIncluded: boolean) {
     // const root = this.isRoot ? this : undefined;
     let nextAcc = postAction(acc, this, root);
     if (this.type == 'tree') {
-      this.children.concat(this.removedChildren).forEach((child) => {
-        nextAcc = child.reduceInnerLoop(postAction, nextAcc, root);
+      this.children.concat(removeIncluded ? this.removedChildren : []).forEach((child) => {
+        nextAcc = child.reduceInnerLoop(postAction, nextAcc, root, removeIncluded);
       })
     }
     return nextAcc;
@@ -205,9 +205,9 @@ export class GithubTreeNode {
    * @param postAction 
    * @param initValue 
    */
-  reduce<A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A, initValue: A) {
+  reduce<A>(postAction: (acc: A, node: GithubTreeNode, tree: GithubTreeNode) => A, initValue: A, removeIncluded: boolean = false) {
     const subRoot = this;
-    return this.reduceInnerLoop(postAction, initValue, subRoot);
+    return this.reduceInnerLoop(postAction, initValue, subRoot, removeIncluded);
   }
 
   setContentModifiedFlag() {
@@ -216,12 +216,20 @@ export class GithubTreeNode {
   }
 
   setSyncedFlag(sha: string) {
+    this.state.splice(0, this.state.length);
     this._sha = sha;
-    // this.state.push(NodeStateAction.Synced);
   }
 
   private getNameFromPath() {
     return this.path.match(new RegExp('[^/]*$'))[0];
+  }
+
+  private changeAllParents(parent: GithubTreeNode){
+    let p = parent;
+    while(p != undefined){
+      p.state.push(NodeStateAction.NodesChanged);
+      p = p.parentNode;
+    }
   }
 
   isMyDescendant(node: GithubTreeNode) {

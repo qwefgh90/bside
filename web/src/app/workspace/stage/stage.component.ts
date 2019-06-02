@@ -1,7 +1,8 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, EventEmitter, Output } from '@angular/core';
 import { GithubTreeNode, GithubNode, NodeStateAction } from '../tree/github-tree-node';
 import { GithubTree } from '../tree/github-tree';
 import { Stage } from './stage';
+import { WrapperService } from 'src/app/github/wrapper.service';
 
 @Component({
   selector: 'app-stage',
@@ -11,6 +12,7 @@ import { Stage } from './stage';
 export class StageComponent implements OnInit, OnChanges, Stage {
   @Input("repository") repository;
   @Input("tree") tree: GithubTreeNode;
+  @Output("commit") clickCommit: EventEmitter<void> = new EventEmitter<void>();
   NodeStateAction = NodeStateAction;
   items: Array<GithubTreeNode> = [];
   options = {
@@ -29,12 +31,12 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   invalidate() {
     if (this.tree != undefined) {
       let arr = this.tree.reduce<Array<GithubTreeNode>>((acc, node, tree) => {
-        if (!node.isRoot && (node.state.length > 0)) {
+        if (!node.isRoot && (node.type == 'blob') && (node.state.length > 0)) {
           console.debug(`${node.path} is added`);
           acc.push(node);
         }
         return acc;
-      }, []);
+      }, [], true);
       this.items = arr;
     }
   }
@@ -65,6 +67,10 @@ export class StageComponent implements OnInit, OnChanges, Stage {
       return "D";
     else if (v == NodeStateAction.NodesChanged)
       return "T";
+  }
+
+  commit(){
+    this.clickCommit.emit();
   }
 
 }

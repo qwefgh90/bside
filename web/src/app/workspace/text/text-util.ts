@@ -12,14 +12,14 @@ export class TextUtil {
 
     private constructor(){ }
 
-    static decode(bytes, encoding: string) {
-        let decoder = new (TextDecoderLite == undefined ? TextDecoder : TextDecoderLite)(encoding != null ? encoding.toLowerCase() : 'utf-8')
+    static decode(bytes, encoding: string = 'utf-8') {
+        let decoder = new (TextDecoderLite == undefined ? TextDecoder : TextDecoderLite)(encoding.toLowerCase())
         let result = decoder.decode(bytes);
         return result;
     }
 
-    static encode(text: string, encoding: string): Uint8Array {
-        let encoder = new (TextEncoderLite == undefined ? TextEncoder : TextEncoderLite)(encoding);
+    static encode(text: string, encoding: string = 'utf-8'): Uint8Array {
+        let encoder = new (TextEncoderLite == undefined ? TextEncoder : TextEncoderLite)(encoding.toLowerCase());
         let result = encoder.encode(text)
         return result;
     }

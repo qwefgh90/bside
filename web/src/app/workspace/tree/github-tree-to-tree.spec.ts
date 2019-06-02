@@ -173,9 +173,10 @@ describe('GithubTreeToTree', () => {
         acc.push(node);
       }
       return acc;
-    }, []);
+    }, [], true);
 
     expect(acc.length).toBe(9);
+    expect(root.state.includes(NodeStateAction.NodesChanged)).toBeTruthy();
   })
 
   it('reduce() after remove()', () =>{
@@ -193,9 +194,10 @@ describe('GithubTreeToTree', () => {
         acc.push(node);
       }
       return acc;
-    }, []);
+    }, [], true);
 
-    expect(acc.length).toBe(5);
+    expect(acc.length).toBe(6);
+    expect(root.state.includes(NodeStateAction.NodesChanged)).toBeTruthy();
   })
   //does not allow parent move to the child tree
 });

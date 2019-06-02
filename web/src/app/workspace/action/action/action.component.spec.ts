@@ -1,7 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ActionComponent } from './action.component';
-import { MatExpansionModule, MatInputModule, MatIcon, MatIconModule } from '@angular/material';
+import { MatExpansionModule, MatInputModule, MatIcon, MatIconModule, MatButtonToggleModule } from '@angular/material';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -16,7 +16,8 @@ describe('ActionComponent', () => {
         FormsModule,
         ReactiveFormsModule,
         BrowserAnimationsModule,
-        MatIconModule]
+        MatIconModule,
+      MatButtonToggleModule]
     })
     .compileComponents();
   }));

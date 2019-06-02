@@ -11,7 +11,7 @@
       <app-tree #tree style="flex: 1" [repository]="repositoryDetails" [tree]="flatTree" (nodeSelected)="nodeSelected($event)" (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)" (nodeRemoved)="nodeRemoved($event)" *ngIf="(treeStatus == TreeStatus.Done)"
         [class.none]="(workspaceStatus == WorkspaceStatus.Stage)">
       </app-tree>
-      <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="rootToStage" [class.none]="(workspaceStatus == WorkspaceStatus.View)">
+      <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="rootToStage" [class.none]="(workspaceStatus == WorkspaceStatus.View)" (commit)="onCommit()">
       </app-stage>
       <mat-form-field class="branches" [class.none]="(workspaceStatus == WorkspaceStatus.Stage)">
         <mat-label>Branches</mat-label>
@@ -24,7 +24,7 @@
     </div>
   </mat-drawer>
   <mat-drawer #rightDrawer mode="side" position="end">
-    <app-action (stage)="onStage($event)" (edit)="onEdit($event)"></app-action>
+    <app-action #action (stage)="onStage($event)" (edit)="onEdit($event)"></app-action>
   </mat-drawer>
   <div style="display: flex; flex-direction: column; height: 100%">
     <div class="toolbar">

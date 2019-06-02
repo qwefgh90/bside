@@ -2,12 +2,12 @@
   <button mat-icon-button class="mat-button-toggle-button">
     <mat-icon aria-label="view_agenda">view_agenda</mat-icon>
   </button>
-  <mat-button-toggle-group #group="matButtonToggleGroup" [vertical]="true">
-    <mat-button-toggle (click)="onEdit()" [checked]="true">
-      <mat-icon aria-label="edit">edit</mat-icon>
+  <mat-button-toggle-group #group="matButtonToggleGroup" [vertical]="true" [(ngModel)]="selectedBtn">
+    <mat-button-toggle (click)="onEdit()" [value]="ActionState.Edit">
+      <mat-icon aria-label="edit" >edit</mat-icon>
     </mat-button-toggle>
-    <mat-button-toggle (click)="onSave()">
-      <mat-icon aria-label="save">save</mat-icon>
+    <mat-button-toggle (click)="onSave()" [value]="ActionState.Save">
+      <mat-icon aria-label="save" >save</mat-icon>
     </mat-button-toggle>
   </mat-button-toggle-group>
 </div>

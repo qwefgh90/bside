@@ -1,6 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { StageComponent } from './stage.component';
+import { MatMenuModule, MatIconModule, MatButtonModule, MatDividerModule } from '@angular/material';
+import { TreeModule } from 'angular-tree-component';
 
 describe('StageComponent', () => {
   let component: StageComponent;
@@ -8,7 +10,9 @@ describe('StageComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ StageComponent ]
+      declarations: [ StageComponent ],
+      imports: [MatMenuModule, MatIconModule, MatDividerModule,
+        TreeModule.forRoot(), MatButtonModule]
     })
     .compileComponents();
   }));

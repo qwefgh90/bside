@@ -3,7 +3,7 @@ import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, Subject, Observable, combineLatest, fromEventPattern } from 'rxjs';
 import { MatDrawer, MatSelectChange } from '@angular/material';
-import { GithubTreeNode, NodeStateAction } from '../tree/github-tree-node';
+import { GithubTreeNode, NodeStateAction, GithubNode } from '../tree/github-tree-node';
 import { MonacoService } from '../editor/monaco.service';
 import { Editor } from '../editor/editor';
 import { Blob } from 'src/app/github/type/blob';
@@ -11,6 +11,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FileType, TextUtil } from '../text/text-util';
 import { GithubTree } from '../tree/github-tree';
 import { Stage } from '../stage/stage';
+import { ActionComponent, ActionState } from '../action/action/action.component';
 
 declare const monaco;
 
@@ -43,6 +44,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   @ViewChild("tree") tree: GithubTree;
   @ViewChild("editor1") editor1: Editor;
   @ViewChild("stage") stage: Stage;
+  @ViewChild("action") action: ActionComponent;
+  
 
   userId;
   repositoryName;
@@ -274,6 +277,35 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   onCommit(){
-    this.workspaceStatus = WorkspaceStatus.View;
+    let newThings = this.tree.getRoot().reduce<Array<GithubTreeNode>>((acc, node, tree) => {
+      if((node.type == "blob") && (node.state.length>0)){
+        acc.push(node);
+      }
+      return acc;
+    }, [])
+    let responseArr = newThings.map((v)=>{
+      let promise: Promise<{sha: string, url: string}>;
+      if(v.state.includes(NodeStateAction.Created))
+        promise = this.wrapper.createBlob(this.userId, this.repositoryName, TextUtil.bytesToBase64(TextUtil.encode(this.editor1.exist(v.path) ? this.editor1.getContent(v.path) : '')));
+      else if((v.state.includes(NodeStateAction.NameModified) ||
+          v.state.includes(NodeStateAction.ContentModified) ||
+          v.state.includes(NodeStateAction.Moved)) && 
+          this.editor1.exist(v.path)){
+        promise = this.wrapper.createBlob(this.userId, this.repositoryName, TextUtil.bytesToBase64(TextUtil.encode(this.editor1.getContent(v.path))));
+      }else{
+        promise = new Promise((resolve) => {
+          resolve({sha: v.sha, url: v.url});
+        })
+      }
+      return promise.then((response) => {return {node: v, response: response}});
+    });
+    Promise.all(responseArr).then((arr) => {
+      arr.forEach((v) => {
+        v.node.setSyncedFlag(v.response.sha);
+      })
+    }).then(() => {
+      this.action.select(ActionState.Edit);
+      // this.workspaceStatus = WorkspaceStatus.View;
+    })
   }
 }
