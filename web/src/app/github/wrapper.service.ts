@@ -12,7 +12,7 @@ import { Content } from './type/content';
   providedIn: 'root'
 })
 export class WrapperService {
-  constructor(private oauth: OAuthService, private http: HttpClient) { }
+  constructor(private oauth: OAuthService, private http: HttpClient) {   }
 
   /**
    * [
@@ -490,14 +490,21 @@ export class WrapperService {
 }*/
   repositoryDetails(login: string, repositoryName: string): Promise<any> {
     if (this.hasToken()) {
-      const repo = new Github({
-        token: this.token()
-      });
-      let promise: Promise<any> = repo.getRepo(login, repositoryName).getDetails();
-      return promise.then(result => result.data);
+      // const repo = new Github({
+      //   token: this.token()
+      // });
+      // let promise: Promise<any> = repo.getRepo(login, repositoryName).getDetails();
+      // return promise.then(result => result.data);
+      return this.repository(login, repositoryName)
     } else {
       return Promise.reject();
     }
+  }
+
+  repository(login: string, repositoryName: string){
+    const url = `https://api.github.com/repos/${login}/${repositoryName}`;
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
+    return reposResponse.toPromise();
   }
 
   /**
@@ -858,7 +865,7 @@ export class WrapperService {
       const repo = new Github({
         token: this.token()
       });
-      let promise: Promise<any> = this.getBlob(login, repositoryName, sha);
+      let promise: Promise<any> = this.getBlob(login, repositoryName, sha)
       // let promise: Promise<any> = this.treeRecursive(login, repositoryName, sha);//repo.getRepo(login, repositoryName).getTree(sha);
       return promise.then(result => {
         return result
@@ -915,10 +922,91 @@ export class WrapperService {
         "truncated": false
       }
    */
+
   createTree(login: string, repositoryName: string, arr: Array<{path: string, mode: string, type: string, sha: string}>){
     const url = `https://api.github.com/repos/${login}/${repositoryName}/git/trees`;
-    const data = {"tree": arr };
+    const data = {"tree": arr.map(b => {return {path: b.path, mode: b.mode, type: b.type, sha: b.sha}})};
     let treeResponse = this.http.post<{sha: string, url: string, tree: Array<any>}>(url, data, { headers: { Authorization: `token ${this.token()}` } })
+    return treeResponse.toPromise();
+  }
+
+  /**
+   * curl -i -H "Authorization: token oauthtoken" 
+    -d '{"message": "commit with Github API", "tree":"6438db5869959ae5c4a5a748d84ab2b48d9628da", "parents": ["90c0ea2ac21d52e9164f8b57a68768cd6d9290b8"] }' 
+    https://api.github.com/repos/qwefgh90/test/git/commits
+
+    {
+    "sha": "716013e99784592167c4fc153fa74b2a96f08401",
+    "node_id": "MDY6Q29tbWl0ODIzOTM2MjM6NzE2MDEzZTk5Nzg0NTkyMTY3YzRmYzE1M2ZhNzRiMmE5NmYwODQwMQ==",
+    "url": "https://api.github.com/repos/qwefgh90/test/git/commits/716013e99784592167c4fc153fa74b2a96f08401",
+    "html_url": "qwefgh90/test@716013e",
+    "author": {
+    "name": "Changwon Choe",
+    "email": "qwefgh90@naver.com",
+    "date": "2019-05-19T16:08:19Z"
+    },
+    "committer": {
+    "name": "Changwon Choe",
+    "email": "qwefgh90@naver.com",
+    "date": "2019-05-19T16:08:19Z"
+    },
+    "tree": {
+    "sha": "6438db5869959ae5c4a5a748d84ab2b48d9628da",
+    "url": "https://api.github.com/repos/qwefgh90/test/git/trees/6438db5869959ae5c4a5a748d84ab2b48d9628da"
+    },
+    "message": "commit with Github API",
+    "parents": [
+    {
+    "sha": "90c0ea2ac21d52e9164f8b57a68768cd6d9290b8",
+    "url": "https://api.github.com/repos/qwefgh90/test/git/commits/90c0ea2ac21d52e9164f8b57a68768cd6d9290b8",
+    "html_url": "https://github.com/qwefgh90/test/commit/90c0ea2ac21d52e9164f8b57a68768cd6d9290b8"
+    }
+    ],
+    "verification": {
+    "verified": false,
+    "reason": "unsigned",
+    "signature": null,
+    "payload": null
+    }
+    }
+   */
+  createCommit(login: string, repositoryName: string, commitMsg: string, treeSha: string, parentCommitSha: string){
+    const url = `https://api.github.com/repos/${login}/${repositoryName}/git/commits`;
+    const data = {"message": commitMsg, "tree":treeSha, "parents": [parentCommitSha] }
+    let treeResponse = this.http.post<any>(url, data, { headers: { Authorization: `token ${this.token()}` } })
+    return treeResponse.toPromise();
+  }
+
+  /**
+   * 
+    curl -i -H "Authorization: token oauthtoken" -X PATCH 
+    -d '{"sha":"716013e99784592167c4fc153fa74b2a96f08401" }' 
+    https://api.github.com/repos/qwefgh90/test/git/refs/heads/master
+
+    {
+    "ref": "refs/heads/master",
+    "node_id": "MDM6UmVmODIzOTM2MjM6bWFzdGVy",
+    "url": "https://api.github.com/repos/qwefgh90/test/git/refs/heads/master",
+    "object": {
+      "sha": "716013e99784592167c4fc153fa74b2a96f08401",
+      "type": "commit",
+      "url": "https://api.github.com/repos/qwefgh90/test/git/commits/716013e99784592167c4fc153fa74b2a96f08401"
+    }
+    }
+   */
+  updateBranch(login: string, repositoryName: string, branch: string, commitSha: string){
+    const url = `https://api.github.com/repos/${login}/${repositoryName}/git/refs/heads/${branch}`;
+    const data = {"sha": commitSha }
+    let treeResponse = this.http.post<{
+      ref: string
+      ,node_id: string
+      ,url: string
+      ,object: {
+        sha: string
+        ,type: string
+        ,url: string
+      }
+    }>(url, data, { headers: { Authorization: `token ${this.token()}` } })
     return treeResponse.toPromise();
   }
 
@@ -1023,16 +1111,23 @@ export class WrapperService {
       }
     ]
    */
-  branches(login: string, repositoryName: string): Promise<any> {
+  async branches(login: string, repositoryName: string): Promise<any> {
     if (this.hasToken()) {
-      const repo = new Github({
-        token: this.token()
-      });
-      let promise: Promise<any> = repo.getRepo(login, repositoryName).listBranches();
-      return promise.then(result => result.data);
+      // const repo = new Github({
+      //   token: this.token()
+      // });
+      let repo = await this.repositoryDetails(login, repositoryName);
+      return this.get((repo.branches_url as string).replace("{/branch}", ""));
+      // let promise: Promise<any> = repo.getRepo(login, repositoryName).listBranches();
+      // return promise.then(result => result.data);
     } else {
       return Promise.reject();
     }
+  }
+
+  private async get(url: string){
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
+    return reposResponse.toPromise();
   }
 
   /**

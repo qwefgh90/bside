@@ -24,6 +24,8 @@ import { FileType, TextUtil } from '../text/text-util';
 class StageComponent {
   @Input("repository") repository;
   @Input("tree") tree: GithubTreeNode;
+  @Input("modifiedNodes") modifiedNodes: GithubTreeNode[];
+  
 }
 
 @Component({selector: 'app-editor', template: ''})

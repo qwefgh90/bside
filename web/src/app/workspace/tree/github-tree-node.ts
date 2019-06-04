@@ -215,9 +215,11 @@ export class GithubTreeNode {
       this.state.push(NodeStateAction.ContentModified);
   }
 
-  setSyncedFlag(sha: string) {
+  setSynced(sha: string, type: string, mode: string) {
     this.state.splice(0, this.state.length);
     this._sha = sha;
+    this._type = type;
+    this._mode = mode;
   }
 
   private getNameFromPath() {

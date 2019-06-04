@@ -20,8 +20,23 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
 
   subscription: Subscription;
   monaco: any;
+  option: monacoNameSpace.editor.IEditorConstructionOptions = {
+    value: [""].join("\n"),
+    theme: "vs",
+    automaticLayout: true
+  };
 
   constructor(private monacoService: MonacoService) { }
+
+  private _readonly: boolean;
+  set readonly(v: boolean){
+    this._readonly;
+    this.option.readOnly = v;
+    this.editor.updateOptions(this.option);
+  }
+  get readonly(){
+    return this._readonly;
+  }
 
   ngOnInit() {
     this.subscription = this.monacoService.monaco.subscribe((monaco) => {
@@ -70,14 +85,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
         this.editor.dispose();
         myDiv.childNodes.forEach((c) => c.remove());
       }
-      let option: monacoNameSpace.editor.IEditorConstructionOptions = {
-        value: [""].join("\n"),
-        language: "javascript",
-        theme: "vs",
-        automaticLayout: true
-
-      };
-      this.editor = monaco.editor.create(myDiv, option);
+      this.editor = monaco.editor.create(myDiv, this.option);
     }
   }
 
@@ -105,9 +113,9 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
   setContent(path: string, content: string) {
     if (this.monaco != undefined) {
       let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
-      if (existsModel)
+      if (existsModel){
         existsModel.setValue(content);
-      else {
+      }else {
         this.model = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(path));
         this.model.onDidChangeContent((e) => {
           // console.log(e);

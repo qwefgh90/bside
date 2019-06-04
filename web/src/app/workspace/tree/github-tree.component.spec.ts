@@ -8,6 +8,7 @@ import { TreeModule, TreeNode } from 'angular-tree-component';
 import { tree, repositoryDetails } from 'src/app/testing/mock-data';
 import { SimpleChange } from '@angular/core';
 import { NodeStateAction } from './github-tree-node';
+import { GithubTreeToTree } from './github-tree-to-tree';
 describe('TreeComponent', () => {
   let component: GithubTreeComponent;
   let fixture: ComponentFixture<GithubTreeComponent>;
@@ -49,7 +50,9 @@ describe('TreeComponent', () => {
 
   it('render tree', () => {
     component.repository = repositoryDetails;
-    component.tree = tree;
+    const nodeTransformer = new GithubTreeToTree(tree);
+    const hiarachyTree = nodeTransformer.getTree();
+    component.tree = hiarachyTree;
     component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
 
     fixture.detectChanges();
@@ -63,7 +66,9 @@ describe('TreeComponent', () => {
 
   it('click one node', () => {
     component.repository = repositoryDetails;
-    component.tree = tree;
+    const nodeTransformer = new GithubTreeToTree(tree);
+    const hiarachyTree = nodeTransformer.getTree();
+    component.tree = hiarachyTree;
     component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
     fixture.detectChanges();
     
@@ -78,7 +83,9 @@ describe('TreeComponent', () => {
 
   it('move node under the root in the function of drop()', () => {
     component.repository = repositoryDetails;
-    component.tree = tree;
+    const nodeTransformer = new GithubTreeToTree(tree);
+    const hiarachyTree = nodeTransformer.getTree();
+    component.tree = hiarachyTree;
     component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
     fixture.detectChanges();
     
@@ -96,7 +103,9 @@ describe('TreeComponent', () => {
 
   it('findInSiblings()', () => {
     component.repository = repositoryDetails;
-    component.tree = tree;
+    const nodeTransformer = new GithubTreeToTree(tree);
+    const hiarachyTree = nodeTransformer.getTree();
+    component.tree = hiarachyTree;
     component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
     fixture.detectChanges();
 
@@ -115,7 +124,9 @@ describe('TreeComponent', () => {
     fixture.detectChanges();
 
     component.repository = repositoryDetails;
-    component.tree = tree;
+    const nodeTransformer = new GithubTreeToTree(tree);
+    const hiarachyTree = nodeTransformer.getTree();
+    component.tree = hiarachyTree;
     component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
     fixture.detectChanges();
 
@@ -136,7 +147,9 @@ describe('TreeComponent', () => {
     fixture.detectChanges();
 
     component.repository = repositoryDetails;
-    component.tree = tree;
+    const nodeTransformer = new GithubTreeToTree(tree);
+    const hiarachyTree = nodeTransformer.getTree();
+    component.tree = hiarachyTree;
     component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
     fixture.detectChanges();
 
@@ -157,7 +170,9 @@ describe('TreeComponent', () => {
     fixture.detectChanges();
 
     component.repository = repositoryDetails;
-    component.tree = tree;
+    const nodeTransformer = new GithubTreeToTree(tree);
+    const hiarachyTree = nodeTransformer.getTree();
+    component.tree = hiarachyTree;
     component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
     fixture.detectChanges();
 
@@ -179,7 +194,9 @@ describe('TreeComponent', () => {
     fixture.detectChanges();
 
     component.repository = repositoryDetails;
-    component.tree = tree;
+    const nodeTransformer = new GithubTreeToTree(tree);
+    const hiarachyTree = nodeTransformer.getTree();
+    component.tree = hiarachyTree;
     component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
     fixture.detectChanges();
 

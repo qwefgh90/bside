@@ -14,12 +14,12 @@
     </div>
   </div>
   <mat-divider></mat-divider>
-  <div style="text-align: center; margin-top: 1em" *ngIf="items.length == 0">
+  <div style="text-align: center; margin-top: 1em" *ngIf="modifiedNodes ? (modifiedNodes.length == 0) : false">
     <span>Nothing to commit</span>
   </div>
   <div class="tree-box">
     <!-- <div style="height: 100%; overflow-y: scroll;"> -->
-    <tree-root #tree1 id="tree" [nodes]="items" [options]="options" [focused]="true">
+    <tree-root #tree1 id="tree" [nodes]="modifiedNodes" [options]="options" [focused]="true">
       <ng-template #treeNodeWrapperTemplate let-node let-index="index" let-templates="templates">
         <div class="node-wrapper" [style.padding-left]="node.getNodePadding()">
           <div class="node-content-wrapper" style="width: 100%; display: flex"
@@ -28,7 +28,7 @@
             (dblclick)="node.mouseAction('dblClick', $event)" (contextmenu)="node.mouseAction('contextMenu', $event)"
             (treeDrop)="node.onDrop($event)" [treeAllowDrop]="node.allowDrop" [treeDrag]="node"
             [treeDragEnabled]="node.allowDrag()">
-            <div class="node-title">
+            <div class="node-title" (click)="selectNode(node)">
               <mat-icon *ngIf="!(node.data.type == 'tree')">description</mat-icon>
               <mat-icon *ngIf="node.data.type == 'tree'">
                 {{!node.isExpanded ? 'folder' : 'folder_open'}}
@@ -55,5 +55,5 @@
     </tree-root>
   <!-- </div> -->
   </div>
-  <button mat-stroked-button style="margin-bottom: 1em" [disabled]="items.length == 0" (click)="commit()">Commit</button>
+  <button mat-stroked-button style="margin-bottom: 1em" [disabled]="modifiedNodes ? (modifiedNodes.length == 0) : false" (click)="commit()">Commit</button>
 </div>

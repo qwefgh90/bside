@@ -38,6 +38,14 @@ export class TextUtil {
         return base64;
     }
 
+    static stringToBase64(text: string, encoding: string = 'utf-8'): string {
+        return this.bytesToBase64(this.encode(text, encoding));
+    }
+
+    static base64ToString(base64: string, encoding: string = 'utf-8'): string {
+        return this.decode(this.base64ToBytes(base64), encoding);
+    }
+
     static getEncoding(bytes): string {
         let string = '';
         for (var i = 0; i < bytes.length; ++i) {

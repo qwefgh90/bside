@@ -8,10 +8,10 @@
           <div>Loading...</div>
         </div>
       </div>
-      <app-tree #tree style="flex: 1" [repository]="repositoryDetails" [tree]="flatTree" (nodeSelected)="nodeSelected($event)" (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)" (nodeRemoved)="nodeRemoved($event)" *ngIf="(treeStatus == TreeStatus.Done)"
+      <app-tree #tree style="flex: 1" [repository]="repositoryDetails" [tree]="root" (nodeSelected)="nodeSelected($event)" (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)" (nodeRemoved)="nodeRemoved($event)" *ngIf="(treeStatus == TreeStatus.Done)"
         [class.none]="(workspaceStatus == WorkspaceStatus.Stage)">
       </app-tree>
-      <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="rootToStage" [class.none]="(workspaceStatus == WorkspaceStatus.View)" (commit)="onCommit()">
+      <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="root" (nodeSelected)="nodeSelected($event)" [modifiedNodes]="nodesToStage" [class.none]="(workspaceStatus == WorkspaceStatus.View)" (commit)="onCommit()">
       </app-stage>
       <mat-form-field class="branches" [class.none]="(workspaceStatus == WorkspaceStatus.Stage)">
         <mat-label>Branches</mat-label>
@@ -24,14 +24,14 @@
     </div>
   </mat-drawer>
   <mat-drawer #rightDrawer mode="side" position="end">
-    <app-action #action (stage)="onStage($event)" (edit)="onEdit($event)"></app-action>
+    <app-action #action (stage)="onStage($event)" (edit)="onEdit($event)" [isNodeDirty]="isNodeDirty  "></app-action>
   </mat-drawer>
   <div style="display: flex; flex-direction: column; height: 100%">
     <div class="toolbar">
       <span class="fileName">{{selectedNode != undefined ? selectedNode.path : ''}}</span>
       <div class="spacer"></div>
       <div *ngIf="selectedNode != undefined">
-        <a href="{{getRawUrl(repositoryDetails.full_name, selectedBranch.commit.sha, selectedNode.syncedNode.path)}}" target="_blank" style="text-decoration: none;color: unset;margin-right: 1em"><button mat-stroked-button><mat-icon>open_in_new</mat-icon></button></a>
+        <a href="{{getRawUrl(repositoryDetails.full_name, selectedBranch.commit.sha, selectedNode.syncedNode.path)}}" *ngIf="selectedNode.syncedNode != undefined" target="_blank" style="text-decoration: none;color: unset;margin-right: 1em"><button mat-stroked-button><mat-icon>open_in_new</mat-icon></button></a>
         <!-- <a href="{{getRawUrl(repositoryDetails.full_name, selectedBranch.commit.sha, selectedNode.syncedNode.path)}}" style="text-decoration: none;color: unset" download><button mat-stroked-button style="margin-right: 1em"><mat-icon>cloud_download</mat-icon></button></a> -->
       </div>
     </div>
@@ -42,7 +42,7 @@
         </div>
       </div>
     </div>
-    <app-editor #editor1 style="flex:1;" (changeContent)="contentChanged($event)" [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)" [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"></app-editor>
+    <app-editor #editor1 style="flex:1;" (changeContent)="nodeContentChanged($event)" [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)" [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"></app-editor>
     <div style="flex:1; display: block; height: 100px " *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">
       <div style="overflow-y: scroll; height: 100%;"><img [src]="selectedImagePath"/></div>
     </div>

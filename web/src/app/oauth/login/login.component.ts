@@ -31,7 +31,7 @@ export class LoginComponent implements OnInit {
       this.status = LoginStatus.Initialized;
     }, (reason) => {
       this.status = LoginStatus.Failure;
-      console.error("We cannot get initial information from server.")
+      console.error("We cannot get initial information from server.", reason)
     })
     this.redirect_uri = this.makeRedirectUrl();
   }

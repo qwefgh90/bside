@@ -1,4 +1,4 @@
-import { Component, OnInit, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output, Input } from '@angular/core';
 
 export enum ActionState{
   Save, Edit
@@ -11,6 +11,7 @@ export enum ActionState{
 })
 export class ActionComponent implements OnInit {
   ActionState = ActionState;
+  @Input("isNodeDirty") isNodeDirty: boolean
   @Output("stage") stage = new EventEmitter<void>();
   @Output("edit") edit = new EventEmitter<void>();
 
@@ -30,7 +31,8 @@ export class ActionComponent implements OnInit {
   }
 
   onSave(){
-    this.stage.emit();
+    if(this.isNodeDirty)
+      this.stage.emit();
   }
 
   onEdit(){

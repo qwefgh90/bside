@@ -19,7 +19,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
   treeComponent: TreeComponent;
 
   @Input("repository") repository;
-  @Input("tree") tree: {sha: string, tree: Array<any>};
+  @Input("tree") tree: GithubTreeNode;
   @Output("nodeSelected") nodeSelected = new EventEmitter<GithubTreeNode>();
   @Output("nodeCreated") nodeCreated = new EventEmitter<GithubTreeNode>();
   @Output("nodeRemoved") nodeRemoved = new EventEmitter<GithubTreeNode>();
@@ -81,11 +81,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.tree != undefined && this.tree != undefined) {
-        const nodeTransformer = new GithubTreeToTree(this.tree);
-        const hiarachyTree = nodeTransformer.getTree();
-        this.dataSource = hiarachyTree.children;
-        this.root = hiarachyTree;
-        console.log(`A tree is loaded with ${this.tree.tree.length} nodes.`)
+        this.dataSource = this.tree.children;
+        this.root = this.tree;
     }
   }
 
