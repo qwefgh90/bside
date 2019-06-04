@@ -118,7 +118,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
       }else {
         this.model = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(path));
         this.model.onDidChangeContent((e) => {
-          // console.log(e);
           this.changeContent.emit(path);
         })
       }

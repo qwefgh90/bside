@@ -261,6 +261,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
             } else if (type == FileType.Text) {
               let bytes = TextUtil.base64ToBytes(blob.content);
               let encoding = TextUtil.getEncoding(bytes);
+              encoding = encoding ? encoding : 'utf-8';
               this.encodingMap.set(this.selectedNode.sha, encoding);
               this.setContentAndFocusInEditor(this.selectedNode.path, bytes, encoding);
             }
@@ -298,7 +299,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.isNodeDirty = true;
     if(path == this.selectedNode.path){
       this.selectedNode.setContentModifiedFlag();
-      console.debug(`The content of ${path} is modified.`)
     }
   }
 
@@ -352,7 +352,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
       let blobs = this.getBlobNodes(this.root);
       if (blobs.filter(b => b.state.length > 0).length == 0) {
-        console.debug(`${blobs.toString()} will be committed`);
+        console.debug(`${blobs.map(b => b.path).join(',')} will be committed`);
         let createdTree = await this.wrapper.createTree(this.userId, this.repositoryName, blobs);
         let createdCommit = await this.wrapper.createCommit(this.userId, this.repositoryName, "This is created from BSide.", createdTree.sha, this.selectedBranch.commit.sha);
         let createdBranch = await this.wrapper.updateBranch(this.userId, this.repositoryName, this.selectedBranch.name, createdCommit.sha);

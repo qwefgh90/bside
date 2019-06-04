@@ -96,11 +96,14 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
   completeRenaming() {
     if (this.renamingNode != undefined) {
       let alreadyExist = this.findInSiblings(this.renamingNode, (node) => this.renamingFormControl.value == node.data.name);
-
+      const fileNameRegex = (/[<>:"\/\\|?*\x00-\x1F]/g);
+      let invalid = fileNameRegex.test(this.renamingFormControl.value) //https://github.com/sindresorhus/filename-reserved-regex/blob/master/index.js
       if (alreadyExist) {
         console.log(`${this.renamingFormControl.value} already exists among siblings`);
       } else if ((this.renamingFormControl.value == undefined) || (this.renamingFormControl.value.length == 0)) {
         console.log(`File name is empty`);
+      } else if(invalid) {
+        console.log(`${this.renamingFormControl.value} File name is invalid`);
       } else {
         this.renamingNode.data.rename(this.renamingFormControl.value, (node, parent, pre, newPath) => {
           this.nodeMoved.emit({ 'fromPath': pre, 'to': node });

@@ -46,12 +46,16 @@ export class TextUtil {
         return this.decode(this.base64ToBytes(base64), encoding);
     }
 
+    /**
+     * can return null
+     * @param bytes 
+     */
     static getEncoding(bytes): string {
         let string = '';
         for (var i = 0; i < bytes.length; ++i) {
             string += String.fromCharCode(bytes[i]);
         }
-        let encoding = jschardet.detect(string).encoding;
+        let encoding = jschardet.detect(string, { minimumThreshold: 0 }).encoding;
         console.debug('detected encoding: ' + encoding);
         return encoding;
     }
