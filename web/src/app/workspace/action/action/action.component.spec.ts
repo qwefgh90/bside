@@ -4,6 +4,7 @@ import { ActionComponent } from './action.component';
 import { MatExpansionModule, MatInputModule, MatIcon, MatIconModule, MatButtonToggleModule } from '@angular/material';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('ActionComponent', () => {
   let component: ActionComponent;
@@ -12,6 +13,7 @@ describe('ActionComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ ActionComponent ],
+      schemas: [ NO_ERRORS_SCHEMA ],
       imports: [MatExpansionModule, MatInputModule,
         FormsModule,
         ReactiveFormsModule,

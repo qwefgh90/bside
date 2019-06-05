@@ -21,4 +21,8 @@ export class LocalUploadService {
   exist(path: string){
     return this.map.has(path);
   }
+
+  clear(){
+    this.map.clear();
+  }
 }

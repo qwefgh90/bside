@@ -134,42 +134,38 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
     return found;
   }
 
-  
   /**
    * 
    * @param type 
    * @param parentTreeNode 
    * @param name if this parameter is defined, rename this node with it
    */
-  newNode(type: string, parentTreeNode: TreeNode, name?: string): TreeNode {
+  newNode(type: 'blob' | 'tree', parentTreeNode: TreeNode, name?: string): TreeNode {
     let parent: GithubTreeNode = (parentTreeNode == undefined) ? this.root : parentTreeNode.data;
-    let node: GithubTreeNode;
-    if (type == 'blob' || type == 'tree') {
-      node = GithubTreeNode.githubTreeNodeFactory.createNewNode(parent, type);
-      this.refreshTree();
-      this.nodeCreated.emit(node);
-      let newNode = this.treeComponent.treeModel.getNodeBy((e:TreeNode) => e.data == node);
-      if (!parent.isRoot) {
-        let parentFound = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data == parent);
-        parentFound.expand();
-      }
-      if(name == undefined){
-        this.rename(newNode);
-        return newNode;
-      }else{
-        let alreadyExist = this.findInSiblings(newNode, (node) => name == node.data.name);
-        if(alreadyExist){
-          console.log(`${name} already exists among siblings`);
-          this.remove(newNode);
-          return undefined;
-        }else{
-          newNode.data.rename(name);
-          newNode.data.move(parent);
-          this.nodeMoved.emit({'fromPath': '', 'to': newNode.data.path});
-          return newNode;
-        }
+    let node: GithubTreeNode = GithubTreeNode.githubTreeNodeFactory.createNewNode(parent, type);
+    this.refreshTree();
+    this.nodeCreated.emit(node);
+    let newNode = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data == node);
+    if (!parent.isRoot) {
+      let parentFound = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data == parent);
+      parentFound.expand();
+    }
+    if (name == undefined) {
+      this.rename(newNode);
+    } else {
+      let alreadyExist = this.findInSiblings(newNode, (node) => name == node.data.name);
+      if (alreadyExist) {
+        console.log(`${name} already exists among siblings`);
+        this.remove(newNode);
+        newNode = undefined
+      } else {
+        (newNode.data as GithubTreeNode).rename(name);
+        (newNode.data as GithubTreeNode).move(parent, (n, p , path, newPath) => {
+          this.nodeMoved.emit({'fromPath': '', 'to': newNode.data.path });
+        });
       }
     }
+    return newNode;
   }
 
   rename(node: TreeNode) {
