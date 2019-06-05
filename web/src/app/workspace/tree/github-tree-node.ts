@@ -1,5 +1,5 @@
 export enum NodeStateAction {
-  NodesChanged, NameModified, ContentModified, Created, Deleted, Moved
+  NodesChanged, NameModified, ContentModified, Created, Deleted, Moved, Uploaded
 }
 
 export interface GithubNode {
@@ -210,6 +210,23 @@ export class GithubTreeNode {
     return this.reduceInnerLoop(postAction, initValue, subRoot, removeIncluded);
   }
 
+  /**
+   * return all blob nodes 
+   */
+  getBlobNodes(){
+    if (this.type == 'tree') {
+      let arr = this.reduce<Array<GithubTreeNode>>((acc, node, tree) => {
+        if (!node.isRoot && (node.type == 'blob')) {
+          console.debug(`${node.path} is added`);
+          acc.push(node);
+        }
+        return acc;
+      }, [], true);
+      return arr;
+    }else
+      return [];
+  }
+
   setContentModifiedFlag() {
     if(this.state[this.state.length-1] != NodeStateAction.ContentModified)
       this.state.push(NodeStateAction.ContentModified);
@@ -220,6 +237,10 @@ export class GithubTreeNode {
     this._sha = sha;
     this._type = type;
     this._mode = mode;
+  }
+
+  setUploadedToLocal(){
+    this.state.push(NodeStateAction.Uploaded);
   }
 
   private getNameFromPath() {

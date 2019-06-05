@@ -19,6 +19,7 @@ import { MonacoService } from '../editor/monaco.service';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { GithubTreeNode } from '../tree/github-tree-node';
 import { FileType, TextUtil } from '../text/text-util';
+import { LocalUploadService } from '../upload/local-upload.service';
 
 @Component({selector: 'app-stage', template: ''})
 class StageComponent {
@@ -71,7 +72,7 @@ describe('WorkspaceComponent', () => {
       providers: [{provide: ActivatedRoute, useValue: routeStub}, 
         {provide: WrapperService, useValue: wrapperServiceSpy}, 
         {provide: Router, useValue: routerSpy},
-      {provide: MonacoService}],
+      {provide: MonacoService}, {provide: LocalUploadService}],
       imports: [MatSidenavModule,
         BrowserAnimationsModule,
         MatDividerModule,

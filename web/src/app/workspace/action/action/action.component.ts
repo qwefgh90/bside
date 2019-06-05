@@ -11,6 +11,7 @@ export enum ActionState{
 })
 export class ActionComponent implements OnInit {
   ActionState = ActionState;
+  @Input("repository") repository: any
   @Input("isNodeDirty") isNodeDirty: boolean
   @Output("stage") stage = new EventEmitter<void>();
   @Output("edit") edit = new EventEmitter<void>();

@@ -27,3 +27,6 @@ a {
   display: flex;
   height: 50px;
 }
+#profile-image:hover{
+  cursor: pointer;
+}

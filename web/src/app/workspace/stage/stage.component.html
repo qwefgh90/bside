@@ -4,7 +4,7 @@
       <h3 style="display:inline;">Staged</h3>
     </div>
     <div>
-      <mat-icon style="cursor: pointer" [matMenuTriggerFor]="appMenuForRoot" class="context-menu-button">
+      <mat-icon style="cursor: pointer" [matMenuTriggerFor]="appMenuForRoot" class="context-menu-button" title="Repository menu">
         arrow_drop_down</mat-icon>
       <mat-menu #appMenuForRoot="matMenu" xPosition="before">
         <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;">
@@ -34,20 +34,16 @@
                 {{!node.isExpanded ? 'folder' : 'folder_open'}}
               </mat-icon>
               <span style="line-height: 24px; flex: 1">{{node.data.name}}</span>
-              <div style="margin-left: 1em;" *ngIf="getLabels(node.data).length != 0"><span style="font-size: 0.5em" *ngFor="let l of getLabels(node.data)">{{getLabel(l)}}&nbsp;</span></div>
+              <div style="margin-left: 1em;" *ngIf="getLabels(node.data).length != 0"><span style="font-size: 0.5em" *ngFor="let l of getLabels(node.data)" title="{{l.name}}">{{l.short}}&nbsp;</span></div>
             </div>
             <div>
-              <mat-icon [matMenuTriggerFor]="appMenu" class="context-menu-button">
+              <mat-icon [matMenuTriggerFor]="appMenu" class="context-menu-button" title="Menu">
                 arrow_drop_down</mat-icon>
               <mat-menu #appMenu="matMenu" xPosition="before">
                 <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;">
                   <mat-icon>undo</mat-icon>Undo
                 </button>
               </mat-menu>
-              <!-- <mat-icon [matMenuTriggerFor]="appMenu" *ngIf="!(node.data.type == 'tree')" class="context-menu-button">
-              arrow_drop_down</mat-icon>
-            <mat-icon [matMenuTriggerFor]="appMenuForTree" *ngIf="node.data.type == 'tree'" class="context-menu-button">
-              arrow_drop_down</mat-icon> -->
             </div>
           </div>
         </div>

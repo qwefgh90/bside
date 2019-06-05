@@ -9,6 +9,10 @@ import { DomSanitizer } from '@angular/platform-browser';
 
 import { TREE_ACTIONS, IActionMapping } from 'angular-tree-component';
 import { GithubTree } from './github-tree';
+import { Upload } from '../upload/upload';
+import { UploadComponent } from '../upload/upload.component';
+import { UploadFile } from '../upload/upload-file';
+import { LocalUploadService } from '../upload/local-upload.service';
 @Component({
   selector: 'app-tree',
   templateUrl: './github-tree.component.html',
@@ -27,6 +31,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
 
   @ViewChild('blobRenamingInput') blobRenamingInput: ElementRef;
   @ViewChild('treeRenamingInput') treeRenamingInput: ElementRef;
+  @ViewChild(UploadComponent) upload: Upload;
 
   root: GithubTreeNode;
   renamingFormControl: FormControl = new FormControl();
@@ -36,7 +41,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
 
   subscriptions: Array<Subscription> = [];
 
-  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer) {
+  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private localUpload: LocalUploadService) {
     iconRegistry.addSvgIcon(
       'outline-note',
       sanitizer.bypassSecurityTrustResourceUrl('assets/outline-note-24px.svg'));
@@ -129,27 +134,41 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
     return found;
   }
 
+  
   /**
    * 
-   * @param parentTreeNode if undefined, newNode is created below root node
-   * type is 'tree' or 'blob'
+   * @param type 
+   * @param parentTreeNode 
+   * @param name if this parameter is defined, rename this node with it
    */
-  newNode(type: string, parentTreeNode?: TreeNode) {
-    let parent: GithubTreeNode = parentTreeNode == undefined ? this.root : parentTreeNode.data;
-    let node;
+  newNode(type: string, parentTreeNode: TreeNode, name?: string): TreeNode {
+    let parent: GithubTreeNode = (parentTreeNode == undefined) ? this.root : parentTreeNode.data;
+    let node: GithubTreeNode;
     if (type == 'blob' || type == 'tree') {
       node = GithubTreeNode.githubTreeNodeFactory.createNewNode(parent, type);
       this.refreshTree();
-      // this.treeControl.expand(parent);
       this.nodeCreated.emit(node);
-
-      let found = this.treeComponent.treeModel.getNodeBy((e:TreeNode) => e.data == node);
-      
-      if (parentTreeNode != undefined) {
+      let newNode = this.treeComponent.treeModel.getNodeBy((e:TreeNode) => e.data == node);
+      if (!parent.isRoot) {
         let parentFound = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data == parent);
         parentFound.expand();
       }
-      this.rename(found);
+      if(name == undefined){
+        this.rename(newNode);
+        return newNode;
+      }else{
+        let alreadyExist = this.findInSiblings(newNode, (node) => name == node.data.name);
+        if(alreadyExist){
+          console.log(`${name} already exists among siblings`);
+          this.remove(newNode);
+          return undefined;
+        }else{
+          newNode.data.rename(name);
+          newNode.data.move(parent);
+          this.nodeMoved.emit({'fromPath': '', 'to': newNode.data.path});
+          return newNode;
+        }
+      }
     }
   }
 
@@ -175,6 +194,19 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
 
   refreshTree() {
     this.treeComponent.treeModel.update();
+  }
+
+  onFileLoaded(f: UploadFile) {
+    const parentNode = this.treeComponent.treeModel.getNodeBy((n: TreeNode) => n.data.path == f.parentPath);
+    const newNode = this.newNode('blob', parentNode, f.name);
+    if(newNode != undefined){
+      newNode.data.setUploadedToLocal();
+      this.localUpload.set(newNode.data.path, f);
+    }
+  }
+
+  uploadFile(parentPath: string){
+    this.upload.select(parentPath);
   }
 
   hasChild = (_: number, node: GithubTreeNode) => !!node.children && node.type == 'tree' ;

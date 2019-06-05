@@ -15,9 +15,10 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { TreeModule } from 'angular-tree-component';
 import { StageComponent } from './stage/stage.component';
 import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import { UploadComponent } from './upload/upload.component';
 
 @NgModule({
-  declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent],
+  declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent, UploadComponent],
   imports: [
     CommonModule,
     WorkspaceRoutingModule,

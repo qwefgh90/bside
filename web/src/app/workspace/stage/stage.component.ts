@@ -39,22 +39,37 @@ export class StageComponent implements OnInit, OnChanges, Stage {
     },
       { set: new Set<NodeStateAction>(), acc: new Array<NodeStateAction>() }
     );
-    return result.acc;
+    return result.acc.map(s => this.getLabel(s));
   }
+
+  labelTable = {
+    "C": {short: "C", name: "Created"},
+    "CM": {short: "CM", name: "Modified content"},
+    "M": {short: "M", name: "Moved"},
+    "NM": {short: "NM", name: "Modified name"},
+    "D": {short: "D", name: "Deleted"},
+    "T": {short: "T", name: "Changed tree"},
+    "U": {short: "U", name: "Uploaded"},
+    "E": {short: "E", name: "ETC"},
+  };
 
   getLabel(v: NodeStateAction) {
     if (v == NodeStateAction.Created)
-      return "C";
+      return this.labelTable["C"];
     else if (v == NodeStateAction.ContentModified)
-      return "CM";
+      return this.labelTable["CM"];
     else if (v == NodeStateAction.Moved)
-      return "M";
+      return this.labelTable["M"];
     else if (v == NodeStateAction.NameModified)
-      return "NM";
+      return this.labelTable["NM"];
     else if (v == NodeStateAction.Deleted)
-      return "D";
+      return this.labelTable["D"];
     else if (v == NodeStateAction.NodesChanged)
-      return "T";
+      return this.labelTable["T"];
+    else if (v == NodeStateAction.Uploaded)
+      return this.labelTable["U"];
+    else 
+      return this.labelTable["E"];
   }
 
   commit(){

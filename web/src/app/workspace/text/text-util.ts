@@ -13,13 +13,13 @@ export class TextUtil {
     private constructor(){ }
 
     static decode(bytes, encoding: string = 'utf-8') {
-        let decoder = new (TextDecoderLite == undefined ? TextDecoder : TextDecoderLite)(encoding.toLowerCase())
+        let decoder = new (TextDecoder != undefined ? TextDecoder : TextDecoderLite)(encoding.toLowerCase())
         let result = decoder.decode(bytes);
         return result;
     }
 
     static encode(text: string, encoding: string = 'utf-8'): Uint8Array {
-        let encoder = new (TextEncoderLite == undefined ? TextEncoder : TextEncoderLite)(encoding.toLowerCase());
+        let encoder = new (TextEncoder != undefined ? TextEncoder : TextEncoderLite)(encoding.toLowerCase());
         let result = encoder.encode(text)
         return result;
     }

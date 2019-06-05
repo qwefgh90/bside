@@ -1,11 +1,10 @@
 <div style="width: 100%; height: 100%; display: flex; flex-flow: column">
-
   <div class="repository-title">
     <div style="flex: 1;padding-left: 0.3em;">
       <h3 style="display:inline;">{{repository?.name}}</h3>
     </div>
     <div>
-      <mat-icon style="cursor: pointer" [matMenuTriggerFor]="appMenuForRoot" class="context-menu-button">
+      <mat-icon style="cursor: pointer" [matMenuTriggerFor]="appMenuForRoot" class="context-menu-button" title="Repository menu">
         arrow_drop_down</mat-icon>
       <mat-menu #appMenuForRoot="matMenu" xPosition="before">
         <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="newNode('blob')">
@@ -14,15 +13,18 @@
         <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="newNode('tree')">
           <mat-icon>fiber_new</mat-icon>New Folder
         </button>
-        <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;">
+        <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="uploadFile('')">
           <mat-icon>cloud_upload</mat-icon>Upload
         </button>
-        <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;">
-          <a href="{{repository?.html_url}}" target="_blank"
-            style="text-decoration: none; color: black; display: block">
-            <mat-icon>link</mat-icon>Github
-          </a>
-        </button>
+        <a mat-menu-item style="margin-top: -12px; margin-bottom: -12px;"
+          href="{{repository?.html_url}}" target="_blank">
+          <mat-icon>link</mat-icon>Github
+        </a>
+        <a mat-menu-item style="margin-top: -12px; margin-bottom: -12px;"
+          href="{{repository?.homepage}}" target="_blank"
+          [disabled]="repository?.homepage == undefined || repository?.homepage == null">
+          <mat-icon>web</mat-icon>Static page
+        </a>
       </mat-menu>
     </div>
   </div>
@@ -49,10 +51,9 @@
                 [formControl]="renamingFormControl" (keydown.enter)="completeRenaming()" (blur)="completeRenaming()" />
             </div>
             <div>
-              <mat-icon [matMenuTriggerFor]="appMenu" *ngIf="!(node.data.type == 'tree')" class="context-menu-button">
+              <mat-icon [matMenuTriggerFor]="appMenu" *ngIf="!(node.data.type == 'tree')" title="Blob menu" class="context-menu-button" >
                 arrow_drop_down</mat-icon>
-              <mat-icon [matMenuTriggerFor]="appMenuForTree" *ngIf="node.data.type == 'tree'"
-                class="context-menu-button">
+              <mat-icon [matMenuTriggerFor]="appMenuForTree" *ngIf="node.data.type == 'tree'" title="Tree menu" class="context-menu-button">
                 arrow_drop_down</mat-icon>
               <mat-menu #appMenu="matMenu" xPosition="before">
                 <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="rename(node)">
@@ -69,7 +70,7 @@
                 <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="newNode('tree', node)">
                   <mat-icon>fiber_new</mat-icon>New Folder
                 </button>
-                <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;">
+                <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="uploadFile(node.data.path)">
                   <mat-icon>cloud_upload</mat-icon>Upload
                 </button>
                 <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="rename(node)">
@@ -86,3 +87,4 @@
     </tree-root>
   </div>
 </div>
+<app-upload (fileToUpload)="onFileLoaded($event)"></app-upload>

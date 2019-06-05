@@ -1,12 +1,15 @@
-<div style="height: 100%;display: flex; flex-flow: column">
-  <button mat-icon-button class="mat-button-toggle-button">
+<div style="height: 100%;display: flex; flex-flow: column" aria-label>
+  <button mat-icon-button class="button-with-toggle-style">
     <mat-icon aria-label="view_agenda">view_agenda</mat-icon>
   </button>
+  <a mat-icon-button title="Static page" class="button-with-toggle-style" href="{{repository?.homepage}}" target="_blank" [disabled]="repository?.homepage == undefined || repository?.homepage == null">
+      <mat-icon aria-label="web">web</mat-icon>
+  </a>
   <mat-button-toggle-group #group="matButtonToggleGroup" [vertical]="true" [(ngModel)]="selectedBtn">
-    <mat-button-toggle (click)="onEdit()" [value]="ActionState.Edit">
+    <mat-button-toggle (click)="onEdit()" [value]="ActionState.Edit" title="Edit">
       <mat-icon aria-label="edit" >edit</mat-icon>
     </mat-button-toggle>
-    <mat-button-toggle (click)="onSave()" [value]="ActionState.Save" [disabled]="!isNodeDirty">
+    <mat-button-toggle (click)="onSave()" [value]="ActionState.Save" [disabled]="!isNodeDirty" title="Save">
       <mat-icon aria-label="save" >save</mat-icon>
     </mat-button-toggle>
   </mat-button-toggle-group>

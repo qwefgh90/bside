@@ -9,13 +9,15 @@ import { tree, repositoryDetails } from 'src/app/testing/mock-data';
 import { SimpleChange } from '@angular/core';
 import { NodeStateAction } from './github-tree-node';
 import { GithubTreeToTree } from './github-tree-to-tree';
+import { LocalUploadService } from '../upload/local-upload.service';
+import { UploadComponent } from '../upload/upload.component';
 describe('TreeComponent', () => {
   let component: GithubTreeComponent;
   let fixture: ComponentFixture<GithubTreeComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ GithubTreeComponent ],
+      declarations: [ GithubTreeComponent, UploadComponent ],
       imports: [
         TreeModule.forRoot(),
         MatIconModule,
@@ -27,6 +29,7 @@ describe('TreeComponent', () => {
         MatMenuModule,
         MatDividerModule,
       ]
+      ,providers: [{provide: LocalUploadService}]
     })
     .compileComponents();
   }));

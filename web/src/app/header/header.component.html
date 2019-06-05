@@ -8,7 +8,7 @@
     <!-- <mat-icon class="example-icon" aria-hidden="false" aria-label="Example heart icon">favorite</mat-icon> -->
     <a routerLink="/login"><button class="signin" mat-raised-button *ngIf="!oauth.isLogin && !redirecting">Sign in</button></a>
     <!-- <button mat-icon-button [matMenuTriggerFor]="menu" *ngIf="oauth.isLogin" color="white" style="width: 32px; height: 32px;"> -->
-      <img src="{{user?.avatar_url}}" [matMenuTriggerFor]="menu" *ngIf="oauth.isLogin && user" color="white" style="width: 32px; height: 32px; vertical-align: middle;" />
+      <img src="{{user?.avatar_url}}" [matMenuTriggerFor]="menu" *ngIf="oauth.isLogin && user" color="white" style="width: 32px; height: 32px; vertical-align: middle;" title="{{user?.login}}({{user?.name}})" id="profile-image" />
       <mat-spinner style="display: inline-block;" [diameter]="30" [strokeWidth]="3" *ngIf="oauth.isLogin && !user"></mat-spinner>
     <!-- </button>  -->
     <mat-menu #menu="matMenu">
