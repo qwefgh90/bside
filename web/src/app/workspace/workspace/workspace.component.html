@@ -1,6 +1,6 @@
 
 <mat-drawer-container autosize style="width: 100%; height: 100%;">
-  <mat-drawer #leftDrawer mode="side" style="padding-left: 1em; padding-right: 0.5em; padding-top: 0.5em;">
+  <mat-drawer #leftDrawer mode="side" class="left-drawer">
     <div style="width: 100%; height: 100%; display: flex; flex-flow: column">
       <div style="flex:1; display: block; height: 100%" *ngIf="(treeStatus == TreeStatus.Loading) || (treeStatus == TreeStatus.NotInitialized)">
         <div class="loading">
@@ -14,7 +14,7 @@
           <div>Committing...</div>
         </div>
       </div>
-      <app-tree #tree style="flex: 1" [repository]="repositoryDetails" [tree]="root" (nodeSelected)="nodeSelected($event)" (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)" (nodeRemoved)="nodeRemoved($event)" *ngIf="(treeStatus == TreeStatus.Done)"
+      <app-tree #tree style="flex: 1" [repository]="repositoryDetails" [tree]="root" (nodeSelected)="nodeSelected($event)" (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)" (nodeRemoved)="nodeRemoved($event)" (nodeUploaded)="nodeUploaded($event)" *ngIf="(treeStatus == TreeStatus.Done)"
         [class.none]="(workspaceStatus == WorkspaceStatus.Stage)">
       </app-tree>
       <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="root" (nodeSelected)="nodeSelected($event)" [modifiedNodes]="nodesToStage" [class.none]="(workspaceStatus == WorkspaceStatus.View)" (commit)="onCommit()" *ngIf="(treeStatus == TreeStatus.Done)">

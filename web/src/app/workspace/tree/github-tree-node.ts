@@ -154,7 +154,8 @@ export class GithubTreeNode {
     });
     if (found != -1) {
       this.state.push(NodeStateAction.Deleted);
-      this.parentNode.removedChildren = this.parentNode.removedChildren.concat(this.parentNode.children.splice(found, 1));
+      let removedOne = this.parentNode.children.splice(found, 1);
+      this.parentNode.removedChildren = this.parentNode.removedChildren.concat(removedOne);
       this.changeAllParents(this.parentNode);
       if (postAction)
         postAction(this);

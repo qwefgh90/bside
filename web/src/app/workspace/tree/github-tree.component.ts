@@ -28,7 +28,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
   @Output("nodeCreated") nodeCreated = new EventEmitter<GithubTreeNode>();
   @Output("nodeRemoved") nodeRemoved = new EventEmitter<GithubTreeNode>();
   @Output("nodeMoved") nodeMoved = new EventEmitter<{fromPath: string, to: GithubTreeNode}>();
-
+  @Output("nodeUploaded") nodeUploaded = new EventEmitter<{node: GithubTreeNode, base64: string}>();
+  
   @ViewChild('blobRenamingInput') blobRenamingInput: ElementRef;
   @ViewChild('treeRenamingInput') treeRenamingInput: ElementRef;
   @ViewChild(UploadComponent) upload: Upload;
@@ -144,7 +145,6 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
     let parent: GithubTreeNode = (parentTreeNode == undefined) ? this.root : parentTreeNode.data;
     let node: GithubTreeNode = GithubTreeNode.githubTreeNodeFactory.createNewNode(parent, type);
     this.refreshTree();
-    this.nodeCreated.emit(node);
     let newNode = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data == node);
     if (!parent.isRoot) {
       let parentFound = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data == parent);
@@ -158,12 +158,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
         console.log(`${name} already exists among siblings`);
         this.remove(newNode);
         newNode = undefined
-      } else {
-        (newNode.data as GithubTreeNode).rename(name);
-        (newNode.data as GithubTreeNode).move(parent, (n, p , path, newPath) => {
-          this.nodeMoved.emit({'fromPath': '', 'to': newNode.data.path });
-        });
-      }
+      }else
+        newNode.data.rename(name);
     }
     return newNode;
   }
@@ -197,7 +193,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
     const newNode = this.newNode('blob', parentNode, f.name);
     if(newNode != undefined){
       newNode.data.setUploadedToLocal();
-      this.localUpload.set(newNode.data.path, f);
+      this.nodeUploaded.emit({node: newNode.data, base64: f.base64.toString()});
+      // this.localUpload.set(newNode.data.path, f);
     }
   }
 

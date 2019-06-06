@@ -39,7 +39,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   TreeStatus = TreeStatusOnWorkspace;
   ContentStatus = ContentStatusOnWorkspace;
   WorkspaceStatus = WorkspaceStatus;
-  constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer, private upload: LocalUploadService) { 
+  constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer) { 
   }
 
   @ViewChild("tree") tree: GithubTree;
@@ -78,6 +78,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   private intialize(){
+    this.action.select(ActionState.Edit);
+    this.isNodeDirty = false;
     this.initalizeLoader();
     if(this.route.snapshot.queryParams['branch'] == undefined){
       const userId = this.route.snapshot.params['userId']
@@ -148,12 +150,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return `https://raw.githubusercontent.com/${fullName}/${commitSha}/${path}`;
   }
 
-  private setContentAndFocusInEditor(path: string, bytes: any, encoding: string): void{
+  private setContentAndFocusInEditor(path: string, content: string): void{
     if (this.editor1 != undefined) {
       if (this.editor1.exist(path))
         this.editor1.selectTab(path);
       else{
-        this.editor1.setContent(path, TextUtil.decode(bytes, encoding))
+        this.editor1.setContent(path, content)
         this.editor1.selectTab(path);
       }
     }
@@ -217,40 +219,32 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       let type = TextUtil.getFileType(this.selectedNode.name);
       this.selectedFileType = type;
       if (this.selectedNode.state.filter((v) => v == NodeStateAction.Created).length == 1) {
-        if (this.selectedNode.state.filter((v) => v == NodeStateAction.Uploaded).length == 0) {
-          if (type == FileType.Text) {
-            let bytes = TextUtil.base64ToBytes('');
-            let encoding = 'utf-8';
-            this.setContentAndFocusInEditor(this.selectedNode.path, bytes, encoding);
+        if (this.editor1.exist(node.path)) {
+          let base64OrText = this.editor1.getContent(node.path);
+          if (type == FileType.Image) {
+            let mime = TextUtil.getMime(node.name);
+            this.selectedImagePath = this.getImage(base64OrText, mime);
+          } else if (type == FileType.Text) {
+            let encoding = this.encoding;
+            this.encodingMap.set(this.selectedNode.sha, encoding);
+            this.setContentAndFocusInEditor(this.selectedNode.path, base64OrText);
           }
-          this.contentStatus = ContentStatusOnWorkspace.Done;
         } else {
-          if (this.upload.exist(node.path)) {
-            const uploadFile = this.upload.get(node.path);
-            if (type == FileType.Image) {
-              this.selectedImagePath = this.getImage(uploadFile.base64.toString(), uploadFile.type);
-            } else if (type == FileType.Text) {
-              let bytes = TextUtil.base64ToBytes(uploadFile.base64.toString());
-              let encoding = this.encoding;
-              this.encodingMap.set(this.selectedNode.sha, encoding);
-              this.setContentAndFocusInEditor(this.selectedNode.path, bytes, encoding);
-            }
-          } else {
-            console.error(`the blob of ${node.path} can not be found on LocalUploadService`)
-          }
-          this.contentStatus = ContentStatusOnWorkspace.Done;
+          console.error(`The blob of ${node.path} must be in monaco editor`);
         }
-      }  else {
+        this.contentStatus = ContentStatusOnWorkspace.Done;
+      } else {
         this.wrapper.getBlob(this.userId, this.repositoryName, this.selectedNode.sha).then(
           (blob: Blob) => {
             if(type == FileType.Image){
               this.selectedImagePath = this.getRawUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, this.selectedNode.syncedNode.path);
+              
             } else if (type == FileType.Text) {
               let bytes = TextUtil.base64ToBytes(blob.content);
               let encoding = this.encoding;
               // encoding = encoding ? encoding : 'utf-8';
               this.encodingMap.set(this.selectedNode.sha, encoding);
-              this.setContentAndFocusInEditor(this.selectedNode.path, bytes, encoding);
+              this.setContentAndFocusInEditor(this.selectedNode.path, TextUtil.decode(bytes, encoding));
             }
           }, (reason) => {
             console.debug("An error during getting the blob. Maybe selectedNode is invalid.");
@@ -263,7 +257,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }
   }
 
-  nodeCreated(node: GithubTreeNode){ 
+  nodeCreated(node: GithubTreeNode){
+
   }
 
   nodeRemoved(node: GithubTreeNode){
@@ -281,12 +276,27 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       this.editor1.setContent(e.to.path, content);
       if(this.selectedNode == e.to)
         this.nodeSelected(e.to);
+    }else{
+      this.editor1.setContent(e.to.path, '');
+    }
+  }
+
+  nodeUploaded(event: {node: GithubTreeNode, base64: string}){
+    this.isNodeDirty = true;
+    let type = TextUtil.getFileType(event.node.name);
+    if(type == FileType.Text){
+      let bytes = TextUtil.base64ToBytes(event.base64.toString());
+      let encoding = this.encoding;
+      // this.encodingMap.set(event.node.sha, encoding);
+      this.editor1.setContent(event.node.path, TextUtil.decode(bytes, encoding));
+    }else {
+      this.editor1.setContent(event.node.path, event.base64);
     }
   }
 
   nodeContentChanged(path: string){
     this.isNodeDirty = true;
-    if(path == this.selectedNode.path){
+    if(this.selectedNode != undefined && path == this.selectedNode.path){
       this.selectedNode.setContentModifiedFlag();
     }
   }
@@ -299,7 +309,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   onStage(){
     this.workspaceStatus = WorkspaceStatus.Stage;
-    this.nodesToStage = this.root.getBlobNodes().filter(v => v.state.length > 0);
+    this.nodesToStage = this.root.getBlobNodes().filter(v => (v.state.length > 0) && v.name != undefined && v.name.length != 0);
     this.editor1.readonly = true;
   }
 
@@ -315,28 +325,29 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       let modifiedNodes = listToCommit.filter(n => (n.state.length > 0) && (!n.state.includes(NodeStateAction.Deleted)));
       let blobsWithoutDeletion = listToCommit.filter(n => !n.state.includes(NodeStateAction.Deleted));
       let responseArrPromise = modifiedNodes.map((v) => {
+        let type = TextUtil.getFileType(v.name);
+        let oldSha = v.sha;
+        let base64;
         let promise: Promise<{ sha: string, url: string }>;
-        if (v.state.includes(NodeStateAction.Created)){
-          if(v.state.includes(NodeStateAction.Uploaded)){
-            if(this.upload.exist(v.path)){
-              let base64 = this.upload.get(v.path).base64.toString();
+        if (v.state.includes(NodeStateAction.NameModified) ||
+            v.state.includes(NodeStateAction.ContentModified) ||
+            v.state.includes(NodeStateAction.Moved) ||
+            v.state.includes(NodeStateAction.Created)){
+          if(this.editor1.exist(v.path)){
+            let base64OrText = this.editor1.getContent(v.path);
+            if(type == FileType.Image || type == FileType.Other){
+              promise = this.wrapper.createBlob(this.userId, this.repositoryName, base64OrText);
+            }else{
+              if (this.encodingMap.has(oldSha))
+                base64 = TextUtil.stringToBase64(base64OrText, this.encodingMap.get(oldSha));
+              else
+                base64 = TextUtil.stringToBase64(base64OrText);
               promise = this.wrapper.createBlob(this.userId, this.repositoryName, base64);
-            }else
-              throw new Error(`the blob of ${v.path} can not be found on LocalUploadService`);
+            }
           }else
-            promise = this.wrapper.createBlob(this.userId, this.repositoryName, TextUtil.stringToBase64(this.editor1.exist(v.path) ? this.editor1.getContent(v.path) : ''));
-        
-        }else if ((v.state.includes(NodeStateAction.NameModified) ||
-          v.state.includes(NodeStateAction.ContentModified) ||
-          v.state.includes(NodeStateAction.Moved)) &&
-          this.editor1.exist(v.path)) {
-          let oldSha = v.sha;
-          let base64;
-          if (this.encodingMap.has(oldSha))
-            base64 = TextUtil.stringToBase64(this.editor1.getContent(v.path), this.encodingMap.get(oldSha));
-          else
-            base64 = TextUtil.stringToBase64(this.editor1.getContent(v.path));
-          promise = this.wrapper.createBlob(this.userId, this.repositoryName, base64);
+            promise = new Promise((r, reject) => {
+              reject('The blob of ${v.path} was not found. It must be in monaco editor')
+            })
         } else {
           promise = new Promise((resolve) => {
             resolve({ sha: v.sha, url: v.url });
@@ -363,10 +374,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     } catch(e){
       console.error(e);
     } finally {
-      this.action.select(ActionState.Edit);
-      this.isNodeDirty = false;
       this.intialize();
-      this.treeStatus = TreeStatusOnWorkspace.Done;
     }
   }
 }
