@@ -261,9 +261,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   nodeRemoved(node: GithubTreeNode){
     this.isNodeDirty = true;
-    this.editor1.removeContent(node.path);
-    this.contentStatus = ContentStatusOnWorkspace.NotInitialized
-    this.selectedNode = undefined;
+    if(node.path == this.selectedNode.path){
+      this.editor1.removeContent(node.path);
+      this.contentStatus = ContentStatusOnWorkspace.NotInitialized
+      this.selectedNode = undefined;
+    }
   }
 
   nodeMoved(e: {fromPath: string, to: GithubTreeNode}){

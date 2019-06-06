@@ -197,7 +197,8 @@ describe('WorkspaceComponent', () => {
     let existSpy = spyOn(component.editor1, 'exist');
     existSpy.and.returnValue(false);
     let removeContentSpy = spyOn(component.editor1, 'removeContent');
-
+    
+    component.selectedNode = component.tree.root.children[0];
     component.nodeRemoved(component.tree.root.children[0]);
 
     expect(removeContentSpy.calls.count()).toBe(1);
