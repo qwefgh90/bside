@@ -1,6 +1,6 @@
 import { Component, OnInit, EventEmitter, Output, Input } from '@angular/core';
 
-export enum ActionState{
+export enum ActionState {
   Save, Edit
 }
 
@@ -17,26 +17,28 @@ export class ActionComponent implements OnInit {
   @Output("edit") edit = new EventEmitter<void>();
 
   selectedBtn: ActionState = ActionState.Edit;
-  
+
   constructor() { }
 
   ngOnInit() {
   }
 
-  select(v: ActionState){
-    this.selectedBtn = v;
-    if(v == ActionState.Edit)
-      this.onEdit();
-    else if(v == ActionState.Save)
-      this.onSave();
+  select(v: ActionState) {
+    if (this.selectedBtn != v) {
+      this.selectedBtn = v;
+      if (v == ActionState.Edit)
+        this.onEdit();
+      else if (v == ActionState.Save)
+        this.onSave();
+    }
   }
 
-  onSave(){
-    if(this.isNodeDirty)
+  onSave() {
+    if (this.isNodeDirty)
       this.stage.emit();
   }
 
-  onEdit(){
+  onEdit() {
     this.edit.emit();
   }
 

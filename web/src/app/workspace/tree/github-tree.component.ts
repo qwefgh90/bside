@@ -8,7 +8,6 @@ import { ITreeOptions, TreeNode, TreeComponent } from 'angular-tree-component';
 import { DomSanitizer } from '@angular/platform-browser';
 
 import { TREE_ACTIONS, IActionMapping } from 'angular-tree-component';
-import { GithubTree } from './github-tree';
 import { Upload } from '../upload/upload';
 import { UploadComponent } from '../upload/upload.component';
 import { UploadFile } from '../upload/upload-file';
@@ -18,7 +17,7 @@ import { LocalUploadService } from '../upload/local-upload.service';
   templateUrl: './github-tree.component.html',
   styleUrls: ['./github-tree.component.css']
 })
-export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
+export class GithubTreeComponent implements OnChanges, OnDestroy {
   @ViewChild("tree1")
   treeComponent: TreeComponent;
 
@@ -48,21 +47,13 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
       sanitizer.bypassSecurityTrustResourceUrl('assets/outline-note-24px.svg'));
   }
 
-  getRoot(){
-    return this.root;
-  }
-
   actionMapping: IActionMapping = {
     mouse: {
       drop: (m, n, event, rest: {from: TreeNode, to: {dropOnNode: boolean, index: number, parent: TreeNode}}) => {
-        console.log(`${rest.from.data.name} is dropped`);
+        console.debug(`${rest.from.data.name} is dropped`);
         let foundIndex = (rest.to.parent.data as GithubTreeNode).children.findIndex((v) => v.name == rest.from.data.name)
         let newParent = rest.to.parent;
         let nodeToMove = rest.from;
-        // let invalid = nodeToMove.data.isMyDescendant(newParent.parent == null ? this.root : newParent.data);
-        // if(invalid){
-        //   console.log(`${rest.from.data.path} can not move to ${newParent.data.path}.`);
-        // }else 
         if(foundIndex == -1){
           const fromPath = rest.from.data.path;
           (rest.from.data as GithubTreeNode).move(newParent.parent == null ? this.root : newParent.data,
@@ -194,7 +185,6 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
     if(newNode != undefined){
       newNode.data.setUploadedToLocal();
       this.nodeUploaded.emit({node: newNode.data, base64: f.base64.toString()});
-      // this.localUpload.set(newNode.data.path, f);
     }
   }
 

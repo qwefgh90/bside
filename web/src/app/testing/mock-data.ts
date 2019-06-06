@@ -1,3 +1,4 @@
+import { Blob } from '../github/type/blob';
 
 export let simpleTree = {
   "sha": "xxxxxxf129c486558e37d797e54c9fd81c9c3407",
@@ -532,4 +533,12 @@ export let repositoryDetails = {
     "subscribers_count": 42,
     "network_count": 0
   }
+}
+export let blob1 = {
+  "sha": "3037bc2bdfba5b1c8885537245a62cd8b8049ce3",
+  "node_id": "MDQ6QmxvYjgyMzkzNjIzOjMwMzdiYzJiZGZiYTViMWM4ODg1NTM3MjQ1YTYyY2Q4YjgwNDljZTM=",
+  "size": 23,
+  "url": "https://api.github.com/repos/qwefgh90/test/git/blobs/3037bc2bdfba5b1c8885537245a62cd8b8049ce3",
+  "content": "6raB7J20IOq2geuztCDrs7bsnYzrsKU=\n",
+  "encoding": "base64"
 }

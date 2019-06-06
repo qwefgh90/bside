@@ -11,6 +11,7 @@ import { NodeStateAction } from './github-tree-node';
 import { GithubTreeToTree } from './github-tree-to-tree';
 import { LocalUploadService } from '../upload/local-upload.service';
 import { UploadComponent } from '../upload/upload.component';
+import { UploadFile } from '../upload/upload-file';
 describe('TreeComponent', () => {
   let component: GithubTreeComponent;
   let fixture: ComponentFixture<GithubTreeComponent>;
@@ -62,7 +63,6 @@ describe('TreeComponent', () => {
     const levelOneNodes = tree.tree.filter(e => {
       return !e.path.includes("/");
     });
-  // heroDe.triggerEventHandler('click', null);
     let treeNodes = fixture.nativeElement.querySelectorAll('tree-node');
     expect(treeNodes.length).toBe(levelOneNodes.length);
   });
@@ -144,6 +144,71 @@ describe('TreeComponent', () => {
     fixture.detectChanges();
     
     expect(_downloads.data.children.length).toBe(beforeLen + 1);
+  });
+
+  it('newNode() with the name', () => {
+    fixture.detectChanges();
+
+    component.repository = repositoryDetails;
+    const nodeTransformer = new GithubTreeToTree(tree);
+    const hiarachyTree = nodeTransformer.getTree();
+    component.tree = hiarachyTree;
+    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+    fixture.detectChanges();
+
+    let model = component.treeComponent.treeModel;
+    let _downloads: TreeNode = model.roots[5];
+    let beforeLen = _downloads.data.children.length
+    try{
+      component.newNode('blob', _downloads, "newnode");
+    }catch(e){}
+    component.renamingFormControl.setValue("newname");
+    component.completeRenaming();
+    fixture.detectChanges();
+    
+    expect(_downloads.data.children.length).toBe(beforeLen + 1);
+  });
+  
+  it('onFileLoaded()', () => {
+    fixture.detectChanges();
+
+    component.repository = repositoryDetails;
+    const nodeTransformer = new GithubTreeToTree(tree);
+    const hiarachyTree = nodeTransformer.getTree();
+    component.tree = hiarachyTree;
+    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+    fixture.detectChanges();
+
+    let model = component.treeComponent.treeModel;
+    let _downloads: TreeNode = model.roots[5];
+    let beforeLen = _downloads.data.children.length
+    try{
+      const fileToBeUploaded = new UploadFile(_downloads.data.path, 'uploadedFile', '', 0, '');
+      component.onFileLoaded(fileToBeUploaded);
+    }catch(e){}
+    fixture.detectChanges();
+    expect(_downloads.data.children.length).toBe(beforeLen + 1);
+  });
+
+  it('onFileLoaded() with the existing name', () => {
+    fixture.detectChanges();
+
+    component.repository = repositoryDetails;
+    const nodeTransformer = new GithubTreeToTree(tree);
+    const hiarachyTree = nodeTransformer.getTree();
+    component.tree = hiarachyTree;
+    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+    fixture.detectChanges();
+
+    let model = component.treeComponent.treeModel;
+    let _downloads: TreeNode = model.roots[5];
+    let beforeLen = _downloads.data.children.length
+    try{
+      const fileToBeUploaded = new UploadFile(_downloads.data.path, '376fff9bd23db6ea14d201f2479fb500', '', 0, '');
+      component.onFileLoaded(fileToBeUploaded);
+    }catch(e){}
+    fixture.detectChanges();
+    expect(_downloads.data.children.length).toBe(beforeLen);
   });
 
   it('newNode() with empty name', () => {

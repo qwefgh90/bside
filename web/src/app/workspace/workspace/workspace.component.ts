@@ -9,11 +9,11 @@ import { Editor } from '../editor/editor';
 import { Blob } from 'src/app/github/type/blob';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FileType, TextUtil } from '../text/text-util';
-import { GithubTree } from '../tree/github-tree';
 import { Stage } from '../stage/stage';
 import { ActionComponent, ActionState } from '../action/action/action.component';
 import { GithubTreeToTree } from '../tree/github-tree-to-tree';
 import { LocalUploadService } from '../upload/local-upload.service';
+import { GithubTreeComponent } from '../tree/github-tree.component';
 
 declare const monaco;
 
@@ -42,7 +42,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer) { 
   }
 
-  @ViewChild("tree") tree: GithubTree;
+  @ViewChild("tree") tree: GithubTreeComponent;
   @ViewChild("editor1") editor1: Editor;
   @ViewChild("stage") stage: Stage;
   @ViewChild("action") action: ActionComponent;
@@ -236,13 +236,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       } else {
         this.wrapper.getBlob(this.userId, this.repositoryName, this.selectedNode.sha).then(
           (blob: Blob) => {
-            if(type == FileType.Image){
+            if(type == FileType.Image)
               this.selectedImagePath = this.getRawUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, this.selectedNode.syncedNode.path);
-              
-            } else if (type == FileType.Text) {
+            else if (type == FileType.Text) {
               let bytes = TextUtil.base64ToBytes(blob.content);
               let encoding = this.encoding;
-              // encoding = encoding ? encoding : 'utf-8';
               this.encodingMap.set(this.selectedNode.sha, encoding);
               this.setContentAndFocusInEditor(this.selectedNode.path, TextUtil.decode(bytes, encoding));
             }
@@ -329,9 +327,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         let oldSha = v.sha;
         let base64;
         let promise: Promise<{ sha: string, url: string }>;
-        if (v.state.includes(NodeStateAction.NameModified) ||
-            v.state.includes(NodeStateAction.ContentModified) ||
-            v.state.includes(NodeStateAction.Moved) ||
+        if (v.state.includes(NodeStateAction.ContentModified) ||
             v.state.includes(NodeStateAction.Created)){
           if(this.editor1.exist(v.path)){
             let base64OrText = this.editor1.getContent(v.path);

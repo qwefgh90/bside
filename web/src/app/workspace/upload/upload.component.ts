@@ -27,7 +27,8 @@ export class UploadComponent implements OnInit, Upload {
 
   handleFiles(event: Event) {
     const parentPath = this.parentPath;
-    const files = ((event.target) as HTMLInputElement).files;
+    const inputElement = ((event.target) as HTMLInputElement);
+    const files = inputElement.files;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       console.debug(`select ${file.name}`);
@@ -45,5 +46,10 @@ export class UploadComponent implements OnInit, Upload {
       };
       reader.readAsDataURL(file);
     }
+    this.clear();
+  }
+
+  clear(){
+    this.fileInput.nativeElement.value = '';
   }
 }

@@ -1,6 +1,5 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges, EventEmitter, Output } from '@angular/core';
 import { GithubTreeNode, GithubNode, NodeStateAction } from '../tree/github-tree-node';
-import { GithubTree } from '../tree/github-tree';
 import { Stage } from './stage';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { TreeNode } from 'angular-tree-component';
