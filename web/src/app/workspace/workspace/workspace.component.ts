@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, AfterContentInit, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, AfterContentInit, ElementRef, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, Subject, Observable, combineLatest, fromEventPattern } from 'rxjs';
@@ -78,12 +78,16 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.intialize();
   }
 
+  @HostListener('document:keydown.escape', ['$event']) onKeydownHandler(event: KeyboardEvent) {
+    this.toggle();  
+  }
+
   private async intialize(){
     this.editorReset();
     this.selectedImagePath = undefined;
     this.selectedFileType = undefined;
-    this.treeStatus = TreeStatusOnWorkspace.NotInitialized;
     this.action.select(ActionState.Edit);
+    this.treeStatus = TreeStatusOnWorkspace.Loading;
     this.isNodeDirty = false;
     this.initalizeLoader();
     let promise;
@@ -103,17 +107,16 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           reject('It does not have user id or repository name');
         });
       }
-    }else
-      this.treeStatus = TreeStatusOnWorkspace.Fail;
-      let s = combineLatest(this.route.paramMap, this.route.queryParamMap).subscribe(([p, q]) => {
+    }
+    let s = combineLatest(this.route.paramMap, this.route.queryParamMap).subscribe(([p, q]) => {
       const branchName = this.route.snapshot.queryParams['branch'];
       if (p.has('userId') && p.has('repositoryName')) {
         this.userId = p.get('userId');
         this.repositoryName = p.get('repositoryName');
-        promise = this.initialzeWorkspace(this.userId, this.repositoryName, branchName).finally(() => { 
+        promise = this.initialzeWorkspace(this.userId, this.repositoryName, branchName).finally(() => {
           this.treeStatus = TreeStatusOnWorkspace.Done;
         });
-      }else{
+      } else {
         this.treeStatus = TreeStatusOnWorkspace.Fail;
         promise = new Promise((r, reject) => {
           reject('It does not have user id or repository name');
@@ -147,22 +150,27 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   ngAfterContentInit() {
     this.toggle();
+    this.rightPane.toggle();
   }
 
   ngOnDestroy() {
+    this.clean();
+  }
+
+  private clean(){
     this.subscriptions.forEach(subscribe =>
       subscribe.unsubscribe());
   }
 
   toggle() {
     this.leftPane.toggle();
-    this.rightPane.toggle();
+    this.editor1.shrinkExpand();
   }
 
   newNode(node: GithubTreeNode){
 
   }
-
+ 
   getImage(base64: string, mediaType: string): SafeResourceUrl{
     return this.sanitizer.bypassSecurityTrustResourceUrl(`data:${mediaType};base64,${base64}`);
   }
@@ -233,6 +241,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.selectedBranch = branch;
   }
 
+  private selectNode(path: string){
+    setTimeout(( ) =>{
+      this.tree.selectNode(path);
+    }, 500);
+  }
+
   nodeSelected(node: GithubTreeNode) {
     if (node.type == 'blob') {
       this.selectedNodePath = node.path;
@@ -257,7 +271,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       } else {
         this.wrapper.getBlob(this.userId, this.repositoryName, node.sha).then(
           (blob: Blob) => {
-            console.log("selectnode?")
             if(type == FileType.Image)
               this.selectedImagePath = this.getRawUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, node.syncedNode.path);
             else if (type == FileType.Text) {
@@ -278,8 +291,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }
   }
 
-  nodeCreated(node: GithubTreeNode){
-
+  nodeCreated(path: string){
+    this.isNodeDirty = true;
+    this.editor1.setContent(path, '');
   }
 
   nodeRemoved(node: GithubTreeNode){
@@ -298,7 +312,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.editor1.setContent(e.to.path, content);
       }
       if(this.selectedNodePath == e.fromPath)
-        this.nodeSelected(e.to);
+        this.selectNode(e.to.path);
     }
   }
 
@@ -308,7 +322,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     if(type == FileType.Text){
       let bytes = TextUtil.base64ToBytes(event.base64.toString());
       let encoding = this.encoding;
-      // this.encodingMap.set(event.node.sha, encoding);
       this.editor1.setContent(event.node.path, TextUtil.decode(bytes, encoding));
     }else {
       this.editor1.setContent(event.node.path, event.base64);
@@ -398,11 +411,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       console.error(e);
     } finally {
       const before = this.selectedNodePath;
+      this.clean();
       this.intialize().then(() => {
+        this.selectNode(before);
         //Wait for few seconds until new tree is created
-        setTimeout(( ) =>{
-          this.tree.selectNode(before);
-        }, 500);
       });
     }
   }

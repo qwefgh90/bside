@@ -50,6 +50,9 @@ class EditorStubComponent implements Editor{
   removeContent(path: string): boolean{
     return true;
   } 
+  shrinkExpand(){
+    
+  }
   readonly: boolean;
 }
 

@@ -1,10 +1,10 @@
 import { Component, OnInit, Input, OnChanges, Output, EventEmitter, SimpleChanges, ViewChild, OnDestroy, ElementRef } from '@angular/core';
 import { MatIconRegistry } from '@angular/material';
-import { GithubTreeNode } from './github-tree-node';
+import { GithubTreeNode, NodeStateAction } from './github-tree-node';
 import { GithubTreeToTree } from './github-tree-to-tree';
 import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { ITreeOptions, TreeNode, TreeComponent } from 'angular-tree-component';
+import { ITreeOptions, TreeNode, TreeComponent, KEYS } from 'angular-tree-component';
 import { DomSanitizer } from '@angular/platform-browser';
 
 import { TREE_ACTIONS, IActionMapping } from 'angular-tree-component';
@@ -25,7 +25,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
   @Input("repository") repository;
   @Input("tree") tree: GithubTreeNode;
   @Output("nodeSelected") nodeSelected = new EventEmitter<GithubTreeNode>();
-  @Output("nodeCreated") nodeCreated = new EventEmitter<GithubTreeNode>();
+  @Output("nodeCreated") nodeCreated = new EventEmitter<string>();
   @Output("nodeRemoved") nodeRemoved = new EventEmitter<GithubTreeNode>();
   @Output("nodeMoved") nodeMoved = new EventEmitter<{fromPath: string, to: GithubTreeNode}>();
   @Output("nodeUploaded") nodeUploaded = new EventEmitter<{node: GithubTreeNode, base64: string}>();
@@ -66,6 +66,132 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
           console.log(`${rest.from.data.name} already exists in the folder.`)
         }
       }
+    },
+    keys: {
+      [KEYS.ENTER]: (tree, node, $event) => {
+        node.expand();
+        this.onSelectNode(node);
+      },
+      [KEYS.DOWN]: (tree, node, $event) => {//Prevent default behavior which is focus(true)
+        let nextNode = node.findNextNode();
+        if(nextNode != null){
+          nextNode.focus(false);
+        }
+      },
+      [KEYS.UP]: (tree, node, $event) => {//Prevent default behavior which is focus(true)
+        let previousNode = node.findPreviousNode();
+        if(previousNode != null){
+          previousNode.focus(false);
+        }
+      },
+      36: (tree, node, $event) => {//HOME
+        let nodes = this.visibleNodes();
+        if(nodes.length > 0){
+          let first = nodes[0];
+          first.focus(false);
+        }
+        
+      },
+      35: (tree, node, $event) => {//END
+        let nodes = this.visibleNodes();
+        if(nodes.length > 0){
+          let end = nodes[nodes.length - 1];
+          end.focus(false);
+        }
+      },
+      33: (tree, node, $event) => {//PAGE UP
+        let nodes = this.visibleNodes();
+        let focusedNode = this.treeComponent.treeModel.focusedNode as TreeNode;
+        let activeNode = this.treeComponent.treeModel.getActiveNode() as TreeNode;
+        let top = this.viewport.scrollTop;
+        if ((focusedNode != undefined)) {
+          let found = this.findNodeWithPosition(top + 10, nodes);
+          if (found != focusedNode) {
+            if (found != undefined) {
+              this.scrollTo(found, nodes);
+              found.focus(false);
+            }
+          } else {
+            found = this.findNodeWithPosition(top - this.viewport.clientHeight + 10, nodes);
+            this.scrollTo(found, nodes);
+            found.focus(false);
+          }
+        }
+      },
+      34: (tree, node, $event) => {//PAGE DOWN
+        let nodes = this.visibleNodes();
+        let focusedNode = this.treeComponent.treeModel.focusedNode as TreeNode;
+        let activeNode = this.treeComponent.treeModel.getActiveNode() as TreeNode;
+        let bottom = this.viewport.scrollTop + this.viewport.clientHeight;
+        if ((focusedNode != undefined)) {
+          let found = this.findNodeWithPosition(bottom, nodes);
+          if (found != focusedNode) {
+            if (found != undefined) {
+              this.scrollTo(found, nodes);
+              found.focus(false);
+            }
+          } else {
+            found = this.findNodeWithPosition(bottom + this.viewport.clientHeight, nodes);
+            this.scrollTo(found, nodes);
+            found.focus(false);
+          }
+        }
+      }
+    }
+  }
+
+  onNodeFocus(node: TreeNode){
+    this.scrollTo(node);
+  }
+
+  private get viewport(){
+    return ((this.treeComponent.viewportComponent as any).elementRef).nativeElement as HTMLDivElement;
+  }
+
+  private visibleNodes(){
+    let all: TreeNode[] = [this.treeComponent.treeModel.virtualRoot.children[0]]
+    let currentNode = this.treeComponent.treeModel.virtualRoot.children[0].findNextNode(true);
+    while(currentNode != null){
+      all.push(currentNode);
+      currentNode = currentNode.findNextNode(true);
+    }
+    return all;
+  }
+
+  private findNodeWithPosition(pos: number, visibleNodes?: TreeNode[]): TreeNode{
+    let viewport = this.viewport;
+    if(pos < 0 ) pos = 0;
+    if(pos > viewport.scrollHeight) pos = viewport.scrollHeight;
+    
+    let all: TreeNode[] = visibleNodes == undefined ? this.visibleNodes() : visibleNodes;
+    let nodeHeight = (viewport.scrollHeight/all.length);
+    return all.find((v, idx, arr) => {
+      let nodePos = ((viewport.scrollHeight/all.length) * idx);
+      if((nodePos <= pos) && (pos <= nodePos + nodeHeight) ){
+        return true;
+      }else
+        return false;
+    });
+  }
+
+  private scrollTo(node: TreeNode, visibleNodes?: TreeNode[]){
+    let viewport = this.viewport;
+    let all: TreeNode[] = visibleNodes == undefined ? this.visibleNodes() : visibleNodes;
+    const index = all.findIndex((v: TreeNode) => {
+      return v.id == node.id
+    })
+
+    let nodePos = ((viewport.scrollHeight/all.length) * index);
+    let nodeHeight = (viewport.scrollHeight/all.length);
+    let top = viewport.scrollTop
+    let viewportHeight = viewport.clientHeight;
+    if(nodePos <= top){
+      viewport.scrollTop = nodePos;
+      console.debug(`scroll up ${node.data.path} ${viewport.scrollTop}`);//scrollheight: ${viewport.scrollHeight} nodepos: ${nodePos} height: ${viewportHeight} nodeheight: ${nodeHeight} top: ${top} ${index} / ${all.length}`);
+    }
+    else if(nodePos >= (top + viewportHeight - (nodeHeight / 2))){
+      viewport.scrollTop = nodePos - viewportHeight + nodeHeight;
+      console.debug(`scroll down ${node.data.path} ${viewport.scrollTop}`);//scrollheight: ${viewport.scrollHeight} nodepos: ${nodePos} height: ${viewportHeight} nodeheight: ${nodeHeight} top: ${top} ${index} / ${all.length}`);
     }
   }
 
@@ -74,7 +200,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
     allowDrop: (element, { parent, index }) => {
       return (element.parent != parent) && (parent.data.type == 'tree' || parent.parent == null);
     },
-    actionMapping: this.actionMapping
+    actionMapping: this.actionMapping,
+    scrollOnActivate: false,
   };
 
   ngOnChanges(changes: SimpleChanges) {
@@ -93,7 +220,6 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
   selectNode(path: string): GithubTreeNode{
     let node: TreeNode = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data.path == path)
     if(node != null){
-      node.focus(true);
       node.setIsActive(true);
       this.onSelectNode(node);
       return node.data;
@@ -122,7 +248,11 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
       } else if(invalid) {
         console.log(`${this.renamingFormControl.value} File name is invalid`);
       } else {
-        this.renamingNode.data.rename(this.renamingFormControl.value, (node, parent, pre, newPath) => {
+        const githubNode = this.renamingNode.data as GithubTreeNode;
+        githubNode.rename(this.renamingFormControl.value, (node, parent, pre, newPath) => {
+          let stateArr = (githubNode as GithubTreeNode).state;
+          if (stateArr.length == 2 && stateArr[0] == NodeStateAction.Created)
+            this.nodeCreated.emit(node.path);
           this.nodeMoved.emit({ 'fromPath': pre, 'to': node });
         });
       }

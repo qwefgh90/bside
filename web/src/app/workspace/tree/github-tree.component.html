@@ -30,7 +30,7 @@
   </div>
   <mat-divider></mat-divider>
   <div class="tree-box">
-    <tree-root #tree1 id="tree" [nodes]="dataSource" [options]="options" [focused]="true">
+    <tree-root #tree1 id="tree" [nodes]="dataSource" [options]="options" [focused]="true" (focus)="onNodeFocus($event.node)">
       <ng-template #treeNodeWrapperTemplate let-node let-index="index" let-templates="templates">
         <div class="node-wrapper" [style.padding-left]="node.getNodePadding()">
           <div class="node-content-wrapper" style="width: 100%; display: flex"

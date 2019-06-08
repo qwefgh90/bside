@@ -69,11 +69,11 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
   /**
    * it triggers recalculate dimension
    */
-  private shrinkExpand(){
+  public shrinkExpand(){
     this.shrink = true;
     setTimeout(() => {
       this.shrink = false;
-    }, 100);
+    }, 400);
   }
 
   // https://ngohungphuc.wordpress.com/2019/01/08/integrate-monaco-editor-with-angular/

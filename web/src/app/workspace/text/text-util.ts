@@ -28,9 +28,13 @@ export class TextUtil {
         let arr = str.split("\n").map(v => {
             return v;
         });
-
-        let bytes = toByteArray(arr.join(''));
-        return bytes;
+        try{
+           let bytes = toByteArray(arr.join(''));
+           return bytes;
+        }catch(e){
+            console.error(e);
+            return new Uint8Array();
+        }
     }
 
     static bytesToBase64(arr: Uint8Array): string {

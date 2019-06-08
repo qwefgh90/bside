@@ -1,47 +1,64 @@
-
 <mat-drawer-container autosize style="width: 100%; height: 100%;">
-  <mat-drawer #leftDrawer mode="side" class="left-drawer">
-    <div style="width: 100%; height: 100%; display: flex; flex-flow: column">
-      <div style="flex:1; display: block; height: 100%" *ngIf="(treeStatus == TreeStatus.Loading) || (treeStatus == TreeStatus.NotInitialized)">
-        <div class="loading">
-          <mat-spinner [strokeWidth]="3"></mat-spinner>
-          <div>Loading...</div>
+  <mat-drawer #leftDrawer mode="side">
+    <div class="left-drawer">
+      <div class="left-drawer-content">
+        <div style="width: 100%; height: 100%; display: flex; flex-flow: column">
+          <div style="flex:1; display: block;" *ngIf="(treeStatus == TreeStatus.Loading)">
+            <div class="loading">
+              <mat-spinner [strokeWidth]="3"></mat-spinner>
+              <div>Loading...</div>
+            </div>
+          </div>
+          <div style="flex:1; display: block;" *ngIf="(treeStatus == TreeStatus.Committing)">
+            <div class="loading">
+              <mat-spinner [strokeWidth]="3"></mat-spinner>
+              <div>Committing...</div>
+            </div>
+          </div>
+          <app-tree #tree style="flex: 1" [repository]="repositoryDetails" [tree]="root"
+            (nodeSelected)="nodeSelected($event)" (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)"
+            (nodeRemoved)="nodeRemoved($event)" (nodeUploaded)="nodeUploaded($event)"
+            [class.none]="(workspaceStatus == WorkspaceStatus.Stage) || (treeStatus != TreeStatus.Done)">
+          </app-tree>
+          <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="root"
+            (nodeSelected)="nodeSelected($event)" [modifiedNodes]="nodesToStage"
+            [class.none]="(workspaceStatus == WorkspaceStatus.View) || (treeStatus != TreeStatus.Done)"
+            (commit)="onCommit($event)" [placeholder]="placeholderForCommit">
+          </app-stage>
+          <mat-form-field class="branches" [class.none]="(workspaceStatus == WorkspaceStatus.Stage)">
+            <mat-label>Branches</mat-label>
+            <mat-select [(value)]="selectedBranch" (selectionChange)="onBranchChange($event)">
+              <mat-option *ngFor="let branch of branches" [value]="branch">
+                {{branch.name}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
         </div>
       </div>
-      <div style="flex:1; display: block; height: 100%" *ngIf="(treeStatus == TreeStatus.Committing)">
-        <div class="loading">
-          <mat-spinner [strokeWidth]="3"></mat-spinner>
-          <div>Committing...</div>
-        </div>
+      <div class="left-fold" (click)="toggle()">
+          <mat-icon *ngIf="leftPane.opened">chevron_left</mat-icon>
       </div>
-      <app-tree #tree style="flex: 1" [repository]="repositoryDetails" [tree]="root" (nodeSelected)="nodeSelected($event)"
-        (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)" (nodeRemoved)="nodeRemoved($event)"
-        (nodeUploaded)="nodeUploaded($event)"
-        [class.none]="(workspaceStatus == WorkspaceStatus.Stage) || (treeStatus != TreeStatus.Done)">
-      </app-tree>
-      <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="root" (nodeSelected)="nodeSelected($event)"
-        [modifiedNodes]="nodesToStage" [class.none]="(workspaceStatus == WorkspaceStatus.View) || (treeStatus != TreeStatus.Done)" (commit)="onCommit($event)"
-         [placeholder]="placeholderForCommit">
-      </app-stage>
-      <mat-form-field class="branches" [class.none]="(workspaceStatus == WorkspaceStatus.Stage)">
-        <mat-label>Branches</mat-label>
-        <mat-select [(value)]="selectedBranch" (selectionChange)="onBranchChange($event)">
-          <mat-option *ngFor="let branch of branches" [value]="branch">
-            {{branch.name}}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
     </div>
   </mat-drawer>
   <mat-drawer #rightDrawer mode="side" position="end">
-    <app-action #action (stage)="onStage()" (edit)="onEdit()" [isNodeDirty]="isNodeDirty" [repository]="repositoryDetails"></app-action>
+    <app-action #action (stage)="onStage()" (edit)="onEdit()" [isNodeDirty]="isNodeDirty"
+      [repository]="repositoryDetails"></app-action>
   </mat-drawer>
-  <div style="display: flex; flex-direction: column; height: 100%">
+  <div style="display: flex; flex-direction: row; height: 100%">
+  <div class="left-fold" (click)="toggle()">
+      <mat-icon *ngIf="!leftPane.opened">chevron_right</mat-icon>
+  </div>
+  <div style="display: flex; flex-direction: column; flex:1; height: 100%">
     <div class="toolbar">
       <span class="fileName">{{selectedNodePath != undefined ? selectedNodePath : ''}}</span>
       <div class="spacer"></div>
       <div *ngIf="selectedNodePath != undefined">
-        <a href="{{selectedRawPath}}" *ngIf="tree?.get(selectedNodePath) != undefined && tree.get(selectedNodePath).syncedNode != undefined" target="_blank" style="text-decoration: none;color: unset;margin-right: 1em"><button mat-stroked-button title="Open raw content"><mat-icon>open_in_new</mat-icon></button></a>
+        <a href="{{selectedRawPath}}"
+          *ngIf="tree?.get(selectedNodePath) != undefined && tree.get(selectedNodePath).syncedNode != undefined"
+          target="_blank" style="text-decoration: none;color: unset;margin-right: 1em"><button mat-stroked-button
+            title="Open raw content">
+            <mat-icon>open_in_new</mat-icon>
+          </button></a>
         <!-- <a href="{{getRawUrl(repositoryDetails.full_name, selectedBranch.commit.sha, selectedNode.syncedNode.path)}}" style="text-decoration: none;color: unset" download><button mat-stroked-button style="margin-right: 1em"><mat-icon>cloud_download</mat-icon></button></a> -->
       </div>
     </div>
@@ -52,11 +69,15 @@
         </div>
       </div>
     </div>
-    <app-editor #editor1 style="flex:1;" (changeContent)="nodeContentChanged($event)" [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)" [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"></app-editor>
-    <div style="flex:1; display: block; height: 100px " *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">
-      <div style="overflow-y: scroll; height: 100%;"><img [src]="selectedImagePath"/></div>
+    <app-editor #editor1 style="flex:1;" (changeContent)="nodeContentChanged($event)"
+      [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
+      [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"></app-editor>
+    <div style="flex:1; display: block; height: 100px "
+      *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">
+      <div style="overflow-y: scroll; height: 100%;"><img [src]="selectedImagePath" /></div>
     </div>
-    <div style="flex:1; display: block; " *ngIf="(selectedFileType == FileType.Other) && (contentStatus == ContentStatus.Done)">
+    <div style="flex:1; display: block; "
+      *ngIf="(selectedFileType == FileType.Other) && (contentStatus == ContentStatus.Done)">
       <div style="display: flex; justify-content: center; width: 100%; height: 100%;">
         <div style="display:flex; flex-direction: row; align-items: center;   height: 100%;">
           <div>This content is not readable.</div>
@@ -65,8 +86,8 @@
     </div>
     <div style="flex:1; display: block; " *ngIf="(contentStatus == ContentStatus.Loading)">
       <div class="loading">
-          <mat-spinner [strokeWidth]="3"></mat-spinner>
-          <div>Loading...</div>
+        <mat-spinner [strokeWidth]="3"></mat-spinner>
+        <div>Loading...</div>
       </div>
     </div>
     <!-- <div style="height: 10px; margin-top: 5px; background-color: #9da5a2"></div>
@@ -74,5 +95,5 @@
       <ngx-md [data]="editor1?.getContent()" style="display:block; height: 0px"></ngx-md>
     </div> -->
     <!-- <app-editor style="flex:1; display: block"></app-editor> -->
-  </div>
+  </div></div>
 </mat-drawer-container>
