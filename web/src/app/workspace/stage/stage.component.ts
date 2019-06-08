@@ -3,6 +3,7 @@ import { GithubTreeNode, GithubNode, NodeStateAction } from '../tree/github-tree
 import { Stage } from './stage';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { TreeNode } from 'angular-tree-component';
+import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-stage',
@@ -12,10 +13,12 @@ import { TreeNode } from 'angular-tree-component';
 export class StageComponent implements OnInit, OnChanges, Stage {
   @Input("repository") repository;
   @Input("tree") tree: GithubTreeNode;
+  @Input("placeholder") placeholder: string = '';
   @Input("modifiedNodes") modifiedNodes: GithubTreeNode[];
-  @Output("commit") clickCommit: EventEmitter<void> = new EventEmitter<void>();
+  @Output("commit") clickCommit: EventEmitter<string> = new EventEmitter<string>();
   @Output("nodeSelected") nodeSelected = new EventEmitter<GithubTreeNode>();
   NodeStateAction = NodeStateAction;
+  description = new FormControl('');
   // items: Array<GithubTreeNode> = [];
   options = {
   };
@@ -72,7 +75,7 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   }
 
   commit(){
-    this.clickCommit.emit();
+    this.clickCommit.emit(this.description.value.length == 0 ? this.placeholder : this.description.value);
   }
   
   selectNode(node: TreeNode){

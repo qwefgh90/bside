@@ -12,12 +12,13 @@ import { Upload } from '../upload/upload';
 import { UploadComponent } from '../upload/upload.component';
 import { UploadFile } from '../upload/upload-file';
 import { LocalUploadService } from '../upload/local-upload.service';
+import { GithubTree } from './github-tree';
 @Component({
   selector: 'app-tree',
   templateUrl: './github-tree.component.html',
   styleUrls: ['./github-tree.component.css']
 })
-export class GithubTreeComponent implements OnChanges, OnDestroy {
+export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
   @ViewChild("tree1")
   treeComponent: TreeComponent;
 
@@ -77,13 +78,32 @@ export class GithubTreeComponent implements OnChanges, OnDestroy {
   };
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.tree != undefined && this.tree != undefined) {
-        this.dataSource = this.tree.children;
-        this.root = this.tree;
+    if (changes.tree != undefined && changes.tree.currentValue != undefined) {
+      console.debug("tree is changed")
+      this.dataSource = this.tree.children;
+      this.root = this.tree;
+      this.refreshTree();
     }
   }
 
-  selectNode(node: TreeNode) {
+  /**
+   * return null if the node does not exist
+   * @param path 
+   */
+  selectNode(path: string): GithubTreeNode{
+    let node: TreeNode = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data.path == path)
+    if(node != null){
+      node.focus(true);
+      node.setIsActive(true);
+      this.onSelectNode(node);
+      return node.data;
+    }else{
+      console.warn(`${path} was not found`);
+      return null;
+    }
+  }
+
+  onSelectNode(node: TreeNode) {
     if(this.renamingNode != node){
       this.selectedNode = node;
       this.nodeSelected.emit(node.data);
@@ -132,7 +152,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy {
    * @param parentTreeNode 
    * @param name if this parameter is defined, rename this node with it
    */
-  newNode(type: 'blob' | 'tree', parentTreeNode: TreeNode, name?: string): TreeNode {
+  newNode(type: 'blob' | 'tree', parentTreeNode?: TreeNode, name?: string): TreeNode {
     let parent: GithubTreeNode = (parentTreeNode == undefined) ? this.root : parentTreeNode.data;
     let node: GithubTreeNode = GithubTreeNode.githubTreeNodeFactory.createNewNode(parent, type);
     this.refreshTree();
@@ -190,6 +210,11 @@ export class GithubTreeComponent implements OnChanges, OnDestroy {
 
   uploadFile(parentPath: string){
     this.upload.select(parentPath);
+  }
+
+  get(path: string): GithubTreeNode{
+    const treeNode: TreeNode = this.treeComponent.treeModel.getNodeBy((p) => p.data.path == path);
+    return treeNode == null ? undefined : treeNode.data
   }
 
   hasChild = (_: number, node: GithubTreeNode) => !!node.children && node.type == 'tree' ;

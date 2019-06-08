@@ -4,7 +4,6 @@ import { MatButtonModule, MatIconModule, MatToolbarModule, MatMenuModule, MatPro
 import { AuthModule } from '../oauth/auth.module';
 import { OAuthService } from '../oauth/service/o-auth.service';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { RouterLinkDirectiveStub } from '../testing/router-link-directive-stub';
 
 describe('HeaderComponent', () => {
   let component: HeaderComponent;
@@ -54,6 +53,7 @@ describe('HeaderComponent', () => {
 
 import { convertToParamMap, ParamMap, Params } from '@angular/router';
 import { ReplaySubject } from 'rxjs';
+import { Directive, Input, HostListener } from '@angular/core';
 
 export class ActivatedRouteStub {
   // Use a ReplaySubject to share previous values with subscribers
@@ -90,4 +90,16 @@ class ActivatedRouteSnapshotStub{
     }
     paramMap: ParamMap;
     queryParamMap: ParamMap;
+}
+@Directive({
+  selector: '[routerLink]'
+})
+class RouterLinkDirectiveStub {
+  @Input('routerLink') linkParams: any;
+  navigatedTo: any = null;
+
+  @HostListener('click')
+  onClick() {
+    this.navigatedTo = this.linkParams;
+  }
 }

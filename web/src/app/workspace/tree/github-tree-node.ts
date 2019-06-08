@@ -218,7 +218,6 @@ export class GithubTreeNode {
     if (this.type == 'tree') {
       let arr = this.reduce<Array<GithubTreeNode>>((acc, node, tree) => {
         if (!node.isRoot && (node.type == 'blob')) {
-          console.debug(`${node.path} is added`);
           acc.push(node);
         }
         return acc;

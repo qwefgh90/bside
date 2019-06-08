@@ -14,10 +14,14 @@
           <div>Committing...</div>
         </div>
       </div>
-      <app-tree #tree style="flex: 1" [repository]="repositoryDetails" [tree]="root" (nodeSelected)="nodeSelected($event)" (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)" (nodeRemoved)="nodeRemoved($event)" (nodeUploaded)="nodeUploaded($event)" *ngIf="(treeStatus == TreeStatus.Done)"
-        [class.none]="(workspaceStatus == WorkspaceStatus.Stage)">
+      <app-tree #tree style="flex: 1" [repository]="repositoryDetails" [tree]="root" (nodeSelected)="nodeSelected($event)"
+        (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)" (nodeRemoved)="nodeRemoved($event)"
+        (nodeUploaded)="nodeUploaded($event)"
+        [class.none]="(workspaceStatus == WorkspaceStatus.Stage) || (treeStatus != TreeStatus.Done)">
       </app-tree>
-      <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="root" (nodeSelected)="nodeSelected($event)" [modifiedNodes]="nodesToStage" [class.none]="(workspaceStatus == WorkspaceStatus.View)" (commit)="onCommit()" *ngIf="(treeStatus == TreeStatus.Done)">
+      <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="root" (nodeSelected)="nodeSelected($event)"
+        [modifiedNodes]="nodesToStage" [class.none]="(workspaceStatus == WorkspaceStatus.View) || (treeStatus != TreeStatus.Done)" (commit)="onCommit($event)"
+         [placeholder]="placeholderForCommit">
       </app-stage>
       <mat-form-field class="branches" [class.none]="(workspaceStatus == WorkspaceStatus.Stage)">
         <mat-label>Branches</mat-label>
@@ -30,14 +34,14 @@
     </div>
   </mat-drawer>
   <mat-drawer #rightDrawer mode="side" position="end">
-    <app-action #action (stage)="onStage($event)" (edit)="onEdit($event)" [isNodeDirty]="isNodeDirty" [repository]="repositoryDetails"></app-action>
+    <app-action #action (stage)="onStage()" (edit)="onEdit()" [isNodeDirty]="isNodeDirty" [repository]="repositoryDetails"></app-action>
   </mat-drawer>
   <div style="display: flex; flex-direction: column; height: 100%">
     <div class="toolbar">
-      <span class="fileName">{{selectedNode != undefined ? selectedNode.path : ''}}</span>
+      <span class="fileName">{{selectedNodePath != undefined ? selectedNodePath : ''}}</span>
       <div class="spacer"></div>
-      <div *ngIf="selectedNode != undefined">
-        <a href="{{getRawUrl(repositoryDetails.full_name, selectedBranch.commit.sha, selectedNode.syncedNode.path)}}" *ngIf="selectedNode.syncedNode != undefined" target="_blank" style="text-decoration: none;color: unset;margin-right: 1em"><button mat-stroked-button title="Open raw content"><mat-icon>open_in_new</mat-icon></button></a>
+      <div *ngIf="selectedNodePath != undefined">
+        <a href="{{selectedRawPath}}" *ngIf="tree?.get(selectedNodePath) != undefined && tree.get(selectedNodePath).syncedNode != undefined" target="_blank" style="text-decoration: none;color: unset;margin-right: 1em"><button mat-stroked-button title="Open raw content"><mat-icon>open_in_new</mat-icon></button></a>
         <!-- <a href="{{getRawUrl(repositoryDetails.full_name, selectedBranch.commit.sha, selectedNode.syncedNode.path)}}" style="text-decoration: none;color: unset" download><button mat-stroked-button style="margin-right: 1em"><mat-icon>cloud_download</mat-icon></button></a> -->
       </div>
     </div>

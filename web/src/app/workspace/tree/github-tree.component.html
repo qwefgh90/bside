@@ -39,7 +39,7 @@
             (dblclick)="node.mouseAction('dblClick', $event)" (contextmenu)="node.mouseAction('contextMenu', $event)"
             (treeDrop)="node.onDrop($event)" [treeAllowDrop]="node.allowDrop" [treeDrag]="node"
             [treeDragEnabled]="node.allowDrag()">
-            <div class="node-title" (click)="node.isExpanded ? node.collapse() : node.expand(); selectNode(node)">
+            <div class="node-title" (click)="node.isExpanded ? node.collapse() : node.expand(); onSelectNode(node)">
               <mat-icon *ngIf="!(node.data.type == 'tree')">description</mat-icon>
               <mat-icon *ngIf="node.data.type == 'tree'">
                 {{!node.isExpanded ? 'folder' : 'folder_open'}}

@@ -5,7 +5,6 @@ import { WrapperService } from 'src/app/github/wrapper.service';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule, MatProgressSpinnerModule, MatDividerModule, MatInputModule } from '@angular/material';
 import { ActivatedRoute } from '@angular/router';
-import { RouterLinkDirectiveStub } from 'src/app/testing/router-link-directive-stub';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 describe('RepositoriesComponent', () => {
@@ -76,6 +75,7 @@ describe('RepositoriesComponent', () => {
 });
 import { convertToParamMap, ParamMap, Params } from '@angular/router';
 import { ReplaySubject } from 'rxjs';
+import { Input, HostListener, Directive } from '@angular/core';
 
 export class ActivatedRouteStub {
   // Use a ReplaySubject to share previous values with subscribers
@@ -112,4 +112,16 @@ class ActivatedRouteSnapshotStub{
     }
     paramMap: ParamMap;
     queryParamMap: ParamMap;
+}
+@Directive({
+  selector: '[routerLink]'
+})
+class RouterLinkDirectiveStub {
+  @Input('routerLink') linkParams: any;
+  navigatedTo: any = null;
+
+  @HostListener('click')
+  onClick() {
+    this.navigatedTo = this.linkParams;
+  }
 }

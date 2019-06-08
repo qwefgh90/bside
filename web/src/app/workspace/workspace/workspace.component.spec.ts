@@ -28,6 +28,7 @@ class StageComponent {
   @Input("repository") repository;
   @Input("tree") tree: GithubTreeNode;
   @Input("modifiedNodes") modifiedNodes: GithubTreeNode[];
+  @Input("placeholder") placeholder;
   
 }
 
@@ -178,7 +179,7 @@ describe('WorkspaceComponent', () => {
     fixture.detectChanges();
     tick(3000);
 
-    expect(component.selectedNode).toBeDefined();
+    expect(component.selectedNodePath).toBeDefined();
     expect(setContentSpy.calls.count()).toBe(1);
     expect(selectTabSpy.calls.first().args[0]).toBe(tree.tree[0].path);
     
@@ -198,7 +199,7 @@ describe('WorkspaceComponent', () => {
     existSpy.and.returnValue(false);
     let removeContentSpy = spyOn(component.editor1, 'removeContent');
     
-    component.selectedNode = component.tree.root.children[0];
+    component.selectedNodePath = component.tree.root.children[0].path;
     component.nodeRemoved(component.tree.root.children[0]);
 
     expect(removeContentSpy.calls.count()).toBe(1);
@@ -228,11 +229,11 @@ describe('WorkspaceComponent', () => {
     expect(setContentSpy.calls.first().args[0]).toBe(arg.to.path);
     expect(setContentSpy.calls.first().args[1]).toBe(valueToReturn);
 
+    setContentSpy.calls.reset();
     existSpy.and.returnValue(false);
     component.nodeMoved(arg);
 
-    expect(setContentSpy.calls.all()[1].args[0]).toBe(arg.to.path);
-    expect(setContentSpy.calls.all()[1].args[1]).toBe('');
+    expect(setContentSpy.calls.count()).toBe(0);
   }))
 
   it('nodeUploaded()', fakeAsync(() => {
