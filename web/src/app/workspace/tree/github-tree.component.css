@@ -54,11 +54,18 @@
     background: black;
 }
 
-.repository-title{
+.repository-title-box{
+    padding-top: 0.5em;
+    font-size: 1.4em;
+    padding-left: 0.2em;
+}
+
+.repository-tools{
     display: flex;
     min-width: 12vw; 
     padding-bottom: 0.5em;
-    padding-top: 0.5em;
+    font-size: 14px;
+    height: 48px;
 }
 
 .context-menu-button{

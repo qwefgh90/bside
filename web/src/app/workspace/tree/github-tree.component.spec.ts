@@ -12,6 +12,7 @@ import { GithubTreeToTree } from './github-tree-to-tree';
 import { LocalUploadService } from '../upload/local-upload.service';
 import { UploadComponent } from '../upload/upload.component';
 import { UploadFile } from '../upload/upload-file';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 describe('TreeComponent', () => {
   let component: GithubTreeComponent;
   let fixture: ComponentFixture<GithubTreeComponent>;
@@ -28,7 +29,9 @@ describe('TreeComponent', () => {
         FormsModule,
         ReactiveFormsModule,
         MatMenuModule,
-        MatDividerModule,
+        MatDividerModule, 
+        MatInputModule,
+        BrowserAnimationsModule
       ]
       ,providers: [{provide: LocalUploadService}]
     })
@@ -48,7 +51,7 @@ describe('TreeComponent', () => {
   it('repository', () => {
     component.repository = repositoryDetails;
     fixture.detectChanges();
-    let name = fixture.nativeElement.querySelector('.repository-title > div > h3').textContent;
+    let name = fixture.nativeElement.querySelector('.repository-title-box > span').textContent;
     expect(repositoryDetails.name).toBe(name);
   });
 

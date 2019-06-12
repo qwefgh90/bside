@@ -1,7 +1,7 @@
 import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 
 import { WorkspaceComponent, TreeStatusOnWorkspace } from './workspace.component';
-import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule, MatExpansionModule, MatSelectModule, MatMenu, MatIcon, MatMenuModule, MatProgressSpinnerModule, MatButtonToggleModule } from '@angular/material';
+import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule, MatExpansionModule, MatSelectModule, MatMenu, MatIcon, MatMenuModule, MatProgressSpinnerModule, MatButtonToggleModule, MatFormField, MatFormFieldModule, MatInputModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WrapperService } from 'src/app/github/wrapper.service';
@@ -51,7 +51,7 @@ class EditorStubComponent implements Editor{
     return true;
   } 
   shrinkExpand(){
-    
+
   }
   readonly: boolean;
 }
@@ -124,7 +124,9 @@ describe('WorkspaceComponent', () => {
         MatMenuModule,
         TreeModule.forRoot(),
         MatProgressSpinnerModule,
-        MatButtonToggleModule
+        MatButtonToggleModule,
+        MatFormFieldModule,
+        MatInputModule
       ],
     }).compileComponents();
   }));

@@ -18,7 +18,7 @@ import { GithubTree } from './github-tree';
   templateUrl: './github-tree.component.html',
   styleUrls: ['./github-tree.component.css']
 })
-export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
+export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, OnInit {
   @ViewChild("tree1")
   treeComponent: TreeComponent;
 
@@ -39,6 +39,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
   renamingNode: TreeNode;
   selectedNode: TreeNode;
   dataSource: GithubTreeNode[];
+  searchInputFormControl = new FormControl('');
 
   subscriptions: Array<Subscription> = [];
 
@@ -204,6 +205,12 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
     scrollOnActivate: false,
   };
 
+  ngOnInit(){
+    this.searchInputFormControl.valueChanges.subscribe( (v: string) =>{
+      this.treeComponent.treeModel.filterNodes(v);
+    })
+  }
+
   ngOnChanges(changes: SimpleChanges) {
     if (changes.tree != undefined && changes.tree.currentValue != undefined) {
       console.debug("tree is changed")
@@ -327,6 +334,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree {
 
   refreshTree() {
     this.treeComponent.treeModel.update();
+    this.searchInputFormControl.setValue('');
   }
 
   onFileLoaded(f: UploadFile) {
