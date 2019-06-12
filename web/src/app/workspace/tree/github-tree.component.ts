@@ -207,7 +207,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
 
   ngOnInit(){
     this.searchInputFormControl.valueChanges.subscribe( (v: string) =>{
-      this.treeComponent.treeModel.filterNodes(v);
+      this.treeComponent.treeModel.filterNodes(v, false);
     })
   }
 

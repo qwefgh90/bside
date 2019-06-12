@@ -69,6 +69,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   treeStatus: TreeStatusOnWorkspace = TreeStatusOnWorkspace.NotInitialized;
   workspaceStatus: WorkspaceStatus = WorkspaceStatus.View;
 
+  refreshSubject = new Subject<void>()
   subscriptions: Array<Subscription> = []
 
   @ViewChild("leftDrawer") leftPane: MatDrawer;
@@ -87,10 +88,37 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.selectedImagePath = undefined;
     this.selectedFileType = undefined;
     this.action.select(ActionState.Edit);
-    this.treeStatus = TreeStatusOnWorkspace.Loading;
     this.isNodeDirty = false;
+    this.treeStatus = TreeStatusOnWorkspace.Loading;
     this.initalizeLoader();
     let promise;
+    let s = combineLatest(this.route.paramMap, this.route.queryParamMap, this.refreshSubject).subscribe(([p, q]) => {
+      const branchName = this.route.snapshot.queryParams['branch'] ? this.route.snapshot.queryParams['branch'] : this.selectedBranch.name;
+      if (p.has('userId') && p.has('repositoryName')) {
+        
+        const selectedNodePath = this.editorReset();
+        this.selectedImagePath = undefined;
+        this.selectedFileType = undefined;
+        this.action.select(ActionState.Edit);
+        this.isNodeDirty = false;
+        this.treeStatus = TreeStatusOnWorkspace.Loading;
+
+        this.userId = p.get('userId');
+        this.repositoryName = p.get('repositoryName');
+        promise = this.initialzeWorkspace(this.userId, this.repositoryName, branchName).finally(() => {
+          this.treeStatus = TreeStatusOnWorkspace.Done;
+        }).then(()=>{
+          if(selectedNodePath != undefined){
+            this.selectNode(selectedNodePath);
+          }
+        })
+      } else {
+        this.treeStatus = TreeStatusOnWorkspace.Fail;
+        promise = new Promise((r, reject) => {
+          reject('It does not have user id or repository name');
+        });
+      }
+    });
     if(this.route.snapshot.queryParams['branch'] == undefined){
       const userId = this.route.snapshot.params['userId']
       const repositoryName = this.route.snapshot.params['repositoryName']
@@ -107,22 +135,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           reject('It does not have user id or repository name');
         });
       }
-    }
-    let s = combineLatest(this.route.paramMap, this.route.queryParamMap).subscribe(([p, q]) => {
-      const branchName = this.route.snapshot.queryParams['branch'];
-      if (p.has('userId') && p.has('repositoryName')) {
-        this.userId = p.get('userId');
-        this.repositoryName = p.get('repositoryName');
-        promise = this.initialzeWorkspace(this.userId, this.repositoryName, branchName).finally(() => {
-          this.treeStatus = TreeStatusOnWorkspace.Done;
-        });
-      } else {
-        this.treeStatus = TreeStatusOnWorkspace.Fail;
-        promise = new Promise((r, reject) => {
-          reject('It does not have user id or repository name');
-        });
-      }
-    });
+    }else
+      this.refreshSubject.next()
     this.subscriptions.push(s);
     return promise;
   }
@@ -141,11 +155,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }
   }
 
-  editorReset(path?: string){
+  editorReset(path?: string): string{
     if(path != undefined && this.editor1 != undefined)
       this.editor1.removeContent(path);
     this.contentStatus = ContentStatusOnWorkspace.NotInitialized
+    const selectedNodePath = this.selectedNodePath;
     this.selectedNodePath = undefined;
+    return selectedNodePath;
   }
 
   ngAfterContentInit() {
@@ -340,7 +356,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   onBranchChange(event: MatSelectChange){
-    this.treeStatus = TreeStatusOnWorkspace.Loading;
+    // this.treeStatus = TreeStatusOnWorkspace.Loading;
     const branch = event.value;
     this.router.navigate([], {queryParams: {branch: branch.name}})
   }
@@ -410,12 +426,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     } catch(e){
       console.error(e);
     } finally {
-      const before = this.selectedNodePath;
-      this.clean();
-      this.intialize().then(() => {
-        this.selectNode(before);
+      // const before = this.selectedNodePath;
+      // this.router.navigate([], {queryParams: {branch: this.selectedBranch.name}})
+      this.refreshSubject.next();
+      // this.intialize().then(() => {
+        // this.selectNode(before);
         //Wait for few seconds until new tree is created
-      });
+      // });
     }
   }
 }
