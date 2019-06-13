@@ -290,26 +290,28 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
    * @param name if this parameter is defined, rename this node with it
    */
   newNode(type: 'blob' | 'tree', parentTreeNode?: TreeNode, name?: string): TreeNode {
-    let parent: GithubTreeNode = (parentTreeNode == undefined) ? this.root : parentTreeNode.data;
-    let node: GithubTreeNode = GithubTreeNode.githubTreeNodeFactory.createNewNode(parent, type);
-    this.refreshTree();
-    let newNode = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data == node);
-    if (!parent.isRoot) {
-      let parentFound = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data == parent);
-      parentFound.expand();
+    if (this.renamingNode == undefined) {
+      let parent: GithubTreeNode = (parentTreeNode == undefined) ? this.root : parentTreeNode.data;
+      let node: GithubTreeNode = GithubTreeNode.githubTreeNodeFactory.createNewNode(parent, type);
+      this.refreshTree();
+      let newNode = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data == node);
+      if (!parent.isRoot) {
+        let parentFound = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data == parent);
+        parentFound.expand();
+      }
+      if (name == undefined) {
+        this.rename(newNode);
+      } else {
+        let alreadyExist = this.findInSiblings(newNode, (node) => name == node.data.name);
+        if (alreadyExist) {
+          console.log(`${name} already exists among siblings`);
+          this.remove(newNode);
+          newNode = undefined
+        } else
+          newNode.data.rename(name);
+      }
+      return newNode;
     }
-    if (name == undefined) {
-      this.rename(newNode);
-    } else {
-      let alreadyExist = this.findInSiblings(newNode, (node) => name == node.data.name);
-      if (alreadyExist) {
-        console.log(`${name} already exists among siblings`);
-        this.remove(newNode);
-        newNode = undefined
-      }else
-        newNode.data.rename(name);
-    }
-    return newNode;
   }
 
   rename(node: TreeNode) {

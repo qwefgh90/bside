@@ -7,5 +7,6 @@ export interface Editor {
     getContent(path?: string): string;
     removeContent(path: string): boolean; 
     readonly: boolean
+    readonly listOfContents: string[];
     shrinkExpand()
 }

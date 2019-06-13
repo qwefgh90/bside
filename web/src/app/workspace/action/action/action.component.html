@@ -3,7 +3,7 @@
     <mat-icon aria-label="view_agenda">view_agenda</mat-icon>
   </button>
   <a mat-icon-button title="Static page" class="button-with-toggle-style" href="{{repository?.homepage}}" target="_blank" [disabled]="repository?.homepage == undefined || repository?.homepage == null">
-      <mat-icon aria-label="web">web</mat-icon>
+      <mat-icon aria-label="web">pageview</mat-icon>
   </a>
   <mat-button-toggle-group #group="matButtonToggleGroup" [vertical]="true" [(ngModel)]="selectedBtn">
     <mat-button-toggle (click)="onEdit()" [value]="ActionState.Edit" title="Edit">

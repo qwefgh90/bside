@@ -75,43 +75,19 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   @ViewChild("leftDrawer") leftPane: MatDrawer;
   @ViewChild("rightDrawer") rightPane: MatDrawer;
 
-  ngOnInit() {
-    this.intialize();
-  }
-
   @HostListener('document:keydown.escape', ['$event']) onKeydownHandler(event: KeyboardEvent) {
     this.toggle();  
   }
 
-  private async intialize(){
-    this.editorReset();
-    this.selectedImagePath = undefined;
-    this.selectedFileType = undefined;
-    this.action.select(ActionState.Edit);
-    this.isNodeDirty = false;
-    this.treeStatus = TreeStatusOnWorkspace.Loading;
+  ngOnInit() {
     this.initalizeLoader();
-    let promise;
     let s = combineLatest(this.route.paramMap, this.route.queryParamMap, this.refreshSubject).subscribe(([p, q]) => {
-      const branchName = this.route.snapshot.queryParams['branch'] ? this.route.snapshot.queryParams['branch'] : this.selectedBranch.name;
+      let promise;
       if (p.has('userId') && p.has('repositoryName')) {
-        
-        const selectedNodePath = this.editorReset();
-        this.selectedImagePath = undefined;
-        this.selectedFileType = undefined;
-        this.action.select(ActionState.Edit);
-        this.isNodeDirty = false;
-        this.treeStatus = TreeStatusOnWorkspace.Loading;
-
-        this.userId = p.get('userId');
-        this.repositoryName = p.get('repositoryName');
-        promise = this.initialzeWorkspace(this.userId, this.repositoryName, branchName).finally(() => {
-          this.treeStatus = TreeStatusOnWorkspace.Done;
-        }).then(()=>{
-          if(selectedNodePath != undefined){
-            this.selectNode(selectedNodePath);
-          }
-        })
+        const userId = p.get('userId');
+        const repositoryName = p.get('repositoryName');
+        const branchName = this.route.snapshot.queryParams['branch'] ? this.route.snapshot.queryParams['branch'] : (this.selectedBranch ? this.selectedBranch.name : undefined);
+        promise = this.initialize(userId, repositoryName, branchName);
       } else {
         this.treeStatus = TreeStatusOnWorkspace.Fail;
         promise = new Promise((r, reject) => {
@@ -119,25 +95,24 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         });
       }
     });
-    if(this.route.snapshot.queryParams['branch'] == undefined){
-      const userId = this.route.snapshot.params['userId']
-      const repositoryName = this.route.snapshot.params['repositoryName']
-      const branchName = this.route.snapshot.queryParams['branch']
-      if(userId != undefined && repositoryName != undefined){
-        this.userId = userId;
-        this.repositoryName = repositoryName;
-        promise = this.initialzeWorkspace(this.userId, this.repositoryName, branchName).finally(() => {
-          this.treeStatus = TreeStatusOnWorkspace.Done;
-        })
-      }else{
-        this.treeStatus = TreeStatusOnWorkspace.Fail;
-        promise = new Promise((r, reject) => {
-          reject('It does not have user id or repository name');
-        });
-      }
-    }else
-      this.refreshSubject.next()
+    this.refreshSubject.next();
     this.subscriptions.push(s);
+  }
+  initialize(userId, repositoryName, branchName): Promise<void>{
+    const selectedNodePath = this.resetEditor();
+    this.selectedImagePath = undefined;
+    this.selectedFileType = undefined;
+    this.action.select(ActionState.Edit);
+    this.isNodeDirty = false;
+    this.treeStatus = TreeStatusOnWorkspace.Loading;
+
+    let promise = this.initialzeWorkspace(userId, repositoryName, branchName).finally(() => {
+      this.treeStatus = TreeStatusOnWorkspace.Done;
+    }).then(()=>{
+      if(selectedNodePath != undefined){
+        this.selectNode(selectedNodePath);
+      }
+    })
     return promise;
   }
 
@@ -155,7 +130,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }
   }
 
-  editorReset(path?: string): string{
+  resetEditor(path?: string): string{
     if(path != undefined && this.editor1 != undefined)
       this.editor1.removeContent(path);
     this.contentStatus = ContentStatusOnWorkspace.NotInitialized
@@ -207,6 +182,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   async initialzeWorkspace(userId, repositoryName, branchName?: string): Promise<void> {
+    this.userId = userId;
+    this.repositoryName = repositoryName;
     let details = this.wrapper.repositoryDetails(userId, repositoryName).then((result) => {
       this.repositoryDetails = result;
     }, () => {
@@ -315,7 +292,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   nodeRemoved(node: GithubTreeNode){
     this.isNodeDirty = true;
     if(node.path == this.selectedNodePath){
-      this.editorReset(node.path);
+      this.resetEditor(node.path);
     }
   }
 
@@ -377,7 +354,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       this.treeStatus = TreeStatusOnWorkspace.Committing;
       let listToCommit = this.root.getBlobNodes();
       let modifiedNodes = listToCommit.filter(n => (n.state.length > 0) && (!n.state.includes(NodeStateAction.Deleted)));
-      let blobsWithoutDeletion = listToCommit.filter(n => !n.state.includes(NodeStateAction.Deleted));
+      let blobsExcludingDeletion = listToCommit.filter(n => !n.state.includes(NodeStateAction.Deleted));
       let responseArrPromise = modifiedNodes.map((v) => {
         let type = TextUtil.getFileType(v.name);
         let oldSha = v.sha;
@@ -413,7 +390,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
       await Promise.all(responseArrPromise);
 
-      let blobs = blobsWithoutDeletion;
+      let blobs = blobsExcludingDeletion;
       if (blobs.filter(b => b.state.length > 0).length == 0) {
         console.debug(`${blobs.map(b => b.path).join(', ')} will be committed`);
         let createdTree = await this.wrapper.createTree(this.userId, this.repositoryName, blobs);
@@ -426,13 +403,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     } catch(e){
       console.error(e);
     } finally {
-      // const before = this.selectedNodePath;
-      // this.router.navigate([], {queryParams: {branch: this.selectedBranch.name}})
       this.refreshSubject.next();
-      // this.intialize().then(() => {
-        // this.selectNode(before);
-        //Wait for few seconds until new tree is created
-      // });
     }
   }
 }

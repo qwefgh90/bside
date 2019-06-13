@@ -177,6 +177,11 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
       this.throwWhenNotInitialized();
   }
 
+  get listOfContents(){
+    let models: Array<monacoNameSpace.editor.ITextModel> = this.monaco.editor.getModels();
+    return models.map(m => m.uri.toString());
+  }
+
   throwWhenNotInitialized(){
     throw new Error("A monaco is not initalized");
   }
