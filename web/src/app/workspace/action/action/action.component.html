@@ -9,8 +9,8 @@
     <mat-button-toggle (click)="onEdit()" [value]="ActionState.Edit" title="Edit">
       <mat-icon aria-label="edit" >edit</mat-icon>
     </mat-button-toggle>
-    <mat-button-toggle (click)="onSave()" [value]="ActionState.Save" [disabled]="!isNodeDirty" title="Save">
-      <mat-icon aria-label="save" >save</mat-icon>
+    <mat-button-toggle (click)="onSave()" [value]="ActionState.Save" [disabled]="dirtyCount == 0" title="stage">
+      <mat-icon aria-label="stage" matBadge="{{dirtyCount}}" matBadgePosition="above after">input</mat-icon>
     </mat-button-toggle>
   </mat-button-toggle-group>
 </div>

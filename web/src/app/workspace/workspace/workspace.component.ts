@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, AfterContentInit, ElementRef, OnChanges, SimpleChanges, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, AfterContentInit, ElementRef, OnChanges, SimpleChanges, HostListener, Inject } from '@angular/core';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, Subject, Observable, combineLatest, fromEventPattern } from 'rxjs';
-import { MatDrawer, MatSelectChange } from '@angular/material';
+import { MatDrawer, MatSelectChange, MatTabGroup } from '@angular/material';
 import { GithubTreeNode, NodeStateAction, GithubNode } from '../tree/github-tree-node';
 import { MonacoService } from '../editor/monaco.service';
 import { Editor } from '../editor/editor';
@@ -14,11 +14,20 @@ import { ActionComponent, ActionState } from '../action/action/action.component'
 import { GithubTreeToTree } from '../tree/github-tree-to-tree';
 import { LocalUploadService } from '../upload/local-upload.service';
 import { GithubTreeComponent } from '../tree/github-tree.component';
+import { repositoryDetails } from 'src/app/testing/mock-data';
+import { CommitProgressComponent } from './commit-progress/commit-progress.component';
+import { group } from '@angular/animations';
+import { TabComponent } from './tab/tab.component';
+import { Tab } from './tab/tab';
+import { Serializable } from './serializable';
+import { Pack } from './pack';
+import { WorkspacePack } from './workspace-pack';
+import { Database, DatabaseToken } from 'src/app/db/database';
 
 declare const monaco;
 
 export enum TreeStatusOnWorkspace{
-  Loading, Committing, NotInitialized, Done, Fail
+  Loading, Committing, NotInitialized, Done, Fail, TreeEmpty
 }
 
 export enum ContentStatusOnWorkspace{
@@ -34,18 +43,20 @@ export enum WorkspaceStatus{
   templateUrl: './workspace.component.html',
   styleUrls: ['./workspace.component.css']
 })
-export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
+export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit, Serializable {
   FileType = FileType;
   TreeStatus = TreeStatusOnWorkspace;
   ContentStatus = ContentStatusOnWorkspace;
   WorkspaceStatus = WorkspaceStatus;
-  constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer) { 
+  constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer, @Inject(DatabaseToken) private database: Database) { 
   }
 
   @ViewChild("tree") tree: GithubTreeComponent;
   @ViewChild("editor1") editor1: Editor;
   @ViewChild("stage") stage: Stage;
   @ViewChild("action") action: ActionComponent;
+  @ViewChild(CommitProgressComponent) commitProgress: CommitProgressComponent;
+  @ViewChild(TabComponent) tab: Tab;
   
 
   userId;
@@ -64,7 +75,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   selectedRawPath: SafeResourceUrl;
   placeholderForCommit: string = `It's committed at ${window.location}`
 
-  isNodeDirty = false;
+  dirtyCount: number = 0;
   contentStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
   treeStatus: TreeStatusOnWorkspace = TreeStatusOnWorkspace.NotInitialized;
   workspaceStatus: WorkspaceStatus = WorkspaceStatus.View;
@@ -98,22 +109,47 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.refreshSubject.next();
     this.subscriptions.push(s);
   }
+
   initialize(userId, repositoryName, branchName): Promise<void>{
-    const selectedNodePath = this.resetEditor();
+    let selectedNodePath;
+    if((this.selectedBranch != undefined) && (branchName == this.selectedBranch.name)){
+      selectedNodePath = this.selectedNodePath;
+    }else{
+      this.resetTab();
+    }
+    this.resetEditor();
     this.selectedImagePath = undefined;
     this.selectedFileType = undefined;
     this.action.select(ActionState.Edit);
-    this.isNodeDirty = false;
     this.treeStatus = TreeStatusOnWorkspace.Loading;
 
     let promise = this.initialzeWorkspace(userId, repositoryName, branchName).finally(() => {
-      this.treeStatus = TreeStatusOnWorkspace.Done;
+      if(this.root == undefined)
+        this.treeStatus = TreeStatusOnWorkspace.TreeEmpty;
+      else
+        this.treeStatus = TreeStatusOnWorkspace.Done;
     }).then(()=>{
       if(selectedNodePath != undefined){
         this.selectNode(selectedNodePath);
+        this.invalidateDirtyCount();
       }
+      // this.deserialize(this.database.get(this.selectedBranch.commit.sha));
     })
     return promise;
+  }
+
+  private invalidateDirtyCount(){
+    this.invalidateNodesToStage();
+    if(this.nodesToStage == undefined)
+      this.dirtyCount = 0;
+    else
+      this.dirtyCount = this.nodesToStage.length;
+  }
+
+  private invalidateNodesToStage(){
+    if(this.root != undefined)
+      this.nodesToStage = this.root.getBlobNodes().filter(v => (v.state.length > 0) && v.name != undefined && v.name.length != 0 
+        && !(v.state.includes(NodeStateAction.Created) && v.state.includes(NodeStateAction.Deleted)));
   }
 
   private initalizeLoader(){
@@ -130,13 +166,55 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }
   }
 
-  resetEditor(path?: string): string{
-    if(path != undefined && this.editor1 != undefined)
+  toggleDiff(){
+    if (this.editor1.isDiffOn) {
+      this.editor1.selectTab(this.selectedNodePath);
+    } else {
+      let nodes = this.root.getBlobNodes();
+      const filteredNodes = nodes.filter((v) => {
+        return v.path == this.selectedNodePath && !v.state.includes(NodeStateAction.Created);
+      });
+      if (filteredNodes.length == 1) {
+        let node = filteredNodes[0];
+        let type = TextUtil.getFileType(node.name);
+        if (type == FileType.Text) {
+          this.getOriginalText(node.sha).then((content: string) => {
+            this.editor1.diffWith(this.selectedNodePath, content);
+          });
+        }
+      }else{
+        console.warn(`${filteredNodes[0].path} are ${filteredNodes.length}. it's expected to be one`)
+      }
+    }
+  }
+
+  toggleMd(){
+    if (this.editor1.isMdOn) {
+      this.editor1.selectTab(this.selectedNodePath);
+    } else {
+      let nodes = this.root.getBlobNodes();
+      const filteredNodes = nodes.filter((v) => {
+        return v.path == this.selectedNodePath;
+      });
+      if (filteredNodes.length == 1) {
+        this.editor1.md();
+      }
+    }
+  }
+
+  resetTab(){
+    if(this.tab != undefined)
+      this.tab.clear();
+  }
+
+  resetEditor(path?: string){
+    if(path != undefined){
       this.editor1.removeContent(path);
+    }
     this.contentStatus = ContentStatusOnWorkspace.NotInitialized
-    const selectedNodePath = this.selectedNodePath;
-    this.selectedNodePath = undefined;
-    return selectedNodePath;
+    //const selectedNodePath = this.selectedNodePath;
+   // this.selectedNodePath = undefined;
+    //return selectedNodePath;
   }
 
   ngAfterContentInit() {
@@ -156,10 +234,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   toggle() {
     this.leftPane.toggle();
     this.editor1.shrinkExpand();
-  }
-
-  newNode(node: GithubTreeNode){
-
   }
  
   getImage(base64: string, mediaType: string): SafeResourceUrl{
@@ -196,23 +270,23 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       console.error("Branches can't be loaded.")
     });
 
-    let defaultBranch = Promise.all([details, branches]).then(() => {
+    await Promise.all([details, branches]);
+
+    if (this.branches.length == 0) {
+      console.error("It seems that this repository is empty.");
+    } else {
       const defaultBranchName = this.repositoryDetails.default_branch;
-      if(branchName)
+      if (branchName)
         this.setBranchByName(branchName);
       else
         this.setBranchByName(defaultBranchName);
-    }, () => {
-      console.error("Default branch can't be loaded.");
-    });
 
-    await defaultBranch;
-
-    return this.setTree().then((v) => { },
-      () => {
-        console.error("Tree can't be loaded.")
-      }
-    );
+      return this.setTree().then((v) => { },
+        () => {
+          console.error("Tree can't be loaded.")
+        }
+      );
+    }
   }
 
   setTree(): Promise<void> {
@@ -222,87 +296,111 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       const hiarachyTree = nodeTransformer.getTree();
       this.root = hiarachyTree;
       console.log(`A tree is loaded with ${tree.tree.length} nodes.`)
+    }, () => {
+      this.root = undefined;
     });
   }
 
-  setBranchByName(branchName: string): void {
+  setBranchByName(branchName: string): boolean {
     const branch = this.branches.find((v) => {
       if (v.name == branchName) {
         return true;
       } return false;
     });
+    
     this.selectedBranch = branch;
+    return branch != undefined ? true : false;
   }
 
   private selectNode(path: string){
+    const snapshot = this.selectedNodePath;
     setTimeout(( ) =>{
-      this.tree.selectNode(path);
-    }, 500);
+      if(snapshot != path)
+        this.tree.selectNode(path);
+    }, 300);
   }
 
-  nodeSelected(node: GithubTreeNode) {
-    if (node.type == 'blob') {
-      this.selectedNodePath = node.path;
-      this.contentStatus = ContentStatusOnWorkspace.Loading;
-      let type = TextUtil.getFileType(node.name);
-      this.selectedFileType = type;
-      if (node.state.filter((v) => v == NodeStateAction.Created).length == 1) {
-        if (this.editor1.exist(node.path)) {
-          let base64OrText = this.editor1.getContent(node.path);
-          if (type == FileType.Image) {
-            let mime = TextUtil.getMime(node.name);
-            this.selectedImagePath = this.getImage(base64OrText, mime);
-          } else if (type == FileType.Text) {
-            let encoding = this.encoding;
-            this.encodingMap.set(node.sha, encoding);
-            this.setContentAndFocusInEditor(node.path, base64OrText);
-          }
-        } else {
-          console.error(`The blob of ${node.path} must be in monaco editor`);
+  nodeSelected(node: GithubTreeNode | string) {
+    if(node == undefined){
+      this.resetEditor();
+    }else if (typeof node === 'string') {
+        this.selectNode(node);
+    } else {
+      if (node.type == 'blob') {
+        this.selectedNodePath = node.path;
+        if (!this.tab.exists(node.path)) {
+          this.tab.addTab(node.path);
         }
-        this.contentStatus = ContentStatusOnWorkspace.Done;
-      } else {
-        this.wrapper.getBlob(this.userId, this.repositoryName, node.sha).then(
-          (blob: Blob) => {
-            if(type == FileType.Image)
-              this.selectedImagePath = this.getRawUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, node.syncedNode.path);
-            else if (type == FileType.Text) {
-              let bytes = TextUtil.base64ToBytes(blob.content);
+        this.tab.selectTab(node.path);
+        this.contentStatus = ContentStatusOnWorkspace.Loading;
+        let type = TextUtil.getFileType(node.name);
+        this.selectedFileType = type;
+        if (node.state.filter((v) => v == NodeStateAction.Created).length == 1) {
+          if (this.editor1.exist(node.path)) {
+            let base64OrText = this.editor1.getContent(node.path);
+            if (type == FileType.Image) {
+              let mime = TextUtil.getMime(node.name);
+              this.selectedImagePath = this.getImage(base64OrText, mime);
+            } else if (type == FileType.Text) {
               let encoding = this.encoding;
               this.encodingMap.set(node.sha, encoding);
-              this.setContentAndFocusInEditor(node.path, TextUtil.decode(bytes, encoding));
+              this.setContentAndFocusInEditor(node.path, base64OrText);
             }
-            this.selectedRawPath = this.getRawUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, node.syncedNode.path);
-          }, (reason) => {
-            console.debug("An error during getting the blob. Maybe selectedNode is invalid.");
-            console.debug(node);
+          } else {
+            console.error(`The blob of ${node.path} must be in monaco editor`);
           }
-        ).finally(() => {
           this.contentStatus = ContentStatusOnWorkspace.Done;
-        });
+          this.database.save(this.serialize());
+        } else {
+          this.wrapper.getBlob(this.userId, this.repositoryName, node.sha).then(
+            (blob: Blob) => {
+              if (type == FileType.Image)
+                this.selectedImagePath = this.getImage(blob.content, TextUtil.getMime(node.syncedNode.path))
+              //this.getRawUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, node.syncedNode.path);
+              else if (type == FileType.Text) {
+                let bytes = TextUtil.base64ToBytes(blob.content);
+                let encoding = this.encoding;
+                this.encodingMap.set(node.sha, encoding);
+                this.setContentAndFocusInEditor(node.path, TextUtil.decode(bytes, encoding));
+              }
+              this.selectedRawPath = this.getRawUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, node.syncedNode.path);
+            }, (reason) => {
+              console.debug("An error during getting the blob. Maybe selectedNode is invalid.");
+              console.debug(node);
+            }
+          ).finally(() => {
+            this.contentStatus = ContentStatusOnWorkspace.Done;
+            this.database.save(this.serialize());
+          });
+        }
       }
     }
   }
 
   nodeCreated(path: string){
-    this.isNodeDirty = true;
+    this.invalidateDirtyCount();
     this.editor1.setContent(path, '');
+    this.database.save(this.serialize());
   }
 
   nodeRemoved(node: GithubTreeNode){
-    this.isNodeDirty = true;
+    this.invalidateDirtyCount();
+    this.tab.removeTab(node.path);
+    this.editor1.removeContent(node.path);
+    this.database.save(this.serialize());
     if(node.path == this.selectedNodePath){
       this.resetEditor(node.path);
     }
   }
 
   nodeMoved(e: {fromPath: string, to: GithubTreeNode}){
-    this.isNodeDirty = true;
+    this.invalidateDirtyCount();
     if(e.to.type == 'blob'){
       if (this.editor1.exist(e.fromPath)) {
         let content = this.editor1.getContent(e.fromPath);
         this.editor1.removeContent(e.fromPath);
         this.editor1.setContent(e.to.path, content);
+        this.database.save(this.serialize());
       }
       if(this.selectedNodePath == e.fromPath)
         this.selectNode(e.to.path);
@@ -310,7 +408,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   nodeUploaded(event: {node: GithubTreeNode, base64: string}){
-    this.isNodeDirty = true;
+    this.invalidateDirtyCount();
     let type = TextUtil.getFileType(event.node.name);
     if(type == FileType.Text){
       let bytes = TextUtil.base64ToBytes(event.base64.toString());
@@ -319,42 +417,78 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }else {
       this.editor1.setContent(event.node.path, event.base64);
     }
+    this.database.save(this.serialize());
   }
 
-  nodeContentChanged(path: string){
-    this.isNodeDirty = true;
+  async nodeContentChanged(path: string){
     if(path == this.selectedNodePath){
       const node = this.tree.get(path);
-      if(node != undefined)
-        node.setContentModifiedFlag();
-      else
+      if(node != undefined){
+        const asyncText = this.getOriginalText(node.sha);
+        asyncText.then((originalText) => {
+          if(this.editor1.getContent(path) == originalText)
+            node.setContentModifiedFlag(false);
+          else
+            node.setContentModifiedFlag(true);
+          this.invalidateDirtyCount();
+          this.database.save(this.serialize());
+        }, (reason) => console.error(reason));
+      }else
         console.error(`The content of ${path} is changed, but it does not exist anywhere`)
     }
   }
 
+  private async getOriginalText(sha: string){
+    return this.wrapper.getBlob(this.userId, this.repositoryName, sha).then((blob: Blob) => {
+      let bytes = TextUtil.base64ToBytes(blob.content);
+      let encoding = this.encoding;
+      const originalText: string = TextUtil.decode(bytes, encoding);
+      return originalText;
+    }, (reason) => {
+      return Promise.reject(reason);
+    })
+  }
+
   onBranchChange(event: MatSelectChange){
-    // this.treeStatus = TreeStatusOnWorkspace.Loading;
     const branch = event.value;
     this.router.navigate([], {queryParams: {branch: branch.name}})
   }
 
   onStage(){
     this.workspaceStatus = WorkspaceStatus.Stage;
-    this.nodesToStage = this.root.getBlobNodes().filter(v => (v.state.length > 0) && v.name != undefined && v.name.length != 0);
+    this.invalidateDirtyCount()
     this.editor1.readonly = true;
+    this.editor1.shrinkExpand();
   }
 
   onEdit(){
     this.workspaceStatus = WorkspaceStatus.View;
     this.editor1.readonly = false;
+    this.editor1.shrinkExpand();
+  }
+
+  getBase64(path: string): string{
+    if (this.editor1.exist(path)) {
+      let type = TextUtil.getFileType(path);
+      let base64;
+      let base64OrText = this.editor1.getContent(path);
+      if (type == FileType.Image || type == FileType.Other) {
+        base64 = base64OrText;
+      } else {
+        base64 = TextUtil.stringToBase64(base64OrText);
+      }
+      return base64;
+    }
   }
 
   async onCommit(msg: string) {
     try {
       this.treeStatus = TreeStatusOnWorkspace.Committing;
+      this.commitProgress.prepare();
       let listToCommit = this.root.getBlobNodes();
       let modifiedNodes = listToCommit.filter(n => (n.state.length > 0) && (!n.state.includes(NodeStateAction.Deleted)));
       let blobsExcludingDeletion = listToCommit.filter(n => !n.state.includes(NodeStateAction.Deleted));
+      this.commitProgress.uploadBlobs(modifiedNodes.length);
       let responseArrPromise = modifiedNodes.map((v) => {
         let type = TextUtil.getFileType(v.name);
         let oldSha = v.sha;
@@ -371,7 +505,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
                 base64 = TextUtil.stringToBase64(base64OrText, this.encodingMap.get(oldSha));
               else
                 base64 = TextUtil.stringToBase64(base64OrText);
-              promise = this.wrapper.createBlob(this.userId, this.repositoryName, base64);
+              promise = this.wrapper.createBlob(this.userId, this.repositoryName, base64);  
             }
           }else
             promise = new Promise((r, reject) => {
@@ -393,9 +527,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       let blobs = blobsExcludingDeletion;
       if (blobs.filter(b => b.state.length > 0).length == 0) {
         console.debug(`${blobs.map(b => b.path).join(', ')} will be committed`);
+        this.commitProgress.createTree();
         let createdTree = await this.wrapper.createTree(this.userId, this.repositoryName, blobs);
+        this.commitProgress.commit();
         let createdCommit = await this.wrapper.createCommit(this.userId, this.repositoryName, msg, createdTree.sha, this.selectedBranch.commit.sha);
+        this.commitProgress.updateBranch(this.selectedBranch.name);
         let createdBranch = await this.wrapper.updateBranch(this.userId, this.repositoryName, this.selectedBranch.name, createdCommit.sha);
+        this.commitProgress.done();
         console.log(`The commit and updating ${createdBranch.ref} have succeeded which is ${createdBranch.object.sha}. Check out all in ${createdBranch.url}`);
       } else {
         console.error("Invalid state of nodes is found because blobs containing more than zero state exist");
@@ -405,5 +543,37 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     } finally {
       this.refreshSubject.next();
     }
+  }
+
+  serialize(): WorkspacePack{
+    // if (this.selectedBranch != undefined) {
+    //   let packs;
+    //   this.invalidateNodesToStage();
+    //   let commit_sha = this.selectedBranch.commit.sha;
+    //   packs = this.nodesToStage.map(n => {
+    //     let base64 = this.getBase64(n.path);
+    //     return Pack.of(commit_sha, n, base64);
+    //   });
+    //   return WorkspacePack.of(commit_sha, this.selectedBranch.name, packs, this.tab.tabs);
+    // }
+    return;
+  }
+
+  deserialize(pack: WorkspacePack): boolean{
+    // if(pack == undefined)
+    //   return false;
+    // let selectedCommitSha = pack.commit_sha;
+    // let branchName = pack.branchName;
+    // if((this.selectedBranch != undefined) && (selectedCommitSha == this.selectedBranch.commit.sha)){
+    //   pack.packs.forEach(p => {
+    //     this.editor1.setContent(p.path, p.base64);
+    //   });
+      
+    //   pack.tabs.forEach(tab => {
+    //     this.tab.addTab(tab);
+    //   });
+    //   return true;
+    // }
+    return false;
   }
 }

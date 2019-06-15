@@ -1,7 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ActionComponent } from './action.component';
-import { MatExpansionModule, MatInputModule, MatIcon, MatIconModule, MatButtonToggleModule } from '@angular/material';
+import { MatExpansionModule, MatInputModule, MatIcon, MatIconModule, MatButtonToggleModule, MatBadgeModule } from '@angular/material';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
@@ -19,7 +19,8 @@ describe('ActionComponent', () => {
         ReactiveFormsModule,
         BrowserAnimationsModule,
         MatIconModule,
-      MatButtonToggleModule]
+        MatButtonToggleModule,
+        MatBadgeModule]
     })
     .compileComponents();
   }));

@@ -13,6 +13,10 @@ import { Content } from './type/content';
 })
 export class WrapperService {
   constructor(private oauth: OAuthService, private http: HttpClient) {   }
+  /**
+   * blobCache contains blobs which associated with urls. blob is a kind of immutable things.
+   */
+  private blobCache = new Map<string, Blob>();
 
   /**
    * [
@@ -891,8 +895,17 @@ export class WrapperService {
   
   getBlob(login: string, repositoryName: string, sha: string){
     const url = `https://api.github.com/repos/${login}/${repositoryName}/git/blobs/${sha}`;
-    let treeResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
-    return treeResponse.toPromise();
+    if (this.blobCache.has(url))
+      return Promise.resolve(this.blobCache.get(url));
+    else {
+      let treeResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
+      return treeResponse.toPromise().then((b: Blob) => {
+        this.blobCache.set(url, b);
+        return b;
+      }, reason => {
+        return Promise.reject(reason);
+      });
+    }
   }
 
   /**

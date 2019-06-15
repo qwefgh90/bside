@@ -9,13 +9,10 @@
               <div>Loading...</div>
             </div>
           </div>
-          <div style="flex:1; display: block;" *ngIf="(treeStatus == TreeStatus.Committing)">
-            <div class="loading">
-              <mat-spinner [strokeWidth]="3"></mat-spinner>
-              <div>Committing...</div>
-            </div>
+          <div style="flex:1;" [class.block]="(treeStatus == TreeStatus.Committing)" [class.none]="(treeStatus != TreeStatus.Committing)">
+            <app-commit-progress></app-commit-progress>
           </div>
-          <app-tree #tree style="flex: 1" [repository]="repositoryDetails" [tree]="root"
+          <app-tree #tree style="flex: 1; min-height: 0px;" [repository]="repositoryDetails" [tree]="root"
             (nodeSelected)="nodeSelected($event)" (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)"
             (nodeRemoved)="nodeRemoved($event)" (nodeUploaded)="nodeUploaded($event)"
             [class.none]="(workspaceStatus == WorkspaceStatus.Stage) || (treeStatus != TreeStatus.Done)">
@@ -25,7 +22,7 @@
             [class.none]="(workspaceStatus == WorkspaceStatus.View) || (treeStatus != TreeStatus.Done)"
             (commit)="onCommit($event)" [placeholder]="placeholderForCommit">
           </app-stage>
-          <mat-form-field class="branches" [class.none]="(workspaceStatus == WorkspaceStatus.Stage)">
+          <mat-form-field class="branches" [class.none]="(workspaceStatus == WorkspaceStatus.Stage)" *ngIf="(branches != undefined) && (branches.length > 0)">
             <mat-label>Branches</mat-label>
             <mat-select [(value)]="selectedBranch" (selectionChange)="onBranchChange($event)">
               <mat-option *ngFor="let branch of branches" [value]="branch">
@@ -41,18 +38,26 @@
     </div>
   </mat-drawer>
   <mat-drawer #rightDrawer mode="side" position="end">
-    <app-action #action (stage)="onStage()" (edit)="onEdit()" [isNodeDirty]="isNodeDirty"
+    <app-action #action (stage)="onStage()" (edit)="onEdit()" [dirtyCount]="dirtyCount"
       [repository]="repositoryDetails"></app-action>
   </mat-drawer>
   <div style="display: flex; flex-direction: row; height: 100%">
   <div class="left-fold" (click)="toggle()">
       <mat-icon *ngIf="!leftPane.opened">chevron_right</mat-icon>
   </div>
-  <div style="display: flex; flex-direction: column; flex:1; height: 100%">
-    <div class="toolbar">
+  <div style="display: flex; flex-direction: column; flex:1; height: 100%; width: 100%;">
+    <div class="toolbar" *ngIf="selectedNodePath != undefined && tree?.get(selectedNodePath) != undefined">
       <span class="fileName">{{selectedNodePath != undefined ? selectedNodePath : ''}}</span>
       <div class="spacer"></div>
-      <div *ngIf="selectedNodePath != undefined">
+      <div *ngIf="selectedNodePath != undefined && selectedFileType == FileType.Text">
+        <button mat-stroked-button *ngIf="tree.get(selectedNodePath).syncedNode != undefined" title="Preview"
+          (click)="toggleMd()">
+            <mat-icon>visibility</mat-icon>
+        </button>
+        <button mat-stroked-button *ngIf="tree.get(selectedNodePath).syncedNode != undefined" title="Compare with original"
+          (click)="toggleDiff()">
+            <mat-icon>compare</mat-icon>
+        </button>
         <a href="{{selectedRawPath}}"
           *ngIf="tree?.get(selectedNodePath) != undefined && tree.get(selectedNodePath).syncedNode != undefined"
           target="_blank" style="text-decoration: none;color: unset;margin-right: 1em"><button mat-stroked-button
@@ -62,15 +67,20 @@
         <!-- <a href="{{getRawUrl(repositoryDetails.full_name, selectedBranch.commit.sha, selectedNode.syncedNode.path)}}" style="text-decoration: none;color: unset" download><button mat-stroked-button style="margin-right: 1em"><mat-icon>cloud_download</mat-icon></button></a> -->
       </div>
     </div>
+    <app-tab (select)="nodeSelected($event)"></app-tab>
     <div style="flex:1; display: block" *ngIf="contentStatus == ContentStatus.NotInitialized">
-      <div style="display: flex; justify-content: center; width: 100%; height: 100%;">
-        <div style="display:flex; flex-direction: row; align-items: center;  height: 100%;">
+      <div style="display: flex; justify-content: center; width: 100%; height: 100%; align-items: center;">
+        <div style="text-align: center;">
           <div>Welcome to BSide</div>
+          <div *ngIf="treeStatus == TreeStatus.TreeEmpty">
+            <div>Your repository is <b>empty</b> now.</div>
+            <div>Please create one file at least in <a href="{{repositoryDetails?.html_url}}" target="_blank">{{repositoryDetails?.html_url}}</a> and refresh here.</div>
+          </div>
         </div>
       </div>
     </div>
-    <app-editor #editor1 style="flex:1;" (changeContent)="nodeContentChanged($event)"
-      [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
+    <app-editor #editor1 style="flex:1; min-height: 0px;" (changeContent)="nodeContentChanged($event)"
+      [class.flex]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
       [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"></app-editor>
     <div style="flex:1; display: block; height: 100px "
       *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">

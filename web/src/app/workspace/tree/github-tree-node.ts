@@ -227,9 +227,16 @@ export class GithubTreeNode {
       return [];
   }
 
-  setContentModifiedFlag() {
-    if(this.state[this.state.length-1] != NodeStateAction.ContentModified)
+  setContentModifiedFlag(flag: boolean = true) {
+    if(this.state[this.state.length-1] != NodeStateAction.ContentModified && flag)
       this.state.push(NodeStateAction.ContentModified);
+    else if(!flag){
+      let statesExcludingContentModified = this.state.filter((v) => {
+        return v != NodeStateAction.ContentModified
+      });
+      this.state.splice(0, this.state.length);
+      statesExcludingContentModified.forEach((v) => this.state.push(v));
+    }
   }
 
   setSynced(sha: string, type: string, mode: string) {
@@ -243,8 +250,9 @@ export class GithubTreeNode {
     this.state.push(NodeStateAction.Uploaded);
   }
 
-  private getNameFromPath() {
-    return this.path.match(new RegExp('[^/]*$'))[0];
+  getNameFromPath(path?: string) {
+    path = path == undefined ? this.path : path;
+    return path.match(new RegExp('[^/]*$'))[0];
   }
 
   private changeAllParents(parent: GithubTreeNode){

@@ -2,6 +2,8 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { EditorComponent } from './editor.component';
 import { MatSidenavModule, MatProgressSpinnerModule } from '@angular/material';
+import { DiffEditorComponent } from '../diff-editor/diff-editor.component';
+import { MarkdownModule } from 'ngx-markdown';
 
 describe('EditorComponent', () => {
   let component: EditorComponent;
@@ -9,9 +11,10 @@ describe('EditorComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ EditorComponent ],
+      declarations: [ EditorComponent, DiffEditorComponent ],
       imports: [MatSidenavModule,
-        MatProgressSpinnerModule]
+        MatProgressSpinnerModule,
+      MarkdownModule.forRoot()]
     })
     .compileComponents();
   }));

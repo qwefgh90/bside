@@ -59,6 +59,9 @@
 .block{
     display: block;
 }
+.flex{
+    display: flex;
+}
 .spacer{
     flex: 1; 
 }
@@ -66,12 +69,12 @@
     display: flex;
     flex-direction: row; 
     width: 100%;
-    padding-bottom: 1em;
-    padding-top: 1em;
+    padding-top: 0.5em;
 }
 .fileName{
     margin-left: 1em;
     font-size: 1.4em;
+    word-break: break-word;
 }
 .loading{
     min-width: 15em;

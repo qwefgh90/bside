@@ -1,12 +1,16 @@
-import { Observable } from 'rxjs';
+import * as monacoNameSpace from 'monaco-editor';
 
 export interface Editor {
-    setContent(path: string, name: string);
     selectTab(path: string): boolean;
+    setContent(path: string, content: string);
     exist(path: string): boolean;
     getContent(path?: string): string;
-    removeContent(path: string): boolean; 
+    removeContent(path: string): boolean;
+    diffWith(path: string, content: string, originalPath?: string)
+    md()
+    getPathList(): Array<string>;
     readonly: boolean
-    readonly listOfContents: string[];
     shrinkExpand()
+    readonly isDiffOn: boolean;
+    readonly isMdOn: boolean;
 }

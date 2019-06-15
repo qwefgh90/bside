@@ -1,15 +1,12 @@
 import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 
 import { WorkspaceComponent, TreeStatusOnWorkspace } from './workspace.component';
-import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule, MatExpansionModule, MatSelectModule, MatMenu, MatIcon, MatMenuModule, MatProgressSpinnerModule, MatButtonToggleModule, MatFormField, MatFormFieldModule, MatInputModule } from '@angular/material';
+import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule, MatExpansionModule, MatSelectModule, MatMenu, MatIcon, MatMenuModule, MatProgressSpinnerModule, MatButtonToggleModule, MatFormField, MatFormFieldModule, MatInputModule, MatBadgeModule, MatTabsModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WrapperService } from 'src/app/github/wrapper.service';
-import { EditorComponent } from '../editor/editor.component';
 import { ActionComponent } from '../action/action/action.component';
-import { NgxMdModule } from 'ngx-md';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NO_ERRORS_SCHEMA } from '@angular/compiler/src/core';
 import { TreeModule } from 'angular-tree-component';
 import { convertToParamMap, ParamMap, Params } from '@angular/router';
 import { ReplaySubject } from 'rxjs';
@@ -22,6 +19,11 @@ import { LocalUploadService } from '../upload/local-upload.service';
 import { UploadComponent } from '../upload/upload.component';
 import { GithubTreeComponent } from '../tree/github-tree.component';
 import { Editor } from '../editor/editor';
+import { MarkdownModule } from 'ngx-markdown';
+import { CommitProgressComponent } from './commit-progress/commit-progress.component';
+import { TabComponent } from './tab/tab.component';
+import { DatabaseToken } from 'src/app/db/database';
+import { LocalDbService } from 'src/app/db/local-db.service';
 
 @Component({selector: 'app-stage', template: ''})
 class StageComponent {
@@ -53,7 +55,27 @@ class EditorStubComponent implements Editor{
   shrinkExpand(){
 
   }
+
+  diffWith(){
+
+  }
+
+  md(){
+
+  }
+
+  getPathList(): string[]{
+    return [];
+  }
+  isMdOn: boolean
+
+  get isDiffOn(){
+    return false;
+  }
+
   readonly: boolean;
+
+  listOfContents = [];
 }
 
 @Component({
@@ -105,18 +127,18 @@ describe('WorkspaceComponent', () => {
     getBlobSpy = wrapperServiceSpy.getBlob;
     mockWrapperServiceSpy();
     TestBed.configureTestingModule({
-      declarations: [WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent],
+      declarations: [WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent, CommitProgressComponent, TabComponent],
       providers: [{provide: ActivatedRoute, useValue: routeStub}, 
         {provide: WrapperService, useValue: wrapperServiceSpy}, 
         {provide: Router, useValue: routerSpy},
-      {provide: MonacoService}, {provide: LocalUploadService}],
+      {provide: MonacoService}, {provide: LocalUploadService},
+      {provide: DatabaseToken, useClass: LocalDbService}],
       imports: [MatSidenavModule,
         BrowserAnimationsModule,
         MatDividerModule,
         MatTreeModule,
         MatButtonModule,
         MatDividerModule,
-        NgxMdModule.forRoot(),
         MatSelectModule,
         MatIconModule,
         FormsModule,
@@ -126,7 +148,10 @@ describe('WorkspaceComponent', () => {
         MatProgressSpinnerModule,
         MatButtonToggleModule,
         MatFormFieldModule,
-        MatInputModule
+        MatInputModule,
+        MatBadgeModule,
+        MarkdownModule.forRoot(),
+        MatTabsModule
       ],
     }).compileComponents();
   }));
@@ -152,6 +177,19 @@ describe('WorkspaceComponent', () => {
     expect(component.tree).toBeDefined();
     expect(component.editor1).toBeDefined();
   }))
+
+
+  // it('serialize()', fakeAsync(() => {
+  //   fixture.detectChanges();
+  //   tick(3000);
+  //   fixture.detectChanges();
+  //   tick(3000);
+  //   let pack = component.serialize();
+  //   expect(pack.commit_sha).toBe(component.selectedBranch.commit.sha);
+  //   expect(pack.branchName).toBe('master')
+  //   expect(pack.packs.length).toBe(0);
+  //   expect(pack.tabs.length).toBe(0);
+  // }))
 
   it('render GithubTreeComponent', fakeAsync(() => {
     fixture.detectChanges();

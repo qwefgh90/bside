@@ -10,3 +10,7 @@ body{
 .description > .mat-form-field-wrapper{
     padding-bottom: 0px;
 }
+
+.mat-tab-label-content{
+    width: 100%
+}

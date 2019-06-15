@@ -1,0 +1,39 @@
+language: node_js
+
+node_js:
+  - '10'
+  
+before_install: cd web
+
+script: 
+  - npm run travis-test
+<<<<<<< HEAD
+=======
+  - npm run prod-build
+
+after_success:
+  - eval $(ssh-agent -s)
+  - chmod 600 ../id_rsa 
+  - ssh-add ../id_rsa
+  - ssh-keyscan -p ${port} ${addr} >> ~/.ssh/known_hosts
+  - ssh -p ${port} root@${addr} "rm /opt/bside/httpd/htdocs/*"
+  - scp -P ${port} dist/web/* root@${addr}:/opt/bside/httpd/htdocs
+>>>>>>> fcbe169... correct wrong command and import commands of deployment
+
+notifications:
+  email: false
+
+cache:
+  directories:
+  - node_modules
+
+branches:
+  only:
+  - master
+  
+addons:
+  chrome: stable
+
+dist: trusty
+
+sudo: required

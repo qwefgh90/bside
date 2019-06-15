@@ -1,4 +1,4 @@
-<div style="height: 100%;" (window:resize)="onResize($event)">
+<div style="height: 100%; flex: 1;" (window:resize)="onResize($event)" [class.flex]="isNone" [class.none]="!isNone">
   <div #editor class="monaco-editor" style="width:100%;height: 100%;" [class.shrink]="shrink"></div>
   <div style="align-items: center;
  display: flex;
@@ -7,3 +7,9 @@
     <mat-spinner [strokeWidth]="3"></mat-spinner>
     <div>Coordinating...</div>
   </div>
+</div>
+
+<div style="overflow: auto; flex: 1" [class.flex]="isMdOn" [class.none]="!isMdOn">
+  <markdown [data]="markdown" style="width: 100%;"></markdown>
+</div>
+<app-diff-editor #diffeditor1 style="width: 100%; flex: 1;" [class.flex]="isDiffOn" [class.none]="!isDiffOn"></app-diff-editor>

@@ -12,7 +12,7 @@ export enum ActionState {
 export class ActionComponent implements OnInit {
   ActionState = ActionState;
   @Input("repository") repository: any
-  @Input("isNodeDirty") isNodeDirty: boolean
+  @Input("dirtyCount") dirtyCount: number
   @Output("stage") stage = new EventEmitter<void>();
   @Output("edit") edit = new EventEmitter<void>();
 
@@ -34,7 +34,7 @@ export class ActionComponent implements OnInit {
   }
 
   onSave() {
-    if (this.isNodeDirty)
+    if (this.dirtyCount > 0)
       this.stage.emit();
   }
 

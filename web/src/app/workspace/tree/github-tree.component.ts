@@ -13,6 +13,7 @@ import { UploadComponent } from '../upload/upload.component';
 import { UploadFile } from '../upload/upload-file';
 import { LocalUploadService } from '../upload/local-upload.service';
 import { GithubTree } from './github-tree';
+import { Pack } from '../workspace/pack';
 @Component({
   selector: 'app-tree',
   templateUrl: './github-tree.component.html',
@@ -337,6 +338,10 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   refreshTree() {
     this.treeComponent.treeModel.update();
     this.searchInputFormControl.setValue('');
+  }
+
+  restore(packs: Pack[]){
+    
   }
 
   onFileLoaded(f: UploadFile) {
