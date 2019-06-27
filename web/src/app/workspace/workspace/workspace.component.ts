@@ -23,6 +23,7 @@ import { Serializable } from './serializable';
 import { Pack } from './pack';
 import { WorkspacePack } from './workspace-pack';
 import { Database, DatabaseToken } from 'src/app/db/database';
+import { WorkspaceService, WorkspaceCommand } from './workspace.service';
 
 declare const monaco;
 
@@ -41,14 +42,17 @@ export enum WorkspaceStatus{
 @Component({
   selector: 'app-workspace',
   templateUrl: './workspace.component.html',
-  styleUrls: ['./workspace.component.css']
+  styleUrls: ['./workspace.component.css'],
+  providers: [WorkspaceService]
 })
 export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit, Serializable {
   FileType = FileType;
   TreeStatus = TreeStatusOnWorkspace;
   ContentStatus = ContentStatusOnWorkspace;
   WorkspaceStatus = WorkspaceStatus;
-  constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer, @Inject(DatabaseToken) private database: Database) { 
+  constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute
+    , private router: Router, private sanitizer: DomSanitizer, @Inject(DatabaseToken) private database: Database
+    , private workspaceService: WorkspaceService) { 
   }
 
   @ViewChild("tree") tree: GithubTreeComponent;
@@ -106,15 +110,31 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit, 
         });
       }
     });
+    this.workspaceService.commandChannel.subscribe((command) => {
+      if(command instanceof WorkspaceCommand.SelectTab){
+        if(command.source != this && this.selectedNodePath != command.path){
+          this.nodeSelected(command.path);
+        }
+      }else if(command instanceof WorkspaceCommand.SelectNodeInTree){
+        if(command.source != this && this.selectedNodePath != command.node.path){
+          this.nodeSelected(command.node);
+        }
+      }else if(command instanceof WorkspaceCommand.RemoveNodeInTree){
+        
+      }else if(command instanceof WorkspaceCommand.CloseTab){
+        
+      }else{
+        console.warn(`It can't handle ${typeof command}.`)
+      }
+    });
+
     this.refreshSubject.next();
     this.subscriptions.push(s);
   }
 
   initialize(userId, repositoryName, branchName): Promise<void>{
-    let selectedNodePath;
-    if((this.selectedBranch != undefined) && (branchName == this.selectedBranch.name)){
-      selectedNodePath = this.selectedNodePath;
-    }else{
+    let selectedNodePath = this.selectedNodePath;
+    if((this.selectedBranch != undefined) && (branchName != this.selectedBranch.name)){
       this.resetTab();
     }
     this.resetEditor();
@@ -207,14 +227,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit, 
       this.tab.clear();
   }
 
-  resetEditor(path?: string){
-    if(path != undefined){
-      this.editor1.removeContent(path);
-    }
+  resetEditor(){
+    this.selectedNodePath = '';
     this.contentStatus = ContentStatusOnWorkspace.NotInitialized
-    //const selectedNodePath = this.selectedNodePath;
-   // this.selectedNodePath = undefined;
-    //return selectedNodePath;
   }
 
   ngAfterContentInit() {
@@ -320,18 +335,17 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit, 
     }, 300);
   }
 
-  nodeSelected(node: GithubTreeNode | string) {
-    if(node == undefined){
+  nodeSelected(path: string | GithubTreeNode) {
+    if(path == undefined){
       this.resetEditor();
-    }else if (typeof node === 'string') {
-        this.selectNode(node);
     } else {
+      const node = (typeof path == 'string') ? this.tree.get(path) : path;
       if (node.type == 'blob') {
         this.selectedNodePath = node.path;
         if (!this.tab.exists(node.path)) {
           this.tab.addTab(node.path);
         }
-        this.tab.selectTab(node.path);
+        this.workspaceService.selectTab(this, node.path);
         this.contentStatus = ContentStatusOnWorkspace.Loading;
         let type = TextUtil.getFileType(node.name);
         this.selectedFileType = type;
@@ -388,22 +402,22 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit, 
     this.tab.removeTab(node.path);
     this.editor1.removeContent(node.path);
     this.database.save(this.serialize());
-    if(node.path == this.selectedNodePath){
-      this.resetEditor(node.path);
-    }
   }
 
   nodeMoved(e: {fromPath: string, to: GithubTreeNode}){
     this.invalidateDirtyCount();
+    let isSelectedNode = this.selectedNodePath == e.fromPath;
     if(e.to.type == 'blob'){
+      if (this.tab.exists(e.fromPath)) {
+        this.tab.removeTab(e.fromPath);
+        this.tab.addTab(e.to.path);
+      }
       if (this.editor1.exist(e.fromPath)) {
         let content = this.editor1.getContent(e.fromPath);
         this.editor1.removeContent(e.fromPath);
         this.editor1.setContent(e.to.path, content);
         this.database.save(this.serialize());
       }
-      if(this.selectedNodePath == e.fromPath)
-        this.selectNode(e.to.path);
     }
   }
 
@@ -424,7 +438,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit, 
     if(path == this.selectedNodePath){
       const node = this.tree.get(path);
       if(node != undefined){
-        const asyncText = this.getOriginalText(node.sha);
+        const asyncText = this.getOriginalText(node.sha)
         asyncText.then((originalText) => {
           if(this.editor1.getContent(path) == originalText)
             node.setContentModifiedFlag(false);
@@ -438,15 +452,19 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit, 
     }
   }
 
-  private async getOriginalText(sha: string){
-    return this.wrapper.getBlob(this.userId, this.repositoryName, sha).then((blob: Blob) => {
-      let bytes = TextUtil.base64ToBytes(blob.content);
-      let encoding = this.encoding;
-      const originalText: string = TextUtil.decode(bytes, encoding);
-      return originalText;
-    }, (reason) => {
-      return Promise.reject(reason);
-    })
+  private async getOriginalText(sha: string) {
+    if (sha != undefined) {
+      return this.wrapper.getBlob(this.userId, this.repositoryName, sha).then((blob: Blob) => {
+        let bytes = TextUtil.base64ToBytes(blob.content);
+        let encoding = this.encoding;
+        const originalText: string = TextUtil.decode(bytes, encoding);
+        return originalText;
+      }, (reason) => {
+        return Promise.reject(reason);
+      })
+    } else {
+      return Promise.resolve('');
+    }
   }
 
   onBranchChange(event: MatSelectChange){

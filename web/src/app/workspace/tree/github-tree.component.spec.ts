@@ -13,6 +13,7 @@ import { LocalUploadService } from '../upload/local-upload.service';
 import { UploadComponent } from '../upload/upload.component';
 import { UploadFile } from '../upload/upload-file';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { WorkspaceService } from '../workspace/workspace.service';
 describe('TreeComponent', () => {
   let component: GithubTreeComponent;
   let fixture: ComponentFixture<GithubTreeComponent>;
@@ -33,7 +34,7 @@ describe('TreeComponent', () => {
         MatInputModule,
         BrowserAnimationsModule
       ]
-      ,providers: [{provide: LocalUploadService}]
+      ,providers: [{provide: LocalUploadService}, WorkspaceService]
     })
     .compileComponents();
   }));

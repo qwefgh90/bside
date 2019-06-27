@@ -14,6 +14,7 @@ import { UploadFile } from '../upload/upload-file';
 import { LocalUploadService } from '../upload/local-upload.service';
 import { GithubTree } from './github-tree';
 import { Pack } from '../workspace/pack';
+import { WorkspaceService, WorkspaceCommand } from '../workspace/workspace.service';
 @Component({
   selector: 'app-tree',
   templateUrl: './github-tree.component.html',
@@ -25,7 +26,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
 
   @Input("repository") repository;
   @Input("tree") tree: GithubTreeNode;
-  @Output("nodeSelected") nodeSelected = new EventEmitter<GithubTreeNode>();
+  // @Output("nodeSelected") nodeSelected = new EventEmitter<GithubTreeNode>();
   @Output("nodeCreated") nodeCreated = new EventEmitter<string>();
   @Output("nodeRemoved") nodeRemoved = new EventEmitter<GithubTreeNode>();
   @Output("nodeMoved") nodeMoved = new EventEmitter<{fromPath: string, to: GithubTreeNode}>();
@@ -44,7 +45,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
 
   subscriptions: Array<Subscription> = [];
 
-  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private localUpload: LocalUploadService) {
+  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private localUpload: LocalUploadService, private workspaceService: WorkspaceService) {
     iconRegistry.addSvgIcon(
       'outline-note',
       sanitizer.bypassSecurityTrustResourceUrl('assets/outline-note-24px.svg'));
@@ -209,6 +210,19 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   ngOnInit(){
     this.searchInputFormControl.valueChanges.subscribe( (v: string) =>{
       this.treeComponent.treeModel.filterNodes(v, false);
+    });
+    this.workspaceService.commandChannel.subscribe((command) => {
+      if(command instanceof WorkspaceCommand.SelectTab){
+        if(command.source != this && (command.path != this.selectedNode.data.path)){
+          this.selectNode(command.path);
+        }
+      }else if(command instanceof WorkspaceCommand.SelectNodeInTree){
+      }else if(command instanceof WorkspaceCommand.RemoveNodeInTree){
+      }else if(command instanceof WorkspaceCommand.CloseTab){
+        
+      }else{
+        console.warn(`It can't handle ${typeof command}.`)
+      }
     })
   }
 
@@ -240,7 +254,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   onSelectNode(node: TreeNode) {
     if(this.renamingNode != node){
       this.selectedNode = node;
-      this.nodeSelected.emit(node.data);
+      this.workspaceService.selectNodeInTree(this, node.data);
+      //this.nodeSelected.emit(node.data);
     }
   }
 
@@ -357,9 +372,14 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     this.upload.select(parentPath);
   }
 
-  get(path: string): GithubTreeNode{
-    const treeNode: TreeNode = this.treeComponent.treeModel.getNodeBy((p) => p.data.path == path);
-    return treeNode == null ? undefined : treeNode.data
+  get(path: string): GithubTreeNode {
+    try {
+      const treeNode: TreeNode = this.treeComponent.treeModel.getNodeBy((p) => p.data.path == path);
+      return treeNode == null ? undefined : treeNode.data
+    } catch (e) {
+      console.warn(e);
+      return undefined;
+    }
   }
 
   hasChild = (_: number, node: GithubTreeNode) => !!node.children && node.type == 'tree' ;

@@ -24,6 +24,7 @@ import { CommitProgressComponent } from './commit-progress/commit-progress.compo
 import { TabComponent } from './tab/tab.component';
 import { DatabaseToken } from 'src/app/db/database';
 import { LocalDbService } from 'src/app/db/local-db.service';
+import { WorkspaceService } from './workspace.service';
 
 @Component({selector: 'app-stage', template: ''})
 class StageComponent {
@@ -132,7 +133,7 @@ describe('WorkspaceComponent', () => {
         {provide: WrapperService, useValue: wrapperServiceSpy}, 
         {provide: Router, useValue: routerSpy},
       {provide: MonacoService}, {provide: LocalUploadService},
-      {provide: DatabaseToken, useClass: LocalDbService}],
+      {provide: DatabaseToken, useClass: LocalDbService}, WorkspaceService],
       imports: [MatSidenavModule,
         BrowserAnimationsModule,
         MatDividerModule,

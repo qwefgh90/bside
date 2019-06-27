@@ -1,6 +1,7 @@
 import { Component, OnInit, EventEmitter, Output, ViewChild } from '@angular/core';
 import { Tab } from './tab';
 import { MatTab, MatTabGroup } from '@angular/material';
+import { WorkspaceService, WorkspaceCommand } from '../workspace.service';
 
 @Component({
   selector: 'app-tab',
@@ -9,18 +10,31 @@ import { MatTab, MatTabGroup } from '@angular/material';
 })
 export class TabComponent implements OnInit, Tab {
 
-  constructor() { }
+  constructor(private workspaceService: WorkspaceService) { }
 
   _tabs: string[] = [];
   _tabsSet: Set<string> = new Set<string>();
 
   @ViewChild(MatTabGroup) group: MatTabGroup;
 
-  // @Output("add") add: EventEmitter<string> = new EventEmitter<string>();
-  @Output("select") select: EventEmitter<string> = new EventEmitter<string>();
-  // @Output("remove") remove: EventEmitter<string> = new EventEmitter<string>();
-
   ngOnInit() {
+    this.workspaceService.commandChannel.subscribe((command) => {
+      if(command instanceof WorkspaceCommand.SelectTab){
+        if(command.source != this && (this._tabs[this.selectedTabindex] != command.path)){
+          this.selectTab(command.path);
+        }
+      }else if(command instanceof WorkspaceCommand.SelectNodeInTree){
+        if(command.source != this && (this._tabs[this.selectedTabindex] != command.node.path)){
+          this.selectTab(command.node.path);
+        }
+      }else if(command instanceof WorkspaceCommand.RemoveNodeInTree){
+        
+      }else if(command instanceof WorkspaceCommand.CloseTab){
+        
+      }else{
+        console.warn(`It can't handle ${typeof command}.`)
+      }
+    });
   }
 
   selectedTabindex: number;
@@ -58,20 +72,20 @@ export class TabComponent implements OnInit, Tab {
           this.selectTab(this._tabs[beforeSelectedIndex]);
         else if (beforeSelectedIndex == this._tabs.length)
           this.selectTab(this._tabs[beforeSelectedIndex - 1]);
+      }else{
+        this.selectTab(undefined);
       }
     }
   }
 
-  selectTab(path: string){
+  private selectTab(path: string){
     if (this.exists(path)) {
       let selectedTabIndex = this.findTabIndex(path);
-      if(selectedTabIndex != this.selectedTabindex){
-        this.selectedTabindex = selectedTabIndex
-        this.select.emit(path);
-      }
+      this.selectedTabindex = selectedTabIndex;
+      this.workspaceService.selectTab(this, path);
       return true;
     }else {
-      this.select.emit(path);
+      this.workspaceService.selectTab(this, path);
       return false;
     }
   }
