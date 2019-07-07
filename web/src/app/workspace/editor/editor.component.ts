@@ -1,10 +1,12 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input, OnChanges, OnDestroy, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input, OnChanges, OnDestroy, Output, EventEmitter, SimpleChanges } from '@angular/core';
 import * as monacoNameSpace from 'monaco-editor';
 import { MonacoService } from './monaco.service';
 import { Subscription, Observable } from 'rxjs';
 import { Editor } from './editor';
 import { DiffEditor } from '../diff-editor/diff-editor';
-import { TypeState } from 'typeState';
+import { TypeState } from 'typestate';
+import { WorkspacePack } from '../workspace/workspace-pack';
+import { TextUtil, FileType } from '../text/text-util';
 
 const prefix: string = 'X'.repeat(100);
 enum EditorMode{
@@ -22,6 +24,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
 
   @Output("changeContent") changeContent: EventEmitter<string> = new EventEmitter<string>();
   @Output("modelChanged") modelChanged: EventEmitter<string> = new EventEmitter<string>();
+
+  @Input("loadedPack") loadedPack: WorkspacePack;
 
   editor: monacoNameSpace.editor.IStandaloneCodeEditor;
   model: monacoNameSpace.editor.ITextModel
@@ -109,7 +113,20 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
     })
   }
 
-  ngOnChanges() {
+  ngOnChanges(changes: SimpleChanges){
+    if (changes.loadedPack.currentValue != undefined && changes.loadedPack.previousValue == undefined) {
+      console.debug("the pack is loaded");
+      changes.loadedPack.currentValue.editorPacks.forEach((v) => {
+        let content;
+        let type = TextUtil.getFileType(v.path);
+        if(type == FileType.Text){
+          content = TextUtil.base64ToString(v.base64);
+        }else{
+          content = v.base64;
+        }
+        this.setContent(v.path, content);
+      });
+    }
   }
 
   ngAfterViewInit() {

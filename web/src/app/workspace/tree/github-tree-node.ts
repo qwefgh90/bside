@@ -9,6 +9,7 @@ export interface GithubNode {
   sha: string;
   size: number;
   url: string;
+  extra: {state: Array<NodeStateAction>};
 }
 
 export class GithubTreeNode {
@@ -281,6 +282,20 @@ export class GithubTreeNode {
     return (firstLength <= secondLength) && isEqualPath;
   }
 
+
+  toGithubNode(): GithubNode{
+    let node: GithubNode = {
+      mode: this.mode,
+      path: this.path,
+      sha: this.sha,
+      type: this.type,
+      size: this.size,
+      url: this.url,
+      extra: {state: this.state}
+    };
+    return node;
+  }
+
   static readonly githubTreeNodeFactory = new class {
     createNewNode(parentNode: GithubTreeNode, type: string) {
       let node = new GithubTreeNode();
@@ -316,6 +331,10 @@ export class GithubTreeNode {
       real._url = v.url;
       real._syncedNode = v;
       real._name = real.getNameFromPath();
+      if(v.extra != undefined && v.extra.state != undefined)
+        v.extra.state.forEach((v) => {
+          real.state.push(v);
+        })
       if (real._type == 'tree') {
         real.children = [];
         real.removedChildren = [];

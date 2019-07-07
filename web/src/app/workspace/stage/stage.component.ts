@@ -4,6 +4,7 @@ import { Stage } from './stage';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { TreeNode } from 'angular-tree-component';
 import { FormControl } from '@angular/forms';
+import { WorkspaceService } from '../workspace/workspace.service';
 
 @Component({
   selector: 'app-stage',
@@ -16,14 +17,12 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   @Input("placeholder") placeholder: string = '';
   @Input("modifiedNodes") modifiedNodes: GithubTreeNode[];
   @Output("commit") clickCommit: EventEmitter<string> = new EventEmitter<string>();
-  @Output("nodeSelected") nodeSelected = new EventEmitter<GithubTreeNode>();
   NodeStateAction = NodeStateAction;
   description = new FormControl('');
-  // items: Array<GithubTreeNode> = [];
   options = {
   };
 
-  constructor() { }
+  constructor(private workspaceService: WorkspaceService) { }
 
   ngOnInit() {
   }
@@ -79,6 +78,6 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   }
   
   selectNode(node: TreeNode){
-    this.nodeSelected.emit(node.data);
+    this.workspaceService.selectNode(this, node.data.path);
   }
 }

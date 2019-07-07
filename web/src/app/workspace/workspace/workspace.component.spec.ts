@@ -32,7 +32,6 @@ class StageComponent {
   @Input("tree") tree: GithubTreeNode;
   @Input("modifiedNodes") modifiedNodes: GithubTreeNode[];
   @Input("placeholder") placeholder;
-  
 }
 
 @Component({selector: 'app-editor', template: ''})
@@ -77,6 +76,8 @@ class EditorStubComponent implements Editor{
   readonly: boolean;
 
   listOfContents = [];
+
+  @Input("loadedPack") loadedPack;
 }
 
 @Component({
@@ -265,17 +266,16 @@ describe('WorkspaceComponent', () => {
     getContentSpy.and.returnValue(valueToReturn)
 
     existSpy.and.returnValue(true);
-    let arg = {fromPath: 'test', to: component.tree.root.children[0]};
-    component.nodeMoved(arg);
+    component.nodeMoved('test', component.tree.root.children[0]);
 
-    expect(getContentSpy.calls.first().args[0]).toBe(arg.fromPath);
-    expect(removeContentSpy.calls.first().args[0]).toBe(arg.fromPath);
-    expect(setContentSpy.calls.first().args[0]).toBe(arg.to.path);
+    expect(getContentSpy.calls.first().args[0]).toBe('test');
+    expect(removeContentSpy.calls.first().args[0]).toBe('test');
+    expect(setContentSpy.calls.first().args[0]).toBe(component.tree.root.children[0].path);
     expect(setContentSpy.calls.first().args[1]).toBe(valueToReturn);
 
     setContentSpy.calls.reset();
     existSpy.and.returnValue(false);
-    component.nodeMoved(arg);
+    component.nodeMoved('test', component.tree.root.children[0]);
 
     expect(setContentSpy.calls.count()).toBe(0);
   }))

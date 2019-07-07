@@ -15,8 +15,11 @@
       <div class="items" *ngIf="repositories">
         <a mat-list-item routerLink="/repos/{{repo.full_name}}" *ngFor="let repo of getRepositories()">
           <mat-icon mat-list-icon>folder</mat-icon>
-          <div mat-line style="display: flex;"><h4 style="margin: 0px;font-weight: unset;">{{repo.name}}</h4>
-            <div *ngIf="repo?.private"><span style="font-size: 0.7em;margin: 0px; vertical-align: middle; margin-left: 0.4em; font-weight: bold;">private</span></div>
+          <div mat-line style="display: flex;">
+            <h4 style="margin: 0px;font-weight: unset;">{{repo.name}}</h4>
+            <div *ngIf="repo?.private"><span
+                style="font-size: 0.7em;margin: 0px; vertical-align: middle; margin-left: 0.4em; font-weight: bold;">private</span>
+            </div>
           </div>
           <p mat-line>{{repo.updated_at | date:'short'}}</p>
         </a>

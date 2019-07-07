@@ -1,45 +1,76 @@
-import { Component, OnInit, EventEmitter, Output, ViewChild } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output, ViewChild, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { Tab } from './tab';
 import { MatTab, MatTabGroup } from '@angular/material';
 import { WorkspaceService, WorkspaceCommand } from '../workspace.service';
+import { filter } from 'rxjs/operators';
+import { WorkspacePack } from '../workspace-pack';
 
 @Component({
   selector: 'app-tab',
   templateUrl: './tab.component.html',
   styleUrls: ['./tab.component.css']
 })
-export class TabComponent implements OnInit, Tab {
+export class TabComponent implements OnInit, Tab, OnChanges {
 
   constructor(private workspaceService: WorkspaceService) { }
+
+  @Input("loadedPack") loadedPack: WorkspacePack;
 
   _tabs: string[] = [];
   _tabsSet: Set<string> = new Set<string>();
 
+  selectedTabindex: number;
+  selectedPath: string;
+
   @ViewChild(MatTabGroup) group: MatTabGroup;
 
   ngOnInit() {
-    this.workspaceService.commandChannel.subscribe((command) => {
-      if(command instanceof WorkspaceCommand.SelectTab){
-        if(command.source != this && (this._tabs[this.selectedTabindex] != command.path)){
-          this.selectTab(command.path);
+    this.workspaceService.commandChannel.pipe(filter((v, idx) => v.source != this))
+      .subscribe((command) => {
+      if(command instanceof WorkspaceCommand.SelectNode){
+        if (!this.exists(command.path)) {
+          this.addTab(command.path);
         }
-      }else if(command instanceof WorkspaceCommand.SelectNodeInTree){
-        if(command.source != this && (this._tabs[this.selectedTabindex] != command.node.path)){
-          this.selectTab(command.node.path);
+        if(this.selectedPath != command.path){
+          // this.selectTab(command.path);
+          let path = command.path;
+          if (this.exists(path)) {
+            // console.log(`before ${this.selectedTabindex}`)
+            this.selectedPath = path;
+            let selectedTabIndex = this.findTabIndex(path);
+            this.selectedTabindex = selectedTabIndex;
+            // console.log(`after ${this.selectedTabindex}`)
+            this.workspaceService.selectNode(this, path);
+            return true;
+          }
         }
-      }else if(command instanceof WorkspaceCommand.RemoveNodeInTree){
-        
-      }else if(command instanceof WorkspaceCommand.CloseTab){
-        
+      }
+      else if(command instanceof WorkspaceCommand.RemoveNode){
+        this.removeTab(command.node.path);
+      }
+      else if(command instanceof WorkspaceCommand.CloseTab){
+      }else if(command instanceof WorkspaceCommand.MoveNodeInTree){
+      if (this.exists(command.fromPath)) {
+        this.renameTab(command.fromPath, command.to.path);
+      }
       }else{
-        console.warn(`It can't handle ${typeof command}.`)
+        //console.trace(`It can't handle ${typeof command}.`)
       }
     });
   }
 
-  selectedTabindex: number;
+  ngOnChanges(changes: SimpleChanges){
+    if (changes.loadedPack.currentValue != undefined && changes.loadedPack.previousValue == undefined) {
+      console.debug("the pack is loaded");
+      changes.loadedPack.currentValue.tabs.forEach(v => {
+        this.addTab(v);
+      });
+      this.selectTab(changes.loadedPack.currentValue.selectedNodePath);
+    } 
+  }
 
   tabSelected(tab: MatTab){
+    console.log(`current ${this.selectedTabindex} - ${this.selectedPath}`)
     if(tab == undefined)
       this.selectTab(undefined);
     else
@@ -60,12 +91,12 @@ export class TabComponent implements OnInit, Tab {
    */
   removeTab(path: string) {
     if (this._tabsSet.has(path)) {
+      let currentIndex = this._tabs.findIndex((v) => this.selectedPath == v);
       let index = this._tabs.findIndex((v) => path == v);
-      let beforeSelectedIndex = this.selectedTabindex;
+      let beforeSelectedIndex = currentIndex;
       if (index != -1) {
         this._tabs.splice(index, 1);
         this._tabsSet.delete(path);
-        // this.remove.emit(path);
       }
       if ((this._tabs.length) > 0) {
         if (beforeSelectedIndex < this._tabs.length)
@@ -80,12 +111,15 @@ export class TabComponent implements OnInit, Tab {
 
   private selectTab(path: string){
     if (this.exists(path)) {
-      let selectedTabIndex = this.findTabIndex(path);
-      this.selectedTabindex = selectedTabIndex;
-      this.workspaceService.selectTab(this, path);
+      // console.log(`before ${this.selectedTabindex}`)
+      this.selectedPath = path;
+      // let selectedTabIndex = this.findTabIndex(path);
+      // this.selectedTabindex = selectedTabIndex;
+      // console.log(`after ${this.selectedTabindex}`)
+      this.workspaceService.selectNode(this, path);
       return true;
     }else {
-      this.workspaceService.selectTab(this, path);
+      this.workspaceService.selectNode(this, path);
       return false;
     }
   }
@@ -100,13 +134,21 @@ export class TabComponent implements OnInit, Tab {
     );
   }
 
+  private renameTab(path: string, newPath: string){
+    const index = this.findTabIndex(path);
+    if(index != -1){
+      this._tabs[index] = newPath;
+      this._tabsSet.delete(path);
+      this._tabsSet.add(newPath);
+    }
+  }
+
   exists(path: string){
     return this._tabsSet.has(path);
-    // return (this._tabs.findIndex((v) => v == path) != -1)
   }
 
   get tabs(): string[]{
-    return this._tabs.splice(0);
+    return this._tabs;
   }
 
   getFileName(path: string): string{
@@ -120,6 +162,6 @@ export class TabComponent implements OnInit, Tab {
   clear(){
     this._tabs.splice(0, this._tabs.length);
     this._tabsSet.clear();
-    this.selectedTabindex = undefined;
+    this.selectedPath = undefined;
   }
 }

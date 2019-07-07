@@ -168,7 +168,7 @@ describe('GithubTreeToTree', () => {
     const newDirectoryName = "simple";
     _downloads.rename(newDirectoryName);
 
-    let acc = root.reduce<Array<GithubNode>>((acc, node, tree) => {
+    let acc = root.reduce<Array<GithubTreeNode>>((acc, node, tree) => {
       if(node.state.length > 0){
         acc.push(node);
       }
@@ -189,7 +189,7 @@ describe('GithubTreeToTree', () => {
     _downloads.children[1].remove();
 
 
-    let acc = root.reduce<Array<GithubNode>>((acc, node, tree) => {
+    let acc = root.reduce<Array<GithubTreeNode>>((acc, node, tree) => {
       if(node.state.length > 0){
         acc.push(node);
       }

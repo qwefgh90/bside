@@ -13,8 +13,9 @@ import { UploadComponent } from '../upload/upload.component';
 import { UploadFile } from '../upload/upload-file';
 import { LocalUploadService } from '../upload/local-upload.service';
 import { GithubTree } from './github-tree';
-import { Pack } from '../workspace/pack';
+import { BlobPack } from '../workspace/pack';
 import { WorkspaceService, WorkspaceCommand } from '../workspace/workspace.service';
+import { filter } from 'rxjs/operators';
 @Component({
   selector: 'app-tree',
   templateUrl: './github-tree.component.html',
@@ -26,10 +27,6 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
 
   @Input("repository") repository;
   @Input("tree") tree: GithubTreeNode;
-  // @Output("nodeSelected") nodeSelected = new EventEmitter<GithubTreeNode>();
-  @Output("nodeCreated") nodeCreated = new EventEmitter<string>();
-  @Output("nodeRemoved") nodeRemoved = new EventEmitter<GithubTreeNode>();
-  @Output("nodeMoved") nodeMoved = new EventEmitter<{fromPath: string, to: GithubTreeNode}>();
   @Output("nodeUploaded") nodeUploaded = new EventEmitter<{node: GithubTreeNode, base64: string}>();
   
   @ViewChild('blobRenamingInput') blobRenamingInput: ElementRef;
@@ -62,7 +59,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
           const fromPath = rest.from.data.path;
           (rest.from.data as GithubTreeNode).move(newParent.parent == null ? this.root : newParent.data,
               (node, parent, pre, newPath) => {
-                this.nodeMoved.emit({'fromPath': pre, 'to': node});
+                this.workspaceService.moveNodeInTree(this, pre, node);
+                // this.nodeMoved.emit({'fromPath': pre, 'to': node});
               });
           TREE_ACTIONS.MOVE_NODE(m, n, event, rest);
         }else{
@@ -211,17 +209,14 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     this.searchInputFormControl.valueChanges.subscribe( (v: string) =>{
       this.treeComponent.treeModel.filterNodes(v, false);
     });
-    this.workspaceService.commandChannel.subscribe((command) => {
-      if(command instanceof WorkspaceCommand.SelectTab){
-        if(command.source != this && (command.path != this.selectedNode.data.path)){
+    this.workspaceService.commandChannel.pipe(filter((v, idx) => v.source != this))
+      .subscribe((command) => {
+      if(command instanceof WorkspaceCommand.SelectNode){
+        if(this.selectedNode != undefined && command.path != this.selectedNode.data.path){
           this.selectNode(command.path);
         }
-      }else if(command instanceof WorkspaceCommand.SelectNodeInTree){
-      }else if(command instanceof WorkspaceCommand.RemoveNodeInTree){
-      }else if(command instanceof WorkspaceCommand.CloseTab){
-        
       }else{
-        console.warn(`It can't handle ${typeof command}.`)
+      // console.trace(`It can't handle ${typeof command}.`)
       }
     })
   }
@@ -239,7 +234,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
    * return null if the node does not exist
    * @param path 
    */
-  selectNode(path: string): GithubTreeNode{
+  private selectNode(path: string): GithubTreeNode{
     let node: TreeNode = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data.path == path)
     if(node != null){
       node.setIsActive(true);
@@ -254,8 +249,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   onSelectNode(node: TreeNode) {
     if(this.renamingNode != node){
       this.selectedNode = node;
-      this.workspaceService.selectNodeInTree(this, node.data);
-      //this.nodeSelected.emit(node.data);
+      if(!node.hasChildren)
+       this.workspaceService.selectNode(this, node.data.path);
     }
   }
 
@@ -275,8 +270,9 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
         githubNode.rename(this.renamingFormControl.value, (node, parent, pre, newPath) => {
           let stateArr = (githubNode as GithubTreeNode).state;
           if (stateArr.length == 2 && stateArr[0] == NodeStateAction.Created)
-            this.nodeCreated.emit(node.path);
-          this.nodeMoved.emit({ 'fromPath': pre, 'to': node });
+            this.workspaceService.createNode(this, node);
+          this.workspaceService.moveNodeInTree(this, pre, node);
+          // this.nodeMoved.emit({ 'fromPath': pre, 'to': node });
         });
       }
       if (this.renamingNode.data.name == undefined) {
@@ -345,7 +341,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   remove(node: TreeNode){
     node.data.remove((node: GithubTreeNode) => {
       console.debug(`${node.path} is removed`);
-      this.nodeRemoved.emit(node);
+      this.workspaceService.removeNode(this, node);
     });
     this.refreshTree();
   }
@@ -355,7 +351,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     this.searchInputFormControl.setValue('');
   }
 
-  restore(packs: Pack[]){
+  restore(packs: BlobPack[]){
     
   }
 

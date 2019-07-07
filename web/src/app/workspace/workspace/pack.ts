@@ -1,8 +1,8 @@
 import { NodeStateAction, GithubTreeNode } from '../tree/github-tree-node';
 
-export class Pack {
-    public static of(commit_sha: string, node: GithubTreeNode, base64?: string): Pack{
-        let p = new Pack();
+export class BlobPack {
+    public static of(commit_sha: string, node: GithubTreeNode, base64?: string): BlobPack{
+        let p = new BlobPack();
         p.commit_sha = commit_sha;
         p.state = node.state
         p.path = node.path;

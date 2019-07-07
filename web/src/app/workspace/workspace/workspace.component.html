@@ -13,12 +13,11 @@
             <app-commit-progress></app-commit-progress>
           </div>
           <app-tree #tree style="flex: 1; min-height: 0px;" [repository]="repositoryDetails" [tree]="root"
-            (nodeCreated)="nodeCreated($event)" (nodeMoved)="nodeMoved($event)"
-            (nodeRemoved)="nodeRemoved($event)" (nodeUploaded)="nodeUploaded($event)"
+            (nodeUploaded)="nodeUploaded($event)"
             [class.none]="(workspaceStatus == WorkspaceStatus.Stage) || (treeStatus != TreeStatus.Done)">
           </app-tree>
           <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="root"
-            (nodeSelected)="nodeSelected($event)" [modifiedNodes]="nodesToStage"
+            [modifiedNodes]="nodesToStage"
             [class.none]="(workspaceStatus == WorkspaceStatus.View) || (treeStatus != TreeStatus.Done)"
             (commit)="onCommit($event)" [placeholder]="placeholderForCommit">
           </app-stage>
@@ -46,10 +45,11 @@
       <mat-icon *ngIf="!leftPane.opened">chevron_right</mat-icon>
   </div>
   <div style="display: flex; flex-direction: column; flex:1; height: 100%; width: 100%;">
-    <div class="toolbar" *ngIf="selectedNodePath != undefined && tree?.get(selectedNodePath) != undefined">
+    <div class="toolbar" *ngIf="selectedNodePath != undefined && tree?.get(selectedNodePath) != undefined && (treeStatus == TreeStatus.Done)">
       <span class="fileName">{{selectedNodePath != undefined ? selectedNodePath : ''}}</span>
       <div class="spacer"></div>
       <div *ngIf="selectedNodePath != undefined && selectedFileType == FileType.Text">
+        
         <button mat-stroked-button *ngIf="tree.get(selectedNodePath).syncedNode != undefined" title="Preview"
           (click)="toggleMd()">
             <mat-icon>visibility</mat-icon>
@@ -67,7 +67,7 @@
         <!-- <a href="{{getRawUrl(repositoryDetails.full_name, selectedBranch.commit.sha, selectedNode.syncedNode.path)}}" style="text-decoration: none;color: unset" download><button mat-stroked-button style="margin-right: 1em"><mat-icon>cloud_download</mat-icon></button></a> -->
       </div>
     </div>
-    <app-tab></app-tab>
+    <app-tab [loadedPack]="loadedPack"></app-tab>
     <div style="flex:1; display: block" *ngIf="contentStatus == ContentStatus.NotInitialized">
       <div style="display: flex; justify-content: center; width: 100%; height: 100%; align-items: center;">
         <div style="text-align: center;">
@@ -81,7 +81,8 @@
     </div>
     <app-editor #editor1 style="flex:1; min-height: 0px;" (changeContent)="nodeContentChanged($event)"
       [class.flex]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
-      [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"></app-editor>
+      [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"
+      [loadedPack]="loadedPack"></app-editor>
     <div style="flex:1; display: block; height: 100px "
       *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">
       <div style="overflow-y: scroll; height: 100%;"><img [src]="selectedImagePath" /></div>

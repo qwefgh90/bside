@@ -1,7 +1,7 @@
-import { Pack } from './pack';
+import { BlobPack } from './pack';
 
 describe('Pack', () => {
   it('should create an instance', () => {
-    expect(new Pack()).toBeTruthy();
+    expect(new BlobPack()).toBeTruthy();
   });
 });
