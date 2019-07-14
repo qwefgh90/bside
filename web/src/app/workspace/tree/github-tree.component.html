@@ -20,30 +20,6 @@
       <button mat-icon-button>
         <mat-icon aria-label="Upload" title="Upload" (click)="uploadFile('')">cloud_upload</mat-icon>
       </button>
-      <!-- 
-        <mat-icon style="cursor: pointer; flex: 1" [matMenuTriggerFor]="appMenuForRoot" class="context-menu-button"
-          title="Repository menu">
-          arrow_drop_down</mat-icon>
-      <mat-menu #appMenuForRoot="matMenu" xPosition="before">
-        <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="newNode('blob')">
-          <mat-icon>note_add</mat-icon>New File
-        </button>
-        <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="newNode('tree')">
-          <mat-icon>fiber_new</mat-icon>New Folder
-        </button>
-        <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="uploadFile('')">
-          <mat-icon>cloud_upload</mat-icon>Upload
-        </button>
-        <a mat-menu-item style="margin-top: -12px; margin-bottom: -12px;"
-          href="{{repository?.html_url}}" target="_blank">
-          <mat-icon>link</mat-icon>Github
-        </a>
-        <a mat-menu-item style="margin-top: -12px; margin-bottom: -12px;"
-          href="{{repository?.homepage}}" target="_blank"
-          [disabled]="repository?.homepage == undefined || repository?.homepage == null">
-          <mat-icon>web</mat-icon>Static page
-        </a>
-      </mat-menu> -->
     </div>
   </div>
   <mat-divider></mat-divider>

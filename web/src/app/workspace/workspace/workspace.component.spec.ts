@@ -52,17 +52,9 @@ class EditorStubComponent implements Editor{
   removeContent(path: string): boolean{
     return true;
   } 
-  shrinkExpand(){
-
-  }
-
-  diffWith(){
-
-  }
-
-  md(){
-
-  }
+  shrinkExpand(){}
+  diffWith(){}
+  md(){}
 
   getPathList(): string[]{
     return [];
@@ -78,6 +70,10 @@ class EditorStubComponent implements Editor{
   listOfContents = [];
 
   @Input("loadedPack") loadedPack;
+
+  load(){
+
+  }
 }
 
 @Component({
@@ -109,6 +105,7 @@ describe('WorkspaceComponent', () => {
   let branchesSpy;
   let treeSpy;
   let getBlobSpy;
+  let workspaceService: WorkspaceService;
 
   function mockWrapperServiceSpy(){
     repositoryDetailsSpy.and.returnValue(Promise.resolve(repositoryDetails));
@@ -160,6 +157,7 @@ describe('WorkspaceComponent', () => {
 
   beforeEach(() => {
     fixture = TestBed.createComponent(WorkspaceComponent);
+    workspaceService = TestBed.get(WorkspaceService);
     component = fixture.componentInstance;
   });
 
@@ -179,19 +177,6 @@ describe('WorkspaceComponent', () => {
     expect(component.tree).toBeDefined();
     expect(component.editor1).toBeDefined();
   }))
-
-
-  // it('serialize()', fakeAsync(() => {
-  //   fixture.detectChanges();
-  //   tick(3000);
-  //   fixture.detectChanges();
-  //   tick(3000);
-  //   let pack = component.serialize();
-  //   expect(pack.commit_sha).toBe(component.selectedBranch.commit.sha);
-  //   expect(pack.branchName).toBe('master')
-  //   expect(pack.packs.length).toBe(0);
-  //   expect(pack.tabs.length).toBe(0);
-  // }))
 
   it('render GithubTreeComponent', fakeAsync(() => {
     fixture.detectChanges();
@@ -302,6 +287,7 @@ describe('WorkspaceComponent', () => {
 
     expect(setContentSpy.calls.all()[1].args[0]).toBe(arg.node.path);
     expect(setContentSpy.calls.all()[1].args[1]).toBe('aGVsbG8gd29ybGQh');
+    tick(3000);
   }))
 
 });
@@ -346,3 +332,167 @@ class ActivatedRouteSnapshotStub{
     paramMap: ParamMap;
     queryParamMap: ParamMap;
 }
+
+describe('WorkspaceComponent with WorkspaceService', () => {
+  let component: WorkspaceComponent;
+  let fixture: ComponentFixture<WorkspaceComponent>;
+  let routerSpy;
+  let routeStub;
+  let wrapperServiceSpy;
+  let repositoryDetailsSpy;
+  let branchesSpy;
+  let treeSpy;
+  let getBlobSpy;
+  let workspaceService: WorkspaceService;
+
+  function mockWrapperServiceSpy(){
+    repositoryDetailsSpy.and.returnValue(Promise.resolve(repositoryDetails));
+    branchesSpy.and.returnValue(Promise.resolve(branches));
+    treeSpy.and.returnValue(Promise.resolve(tree));
+    getBlobSpy.and.returnValue(Promise.resolve(blob1));
+  }
+
+  beforeEach(async(() => {
+    routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    routeStub = new ActivatedRouteStub({});
+    routeStub.setParamMap({userId: 'id', repositoryName: 'repo'});
+    routeStub.setQueryParamMap( {branch:'master'});    
+    wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['repositoryDetails', 'branches', 'tree', 'getBlob']);
+    repositoryDetailsSpy = wrapperServiceSpy.repositoryDetails;
+    branchesSpy = wrapperServiceSpy.branches;
+    treeSpy = wrapperServiceSpy.tree;
+    getBlobSpy = wrapperServiceSpy.getBlob;
+    mockWrapperServiceSpy();
+    TestBed.configureTestingModule({
+      declarations: [WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent, CommitProgressComponent, TabComponent],
+      providers: [{provide: ActivatedRoute, useValue: routeStub}, 
+        {provide: WrapperService, useValue: wrapperServiceSpy}, 
+        {provide: Router, useValue: routerSpy},
+      {provide: MonacoService}, {provide: LocalUploadService},
+      {provide: DatabaseToken, useClass: LocalDbService}, WorkspaceService],
+      imports: [MatSidenavModule,
+        BrowserAnimationsModule,
+        MatDividerModule,
+        MatTreeModule,
+        MatButtonModule,
+        MatDividerModule,
+        MatSelectModule,
+        MatIconModule,
+        FormsModule,
+        ReactiveFormsModule,
+        MatMenuModule,
+        TreeModule.forRoot(),
+        MatProgressSpinnerModule,
+        MatButtonToggleModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatBadgeModule,
+        MarkdownModule.forRoot(),
+        MatTabsModule
+      ],
+    }).compileComponents();
+  }));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(WorkspaceComponent);
+    workspaceService = TestBed.get(WorkspaceService);
+    component = fixture.componentInstance;
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+  
+  it('ngOnInit()', () => {
+    fixture.detectChanges();
+  })
+  
+  it('SelectNode() from service', fakeAsync(() => {
+    fixture.detectChanges();
+    tick(3000);
+    fixture.detectChanges();
+    tick(3000);
+
+    
+    let nodeSelectedSpy = spyOn(component, 'nodeSelected');
+    let setContentSpy = spyOn(component.editor1, 'setContent');
+    let existSpy = spyOn(component.editor1, 'exist');
+    existSpy.and.returnValue(false);
+
+    workspaceService.selectNode(undefined, '.buildinfo')
+    // let treeNodes = fixture.nativeElement.querySelectorAll('tree-node .node-title');
+    // treeNodes[0].click();
+    fixture.detectChanges();
+    tick(3000);
+
+    expect(nodeSelectedSpy.calls.count()).toBe(1);
+    // expect(component.selectedNodePath).toBeDefined();
+    // expect(setContentSpy.calls.count()).toBe(1);
+  }))
+  
+  it('RemoveNode() from service', fakeAsync(() => {
+    fixture.detectChanges();
+    tick(3000);
+    fixture.detectChanges();
+    tick(3000);
+
+    
+    let nodeSelectedSpy = spyOn(component, 'nodeSelected');
+    let nodeMovedSpy = spyOn(component, 'nodeMoved');
+    let nodeCreatedSpy = spyOn(component, 'nodeCreated');
+    let nodeRemovedSpy = spyOn(component, 'nodeRemoved');
+
+    let testNode = Object.assign({}, tree.tree[0]);
+    testNode.path = '.buildinfo';
+
+    workspaceService.removeNode(undefined, GithubTreeNode.githubTreeNodeFactory.of(testNode));
+    fixture.detectChanges();
+    tick(3000);
+
+    expect(nodeRemovedSpy.calls.count()).toBe(1);
+  }))
+
+  it('CreateNode() from service', fakeAsync(() => {
+    fixture.detectChanges();
+    tick(3000);
+    fixture.detectChanges();
+    tick(3000);
+
+    
+    let nodeSelectedSpy = spyOn(component, 'nodeSelected');
+    let nodeMovedSpy = spyOn(component, 'nodeMoved');
+    let nodeCreatedSpy = spyOn(component, 'nodeCreated');
+    let nodeRemovedSpy = spyOn(component, 'nodeRemoved');
+
+    let testNode = Object.assign({}, tree.tree[0]);
+    testNode.path = '.buildinfo';
+
+    workspaceService.createNode(undefined, GithubTreeNode.githubTreeNodeFactory.of(testNode));
+    fixture.detectChanges();
+    tick(3000);
+
+    expect(nodeCreatedSpy.calls.count()).toBe(1);
+  }))
+  
+  it('MoveNodeInTree() from service', fakeAsync(() => {
+    fixture.detectChanges();
+    tick(3000);
+    fixture.detectChanges();
+    tick(3000);
+
+    let nodeSelectedSpy = spyOn(component, 'nodeSelected');
+    let nodeMovedSpy = spyOn(component, 'nodeMoved');
+    let nodeCreatedSpy = spyOn(component, 'nodeCreated');
+    let nodeRemovedSpy = spyOn(component, 'nodeRemoved');
+
+    let testNode = Object.assign({}, tree.tree[0]);
+    testNode.path = 'newfile.txt';
+
+    workspaceService.moveNodeInTree(undefined, 'oldfile.txt', GithubTreeNode.githubTreeNodeFactory.of(testNode))
+    fixture.detectChanges();
+    tick(3000);
+
+    expect(nodeMovedSpy.calls.count()).toBe(1);
+  }))
+
+});

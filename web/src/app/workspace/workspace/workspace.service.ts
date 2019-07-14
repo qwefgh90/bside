@@ -14,63 +14,61 @@ export class WorkspaceService {
   private commandQueue: ReplaySubject<WorkspaceCommand.Command> = new ReplaySubject<WorkspaceCommand.Command>(1);
   private commandQueueObservable = this.commandQueue.asObservable().pipe(observeOn(async));
   private lastCommand: WorkspaceCommand.Command;
-  private globalDebounceTime = 100;
+  private globalDebounceTime = 50;
   constructor() {
     WorkspaceCommand.SelectNode.internalQueue.asObservable()
-    .pipe(debounceTime(this.globalDebounceTime), distinctUntilChanged((x,y) => {
-      if(x.path == y.path)
-        return true;  
-      console.log(`${x.path}, ${y.path}`);
-      return false;
-    })).subscribe((v) => this.emit(v));
-    WorkspaceCommand.CloseTab.internalQueue.pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
-    WorkspaceCommand.CreateNode.internalQueue.pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
-    WorkspaceCommand.RemoveNode.internalQueue.pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
-    WorkspaceCommand.MoveNodeInTree.internalQueue.pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
-    WorkspaceCommand.Save.internalQueue.pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
+    .pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
+    WorkspaceCommand.CloseTab.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
+    WorkspaceCommand.CreateNode.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
+    WorkspaceCommand.RemoveNode.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
+    WorkspaceCommand.MoveNodeInTree.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
+    WorkspaceCommand.UndoAll.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
+    WorkspaceCommand.Save.internalQueue.pipe(observeOn(async))
+    .pipe(debounceTime(1000 + this.globalDebounceTime)).subscribe(
+      (v) => this.emit(v)
+    );
   }
 
   private emit(command: WorkspaceCommand.Command){
-    if(!eq(this.lastCommand, command)){
+    // if(!eq(this.lastCommand, command)){
       this.commandQueue.next(command);
-      this.lastCommand = command;
-    }
+      // this.lastCommand = command;
+    // }
   }
 
   selectNode(source: any, path: string){
     let c = new WorkspaceCommand.SelectNode(path, source);
     WorkspaceCommand.SelectNode.internalQueue.next(c);
-    //this.emit(c);
   }
 
   closeTab(source: any, path: string){
     let c = new WorkspaceCommand.CloseTab(path, source);
     WorkspaceCommand.CloseTab.internalQueue.next(c);
-    //this.emit(c);
   }
 
   createNode(source: any, node: GithubTreeNode){
     let c = new WorkspaceCommand.CreateNode(node, source);
     WorkspaceCommand.CreateNode.internalQueue.next(c);
-    //this.emit(c);
   }
 
   removeNode(source: any, node: GithubTreeNode){
     let c = new WorkspaceCommand.RemoveNode(node, source);
     WorkspaceCommand.RemoveNode.internalQueue.next(c);
-    //this.emit(c);
   }
 
   moveNodeInTree(source: any, fromPath: string, to: GithubTreeNode){
     let c = new WorkspaceCommand.MoveNodeInTree(fromPath, to, source);
     WorkspaceCommand.MoveNodeInTree.internalQueue.next(c);
-    //this.emit(c);
   }
 
   save(source: any){
     let c = new WorkspaceCommand.Save(source);
     WorkspaceCommand.Save.internalQueue.next(c);
-    //this.emit(c);
+  }
+  
+  undoAll(source: any){
+    let c = new WorkspaceCommand.UndoAll(source);
+    WorkspaceCommand.UndoAll.internalQueue.next(c);
   }
   
   get commandChannel(): Observable<WorkspaceCommand.Command>{
@@ -79,46 +77,45 @@ export class WorkspaceService {
 }
 
 export namespace WorkspaceCommand {
-  export type Command =  RemoveNode | CloseTab | MoveNodeInTree | SelectNode | Save;
+  export type Command =  RemoveNode | CloseTab | MoveNodeInTree | SelectNode | Save | UndoAll;
 
   export class RemoveNode{
     constructor(public node: GithubTreeNode, public source: any) {
-      
     }
     static internalQueue = new Subject<RemoveNode>();
   }
 
   export class CreateNode{
     constructor(public node: GithubTreeNode, public source: any) {
-      
     }
     static internalQueue = new Subject<CreateNode>();
   }
 
   export class MoveNodeInTree{
     constructor(public fromPath: string, public to: GithubTreeNode, public source: any) {
-      
     }
     static internalQueue = new Subject<MoveNodeInTree>();
   }
 
   export class CloseTab{
     constructor(public path: string, public source: any) {
-      
     }
     static internalQueue = new Subject<CloseTab>();
   }
   
   export class SelectNode{
     constructor(public path: string, public source: any) {
-      
     }
     static internalQueue = new Subject<SelectNode>();
   }
   export class Save{
     constructor(public source: any) {
-      
     }
     static internalQueue = new Subject<Save>();
+  }
+  export class UndoAll{
+    constructor(public source: any) {
+    }
+    static internalQueue = new Subject<UndoAll>();
   }
 }

@@ -7,9 +7,9 @@ export interface GithubNode {
   mode: string;
   type: string;
   sha: string;
-  size: number;
+  size?: number;
   url: string;
-  extra: {state: Array<NodeStateAction>};
+  extra?: {state: Array<NodeStateAction>};
 }
 
 export class GithubTreeNode {

@@ -20,7 +20,7 @@ enum EditorMode{
   templateUrl: './editor.component.html',
   styleUrls: ['./editor.component.css']
 })
-export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy, Editor {
+export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor {
 
   @Output("changeContent") changeContent: EventEmitter<string> = new EventEmitter<string>();
   @Output("modelChanged") modelChanged: EventEmitter<string> = new EventEmitter<string>();
@@ -113,20 +113,17 @@ export class EditorComponent implements OnInit, AfterViewInit, OnChanges, OnDest
     })
   }
 
-  ngOnChanges(changes: SimpleChanges){
-    if (changes.loadedPack.currentValue != undefined && changes.loadedPack.previousValue == undefined) {
-      console.debug("the pack is loaded");
-      changes.loadedPack.currentValue.editorPacks.forEach((v) => {
-        let content;
-        let type = TextUtil.getFileType(v.path);
-        if(type == FileType.Text){
-          content = TextUtil.base64ToString(v.base64);
-        }else{
-          content = v.base64;
-        }
-        this.setContent(v.path, content);
-      });
-    }
+  load(pack: WorkspacePack) {
+    pack.editorPacks.forEach((v) => {
+      let content;
+      let type = TextUtil.getFileType(v.path);
+      if (type == FileType.Text) {
+        content = TextUtil.base64ToString(v.base64);
+      } else {
+        content = v.base64;
+      }
+      this.setContent(v.path, content);
+    });
   }
 
   ngAfterViewInit() {

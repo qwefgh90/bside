@@ -70,8 +70,10 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     },
     keys: {
       [KEYS.ENTER]: (tree, node, $event) => {
-        node.expand();
-        this.onSelectNode(node);
+        if(this.renamingNode == undefined){
+          node.expand();
+          this.onSelectNode(node);
+        }
       },
       [KEYS.DOWN]: (tree, node, $event) => {//Prevent default behavior which is focus(true)
         let nextNode = node.findNextNode();
@@ -188,11 +190,11 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     let viewportHeight = viewport.clientHeight;
     if(nodePos <= top){
       viewport.scrollTop = nodePos;
-      console.debug(`scroll up ${node.data.path} ${viewport.scrollTop}`);//scrollheight: ${viewport.scrollHeight} nodepos: ${nodePos} height: ${viewportHeight} nodeheight: ${nodeHeight} top: ${top} ${index} / ${all.length}`);
+      console.debug(`scroll up ${node.data.path} ${viewport.scrollTop}`);
     }
     else if(nodePos >= (top + viewportHeight - (nodeHeight / 2))){
       viewport.scrollTop = nodePos - viewportHeight + nodeHeight;
-      console.debug(`scroll down ${node.data.path} ${viewport.scrollTop}`);//scrollheight: ${viewport.scrollHeight} nodepos: ${nodePos} height: ${viewportHeight} nodeheight: ${nodeHeight} top: ${top} ${index} / ${all.length}`);
+      console.debug(`scroll down ${node.data.path} ${viewport.scrollTop}`);
     }
   }
 

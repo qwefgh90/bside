@@ -13,6 +13,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { GithubModule } from './github/github.module';
 import { OAuthService } from './oauth/service/o-auth.service';
 import { WorkspaceModule } from './workspace/workspace.module';
+import { TemplatesModule } from './templates/templates.module';
 
 export function initAuth(oauthService: OAuthService){
   return () => oauthService.initAccessTokenOnSession();
@@ -26,6 +27,7 @@ export function initAuth(oauthService: OAuthService){
   imports: [
     WorkspaceModule,
     ProjectsModule,
+    TemplatesModule,
     AuthModule,
     AppRoutingModule,
     BrowserModule,

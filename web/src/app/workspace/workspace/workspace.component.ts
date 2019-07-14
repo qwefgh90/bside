@@ -21,11 +21,19 @@ import { WorkspacePack } from './workspace-pack';
 import { Database, DatabaseToken } from 'src/app/db/database';
 import { WorkspaceService, WorkspaceCommand } from './workspace.service';
 import { debounceTime, filter } from 'rxjs/operators';
+import {
+  trigger,
+  state,
+  style,
+  animate,
+  transition,
+  // ...
+} from '@angular/animations';
 
 declare const monaco;
 
 export enum TreeStatusOnWorkspace{
-  Loading, Committing, NotInitialized, Done, Fail, TreeEmpty
+  Loading, Committing, NotInitialized, Done, Fail, TreeEmpty, BranchChanging
 }
 
 export enum ContentStatusOnWorkspace{
@@ -40,7 +48,19 @@ export enum WorkspaceStatus{
   selector: 'app-workspace',
   templateUrl: './workspace.component.html',
   styleUrls: ['./workspace.component.css'],
-  providers: [WorkspaceService]
+  providers: [WorkspaceService],
+  animations: [
+    trigger('savingChanged', [
+      state('in',   style({
+        opacity: 1
+      })),
+      state('out', style({
+        opacity: 0
+      })),
+      transition('out => in', animate('50ms ease-out')),
+      transition('in => out', [animate('800ms ease-in')])
+    ])
+  ]
 })
 export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   FileType = FileType;
@@ -79,11 +99,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   contentStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
   treeStatus: TreeStatusOnWorkspace = TreeStatusOnWorkspace.NotInitialized;
   workspaceStatus: WorkspaceStatus = WorkspaceStatus.View;
-  loadedPack: WorkspacePack;
+  errorDescription: string;
+  commitStatePack: WorkspacePack;
 
   modificationSubject = new Subject<void>();
-  workspaceReloadedSubject = new Subject<string>();
-  loadedSubject = new Subject<WorkspacePack>();
+  subjectWithoutSaveFile = new Subject<string>();
+  subjectWithSaveFile = new Subject<WorkspacePack>();
   refreshSubject = new Subject<void>()
   subscriptions: Array<Subscription> = []
 
@@ -93,67 +114,82 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   @HostListener('document:keydown.escape', ['$event']) onKeydownHandler(event: KeyboardEvent) {
     this.toggle();  
   }
-
+  
+  saving = false;
+  
   ngOnInit() {
     let monacoLoaderSubject = from(this.initalizeLoader());
 
     //It saves data when content is modified.
-    this.subscriptions.push(this.modificationSubject.pipe(debounceTime(1000)).subscribe(() => {
+    this.subscriptions.push(this.modificationSubject.subscribe(() => {
       this.workspaceService.save(this);
+      this.saving = true;
     }));
     
-    this.subscriptions.push(this.workspaceService.commandChannel
-      .pipe(filter(v => v instanceof WorkspaceCommand.Save), debounceTime(1000)).subscribe((command) => {
+    this.subscriptions.push(this.workspaceService.commandChannel.subscribe((command) => {
       if (command instanceof WorkspaceCommand.Save && (this.treeStatus == TreeStatusOnWorkspace.Done)) {
         this.database.save(this.pack);
+        this.saving = false;
+      }else if(command instanceof WorkspaceCommand.UndoAll){
+        this.database.delete(this.repositoryDetails.id, this.selectedBranch.commit.sha);
+        this.selectedNodePath = undefined;
+        this.refreshSubject.next();
       }
     }));
+    
     this.subscriptions.push(this.workspaceService.commandChannel.subscribe((command) => {
       if (command.source != this) {
         if (command instanceof WorkspaceCommand.SelectNode) {
-          if(command.path == undefined){
-            this.selectedNodePath = undefined;
             this.nodeSelected(command.path);
-          }else if (this.selectedNodePath != command.path) 
-            this.nodeSelected(command.path);
-          
           this.workspaceService.save(this);
+          this.saving = true;
           this.editor1.shrinkExpand();
         }
         else if (command instanceof WorkspaceCommand.CreateNode) {
           if (this.selectedNodePath != command.node.path) {
             this.nodeCreated(command.node.path);
             this.workspaceService.save(this);
+            this.saving = true;
           }
         } else if (command instanceof WorkspaceCommand.RemoveNode) {
           this.nodeRemoved(command.node);
           this.workspaceService.save(this);
+          this.saving = true;
         } else if (command instanceof WorkspaceCommand.CloseTab) {
         } else if (command instanceof WorkspaceCommand.MoveNodeInTree) {
           this.nodeMoved(command.fromPath, command.to);
           this.workspaceService.save(this);
+          this.saving = true;
         } 
       }
       this.invalidateDirtyCount();
     }));
     
     /**
-     * After all components and third party are loaded, 
-     * pass the packs to others components and subscribe events.
+     * After loading saved data and all children are loaded, 
+     * pass the packs to others components.
     */
-    let s1 = combineLatest(this.loadedSubject, monacoLoaderSubject).subscribe((arr) => {
+    let s1 = combineLatest(this.subjectWithSaveFile, monacoLoaderSubject).subscribe((arr) => {
       let pack = arr[0];
-      this.loadedPack = pack;
+      this.editor1.load(pack);
+      this.tab.load(pack);
+      console.log('workspace have been initialized with saved data.');
     })
 
-    let s2 = combineLatest(this.workspaceReloadedSubject, monacoLoaderSubject).subscribe((arr) => {
+    /**
+     * After reloading component and all children are loaded, 
+     * pass the packs to others components.
+    */
+    let s2 = combineLatest(this.subjectWithoutSaveFile, monacoLoaderSubject).subscribe((arr) => {
       let path = arr[0];
-      if (path != undefined) {
-        this.nodeSelected(path);
-        this.workspaceService.selectNode(this, path);
-      }
+      this.nodeSelected(path);
+      this.workspaceService.selectNode(this, path);
+      console.log('workspace have been reloaded.');
     })
     
+    /**
+     * When parameters of url have some changes, initialize workspace again. 
+     */
     let s = combineLatest(this.route.paramMap, this.route.queryParamMap, this.refreshSubject).subscribe(([p, q]) => {
       let promise: Promise<void>;
       if (p.has('userId') && p.has('repositoryName')) {
@@ -162,11 +198,15 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         const branchName = this.route.snapshot.queryParams['branch'] ? this.route.snapshot.queryParams['branch'] : (this.selectedBranch ? this.selectedBranch.name : undefined);
         promise = this.initialize(userId, repositoryName, branchName);
       } else {
-        this.treeStatus = TreeStatusOnWorkspace.Fail;
         promise = new Promise((r, reject) => {
           reject('It does not have user id or repository name');
         });
       }
+      promise.catch((err) => {
+        console.error(err);
+        this.errorDescription = err;
+        this.treeStatus = TreeStatusOnWorkspace.Fail;
+      })
     });
 
     this.refreshSubject.next();
@@ -177,18 +217,80 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   initialize(userId, repositoryName, branchName): Promise<void>{
     this.treeStatus = TreeStatusOnWorkspace.Loading;
-    if((this.selectedBranch != undefined) && (branchName != this.selectedBranch.name)){
-      this.resetTab();
-    }
+    this.resetTab();
     this.resetEditor();
     this.resetWorkspace();
-    let promise = this.initialzeWorkspace(userId, repositoryName, branchName).finally(() => {
+    let promise = this.initialzeWorkspace(userId, repositoryName, branchName).then(() => {
       if(this.root == undefined)
         this.treeStatus = TreeStatusOnWorkspace.TreeEmpty;
       else
         this.treeStatus = TreeStatusOnWorkspace.Done;
-    })
+    });
     return promise;
+  }
+
+  async initialzeWorkspace(userId, repositoryName, branchName?: string): Promise<void> {
+    try {
+      this.userId = userId;
+      this.repositoryName = repositoryName;
+      let details = this.wrapper.repositoryDetails(userId, repositoryName).then((result) => {
+        this.repositoryDetails = result;
+      }, () => Promise.reject("Repository can't be loaded."));
+
+      let branches = this.wrapper.branches(userId, repositoryName).then((result) => {
+        this.branches = result;
+      }, () => Promise.reject("Branches can't be loaded."));
+
+      await Promise.all([details, branches]);
+
+      if (this.branches.length == 0) {
+        return Promise.reject("It seems that this repository is empty.");
+      } else {
+        const defaultBranchName = this.repositoryDetails.default_branch;
+        if (branchName)
+          this.setBranchByName(branchName);
+        else
+          this.setBranchByName(defaultBranchName);
+
+        // if it have already loaded packs, do nothing.
+        let loadedPack = await this.database.get(this.repositoryDetails.id, this.selectedBranch.commit.sha)
+          .then(v => {
+            console.log(`${v.commit_sha} have been loaded completely.`)
+            return v;
+          })
+          .catch(r => {
+            console.log(r);
+            return undefined;
+          }) as WorkspacePack
+
+        let tree;
+        let doAfterLoadingTree: () => void;
+        if (this.commitStatePack != undefined) {
+          tree = Promise.resolve({ tree: this.commitStatePack.treePacks, sha: this.commitStatePack.tree_sha });
+          doAfterLoadingTree = () => this.subjectWithSaveFile.next(this.commitStatePack);
+          this.commitStatePack = undefined;
+        } else if (loadedPack != undefined) {
+          tree = Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha });
+          doAfterLoadingTree = () => this.subjectWithSaveFile.next(loadedPack);
+        } else {
+          tree = this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha);
+          doAfterLoadingTree = () => this.subjectWithoutSaveFile.next(this.selectedNodePath);
+        }
+        return this.initTree(tree).then(() => doAfterLoadingTree(), () => console.error("Tree can't be loaded."));
+      }
+
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  async initTree(tree: Promise<{sha: string, tree: Array<any>}>): Promise<void> {
+    return tree.then((tree: {sha: string, tree: Array<any>}) => {
+      const nodeTransformer = new GithubTreeToTree(tree);
+      const hiarachyTree = nodeTransformer.getTree();
+      this.root = hiarachyTree;
+      console.log(`A tree is loaded with ${tree.tree.length} nodes.`)
+    }, () => this.root = undefined);
   }
 
   private invalidateDirtyCount(){
@@ -269,9 +371,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   resetWorkspace(){
-    this.loadedPack = undefined;
     this.selectedImagePath = undefined;
     this.selectedFileType = undefined;
+    this.selectedNodePath = undefined;
+    this.errorDescription = undefined;
     this.action.select(ActionState.Edit);
   }
 
@@ -313,67 +416,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }
   }
 
-  async initialzeWorkspace(userId, repositoryName, branchName?: string): Promise<void> {
-    this.userId = userId;
-    this.repositoryName = repositoryName;
-    let details = this.wrapper.repositoryDetails(userId, repositoryName).then((result) => {
-      this.repositoryDetails = result;
-    }, () => {
-      console.error("Repository can't be loaded.")
-    });
-
-    let branches = this.wrapper.branches(userId, repositoryName).then((result) => {
-      this.branches = result;
-    }, () => {
-      console.error("Branches can't be loaded.")
-    });
-
-    await Promise.all([details, branches]);
-
-    if (this.branches.length == 0) {
-      console.error("It seems that this repository is empty.");
-    } else {
-      const defaultBranchName = this.repositoryDetails.default_branch;
-      if (branchName)
-        this.setBranchByName(branchName);
-      else
-        this.setBranchByName(defaultBranchName);
-
-      // if it have already loaded packs, do nothing.
-      let loadedPack = await this.database.get(this.repositoryDetails.id, this.selectedBranch.commit.sha).catch(r => {
-        console.log(r);
-        return undefined;
-      }) as WorkspacePack
-
-      let tree;
-      if(loadedPack == undefined){
-        tree = this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha);
-        this.workspaceReloadedSubject.next(this.selectedNodePath);
-      }else{
-        tree = Promise.resolve({tree: loadedPack.treePacks, sha: loadedPack.tree_sha});
-        this.loadedSubject.next(loadedPack);
-      }
-      
-      
-      return this.setTree(tree).then((v) => { },
-        () => {
-          console.error("Tree can't be loaded.")
-        }
-      );
-    }
-  }
-
-  setTree(tree: Promise<{sha: string, tree: Array<any>}>): Promise<void> {
-    return tree.then((tree: {sha: string, tree: Array<any>}) => {
-      const nodeTransformer = new GithubTreeToTree(tree);
-      const hiarachyTree = nodeTransformer.getTree();
-      this.root = hiarachyTree;
-      console.log(`A tree is loaded with ${tree.tree.length} nodes.`)
-    }, () => {
-      this.root = undefined;
-    });
-  }
-
   setBranchByName(branchName: string): boolean {
     const branch = this.branches.find((v) => {
       if (v.name == branchName) {
@@ -387,6 +429,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   nodeSelected(path: string | GithubTreeNode) {
     if(path == undefined){
+      this.selectedNodePath = undefined;
       this.resetEditor();
     } else {
       const node = (typeof path == 'string') ? this.tree.get(path) : path;
@@ -465,6 +508,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }else {
       this.editor1.setContent(event.node.path, event.base64);
     }
+    this.workspaceService.save(this);
   }
 
   async nodeContentChanged(path: string){
@@ -502,6 +546,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   onBranchChange(event: MatSelectChange){
     const branch = event.value;
+    this.selectedNodePath = undefined;
+    this.treeStatus = this.TreeStatus.BranchChanging;
     this.router.navigate([], {queryParams: {branch: branch.name}})
   }
 
@@ -593,12 +639,14 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     } catch(e){
       console.error(e);
     } finally {
+      this.commitStatePack = this.pack;
       this.refreshSubject.next();
     }
   }
 
   private get pack(): WorkspacePack{
       const repositoryId: number = this.repositoryDetails.id;
+      const repositoryName: string = this.repositoryDetails.full_name;
       const commitSha = this.selectedBranch.commit.sha;
       const treeSha = this.root.sha;
       const name = this.selectedBranch.name;
@@ -622,6 +670,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           acc.push(node.toGithubNode());
         return acc;
       }, [] as Array<GithubNode>, false);
-      return WorkspacePack.of(repositoryId, commitSha, treeSha, name, packs, treeArr, tabs, this.selectedNodePath);
+      return WorkspacePack.of(repositoryId, repositoryName, commitSha, treeSha, name, packs, treeArr, tabs, this.selectedNodePath);
   }
 }

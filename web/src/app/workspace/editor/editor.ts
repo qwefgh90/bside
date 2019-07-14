@@ -1,6 +1,7 @@
 import * as monacoNameSpace from 'monaco-editor';
+import { WorkspaceChild } from '../workspace/workspace-child';
 
-export interface Editor {
+export interface Editor extends WorkspaceChild{
     selectTab(path: string): boolean;
     setContent(path: string, content: string);
     exist(path: string): boolean;

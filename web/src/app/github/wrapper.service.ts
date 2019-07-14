@@ -494,12 +494,7 @@ export class WrapperService {
 }*/
   repositoryDetails(login: string, repositoryName: string): Promise<any> {
     if (this.hasToken()) {
-      // const repo = new Github({
-      //   token: this.token()
-      // });
-      // let promise: Promise<any> = repo.getRepo(login, repositoryName).getDetails();
-      // return promise.then(result => result.data);
-      return this.repository(login, repositoryName)
+      return this.repository(login, repositoryName);
     } else {
       return Promise.reject();
     }
@@ -507,8 +502,8 @@ export class WrapperService {
 
   repository(login: string, repositoryName: string){
     const url = `https://api.github.com/repos/${login}/${repositoryName}`;
-    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
-    return reposResponse.toPromise();
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` }});
+    return reposResponse.toPromise().then(v => v == undefined ? Promise.reject() : Promise.resolve(v));
   }
 
   /**

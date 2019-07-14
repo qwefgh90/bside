@@ -7,8 +7,8 @@
       <mat-icon style="cursor: pointer" [matMenuTriggerFor]="appMenuForRoot" class="context-menu-button" title="Repository menu">
         arrow_drop_down</mat-icon>
       <mat-menu #appMenuForRoot="matMenu" xPosition="before">
-        <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;">
-          <mat-icon>undo</mat-icon>Undo
+        <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="undoAll()">
+          <mat-icon>undo</mat-icon>Undo all
         </button>
       </mat-menu>
     </div>
@@ -36,7 +36,7 @@
               <span style="line-height: 24px; flex: 1">{{node.data.name}}</span>
               <div style="margin-left: 1em;" *ngIf="getLabels(node.data).length != 0"><span style="font-size: 0.5em" *ngFor="let l of getLabels(node.data)" title="{{l.name}}">{{l.short}}&nbsp;</span></div>
             </div>
-            <div>
+            <!-- <div>
               <mat-icon [matMenuTriggerFor]="appMenu" class="context-menu-button" title="Menu">
                 arrow_drop_down</mat-icon>
               <mat-menu #appMenu="matMenu" xPosition="before">
@@ -44,7 +44,7 @@
                   <mat-icon>undo</mat-icon>Undo
                 </button>
               </mat-menu>
-            </div>
+            </div> -->
           </div>
         </div>
       </ng-template>
