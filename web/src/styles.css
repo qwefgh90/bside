@@ -14,3 +14,7 @@ body{
 .mat-tab-label-content{
     width: 100%
 }
+
+.mat-drawer-container{
+    background-color:white;
+}

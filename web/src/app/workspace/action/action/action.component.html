@@ -2,7 +2,7 @@
   <button mat-icon-button class="button-with-toggle-style">
     <mat-icon aria-label="view_agenda">view_agenda</mat-icon>
   </button>
-  <a mat-icon-button title="Static page" class="button-with-toggle-style" href="{{repository?.homepage}}" target="_blank" [disabled]="repository?.homepage == undefined || repository?.homepage == null">
+  <a mat-icon-button title="Static page" class="button-with-toggle-style" href="{{htmlUrl}}" target="_blank" [disabled]="htmlUrl == undefined">
       <mat-icon aria-label="web">pageview</mat-icon>
   </a>
   <mat-button-toggle-group #group="matButtonToggleGroup" [vertical]="true" [(ngModel)]="selectedBtn">

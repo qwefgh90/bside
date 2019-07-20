@@ -1,6 +1,7 @@
 import { Component, OnInit, InjectionToken, Inject } from '@angular/core';
 import { OAuthService } from '../service/o-auth.service';
 import { environment } from 'src/environments/environment';
+import { TextUtil } from 'src/app/workspace/text/text-util';
 
 export const LOCATION_TOKEN = new InjectionToken<Location>('Window location object');
 
@@ -26,9 +27,14 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     const oauthInfo = this.oauthService.intialOAuthInfo(); 
     oauthInfo.then((info) => {
-      this.state = info.state;
-      this.client_id = info.client_id;
-      this.status = LoginStatus.Initialized;
+      if(info == undefined){
+        this.status = LoginStatus.Failure;
+        console.error("We cannot get initial information from server.");
+      }else{
+        this.state = info.state;
+        this.client_id = info.client_id;
+        this.status = LoginStatus.Initialized;
+      }
     }, (reason) => {
       this.status = LoginStatus.Failure;
       console.error("We cannot get initial information from server.", reason)
@@ -37,7 +43,7 @@ export class LoginComponent implements OnInit {
   }
 
   makeRedirectUrl(){
-    return `${environment.redirect_url}?route=${this.oauthService.redirectUrl ? this.oauthService.redirectUrl : ''}`;
+    return `${environment.redirect_url}?route=${this.oauthService.redirectUrl ? TextUtil.stringToBase64(this.oauthService.redirectUrl) : ''}`;
   }
 
   login(){

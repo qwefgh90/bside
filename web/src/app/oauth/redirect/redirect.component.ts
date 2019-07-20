@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { OAuthService } from '../service/o-auth.service';
+import { TextUtil } from 'src/app/workspace/text/text-util';
 
 @Component({
   selector: 'app-redirect',
@@ -19,7 +20,7 @@ export class RedirectComponent implements OnInit {
       if (map.has("route")) {
         let url = map.get("route");
         console.log("RedirectUrl : " + url);
-        this.oauth.redirectUrl = url;
+        this.oauth.redirectUrl = TextUtil.base64ToString(url);
       }
       this.state = map.get("state");
       this.code = map.get("code");
@@ -27,7 +28,7 @@ export class RedirectComponent implements OnInit {
       this.oauth.login(this.state, this.code).then((value) => {
         console.log("success to login");
         if(this.oauth.redirectUrl != undefined){
-          this.router.navigate([this.oauth.redirectUrl]);
+          this.router.navigateByUrl(this.oauth.redirectUrl);
           this.oauth.redirectUrl = undefined;
         }else
           this.router.navigate(["/"]);

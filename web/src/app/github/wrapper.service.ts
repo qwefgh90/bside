@@ -506,6 +506,809 @@ export class WrapperService {
     return reposResponse.toPromise().then(v => v == undefined ? Promise.reject() : Promise.resolve(v));
   }
 
+  
+  /**
+   * curl -H "Authorization: token xxxx" https://api.github.com/repos/TaylanTatli/Moon/forks -X POST -i
+   * HTTP/1.1 202 Accepted
+Date: Tue, 23 Jul 2019 09:00:02 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 16379
+Server: GitHub.com
+Status: 202 Accepted
+X-RateLimit-Limit: 5000
+X-RateLimit-Remaining: 4994
+X-RateLimit-Reset: 1563875676
+X-OAuth-Scopes: public_repo
+X-Accepted-OAuth-Scopes:
+X-OAuth-Client-Id: 356859337d4e59d2fca2
+X-GitHub-Media-Type: github.v3; format=json
+Access-Control-Expose-Headers: ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type
+Access-Control-Allow-Origin: *
+Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
+X-Frame-Options: deny
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: origin-when-cross-origin, strict-origin-when-cross-origin
+Content-Security-Policy: default-src 'none'
+X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
+
+{
+  "id": 198392654,
+  "node_id": "MDEwOlJlcG9zaXRvcnkxOTgzOTI2NTQ=",
+  "name": "Moon",
+  "full_name": "qwefgh90/Moon",
+  "private": false,
+  "owner": {
+    "login": "qwefgh90",
+    "id": 7572251,
+    "node_id": "MDQ6VXNlcjc1NzIyNTE=",
+    "avatar_url": "https://avatars2.githubusercontent.com/u/7572251?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/qwefgh90",
+    "html_url": "https://github.com/qwefgh90",
+    "followers_url": "https://api.github.com/users/qwefgh90/followers",
+    "following_url": "https://api.github.com/users/qwefgh90/following{/other_user}",
+    "gists_url": "https://api.github.com/users/qwefgh90/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/qwefgh90/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/qwefgh90/subscriptions",
+    "organizations_url": "https://api.github.com/users/qwefgh90/orgs",
+    "repos_url": "https://api.github.com/users/qwefgh90/repos",
+    "events_url": "https://api.github.com/users/qwefgh90/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/qwefgh90/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "html_url": "https://github.com/qwefgh90/Moon",
+  "description": "Moon is a minimal, one column jekyll theme.",
+  "fork": true,
+  "url": "https://api.github.com/repos/qwefgh90/Moon",
+  "forks_url": "https://api.github.com/repos/qwefgh90/Moon/forks",
+  "keys_url": "https://api.github.com/repos/qwefgh90/Moon/keys{/key_id}",
+  "collaborators_url": "https://api.github.com/repos/qwefgh90/Moon/collaborators{/collaborator}",
+  "teams_url": "https://api.github.com/repos/qwefgh90/Moon/teams",
+  "hooks_url": "https://api.github.com/repos/qwefgh90/Moon/hooks",
+  "issue_events_url": "https://api.github.com/repos/qwefgh90/Moon/issues/events{/number}",
+  "events_url": "https://api.github.com/repos/qwefgh90/Moon/events",
+  "assignees_url": "https://api.github.com/repos/qwefgh90/Moon/assignees{/user}",
+  "branches_url": "https://api.github.com/repos/qwefgh90/Moon/branches{/branch}",
+  "tags_url": "https://api.github.com/repos/qwefgh90/Moon/tags",
+  "blobs_url": "https://api.github.com/repos/qwefgh90/Moon/git/blobs{/sha}",
+  "git_tags_url": "https://api.github.com/repos/qwefgh90/Moon/git/tags{/sha}",
+  "git_refs_url": "https://api.github.com/repos/qwefgh90/Moon/git/refs{/sha}",
+  "trees_url": "https://api.github.com/repos/qwefgh90/Moon/git/trees{/sha}",
+  "statuses_url": "https://api.github.com/repos/qwefgh90/Moon/statuses/{sha}",
+  "languages_url": "https://api.github.com/repos/qwefgh90/Moon/languages",
+  "stargazers_url": "https://api.github.com/repos/qwefgh90/Moon/stargazers",
+  "contributors_url": "https://api.github.com/repos/qwefgh90/Moon/contributors",
+  "subscribers_url": "https://api.github.com/repos/qwefgh90/Moon/subscribers",
+  "subscription_url": "https://api.github.com/repos/qwefgh90/Moon/subscription",
+  "commits_url": "https://api.github.com/repos/qwefgh90/Moon/commits{/sha}",
+  "git_commits_url": "https://api.github.com/repos/qwefgh90/Moon/git/commits{/sha}",
+  "comments_url": "https://api.github.com/repos/qwefgh90/Moon/comments{/number}",
+  "issue_comment_url": "https://api.github.com/repos/qwefgh90/Moon/issues/comments{/number}",
+  "contents_url": "https://api.github.com/repos/qwefgh90/Moon/contents/{+path}",
+  "compare_url": "https://api.github.com/repos/qwefgh90/Moon/compare/{base}...{head}",
+  "merges_url": "https://api.github.com/repos/qwefgh90/Moon/merges",
+  "archive_url": "https://api.github.com/repos/qwefgh90/Moon/{archive_format}{/ref}",
+  "downloads_url": "https://api.github.com/repos/qwefgh90/Moon/downloads",
+  "issues_url": "https://api.github.com/repos/qwefgh90/Moon/issues{/number}",
+  "pulls_url": "https://api.github.com/repos/qwefgh90/Moon/pulls{/number}",
+  "milestones_url": "https://api.github.com/repos/qwefgh90/Moon/milestones{/number}",
+  "notifications_url": "https://api.github.com/repos/qwefgh90/Moon/notifications{?since,all,participating}",
+  "labels_url": "https://api.github.com/repos/qwefgh90/Moon/labels{/name}",
+  "releases_url": "https://api.github.com/repos/qwefgh90/Moon/releases{/id}",
+  "deployments_url": "https://api.github.com/repos/qwefgh90/Moon/deployments",
+  "created_at": "2019-07-23T09:00:01Z",
+  "updated_at": "2019-07-22T19:47:16Z",
+  "pushed_at": "2019-07-21T23:20:28Z",
+  "git_url": "git://github.com/qwefgh90/Moon.git",
+  "ssh_url": "git@github.com:qwefgh90/Moon.git",
+  "clone_url": "https://github.com/qwefgh90/Moon.git",
+  "svn_url": "https://github.com/qwefgh90/Moon",
+  "homepage": "https://taylantatli.github.io/Moon/",
+  "size": 6974,
+  "stargazers_count": 0,
+  "watchers_count": 0,
+  "language": null,
+  "has_issues": false,
+  "has_projects": true,
+  "has_downloads": true,
+  "has_wiki": true,
+  "has_pages": false,
+  "forks_count": 0,
+  "mirror_url": null,
+  "archived": false,
+  "disabled": false,
+  "open_issues_count": 0,
+  "license": {
+    "key": "mit",
+    "name": "MIT License",
+    "spdx_id": "MIT",
+    "url": "https://api.github.com/licenses/mit",
+    "node_id": "MDc6TGljZW5zZTEz"
+  },
+  "forks": 0,
+  "open_issues": 0,
+  "watchers": 0,
+  "default_branch": "master",
+  "permissions": {
+    "admin": true,
+    "push": true,
+    "pull": true
+  },
+  "parent": {
+    "id": 56186554,
+    "node_id": "MDEwOlJlcG9zaXRvcnk1NjE4NjU1NA==",
+    "name": "Moon",
+    "full_name": "TaylanTatli/Moon",
+    "private": false,
+    "owner": {
+      "login": "TaylanTatli",
+      "id": 754514,
+      "node_id": "MDQ6VXNlcjc1NDUxNA==",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/754514?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/TaylanTatli",
+      "html_url": "https://github.com/TaylanTatli",
+      "followers_url": "https://api.github.com/users/TaylanTatli/followers",
+      "following_url": "https://api.github.com/users/TaylanTatli/following{/other_user}",
+      "gists_url": "https://api.github.com/users/TaylanTatli/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/TaylanTatli/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/TaylanTatli/subscriptions",
+      "organizations_url": "https://api.github.com/users/TaylanTatli/orgs",
+      "repos_url": "https://api.github.com/users/TaylanTatli/repos",
+      "events_url": "https://api.github.com/users/TaylanTatli/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/TaylanTatli/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "html_url": "https://github.com/TaylanTatli/Moon",
+    "description": "Moon is a minimal, one column jekyll theme.",
+    "fork": false,
+    "url": "https://api.github.com/repos/TaylanTatli/Moon",
+    "forks_url": "https://api.github.com/repos/TaylanTatli/Moon/forks",
+    "keys_url": "https://api.github.com/repos/TaylanTatli/Moon/keys{/key_id}",
+    "collaborators_url": "https://api.github.com/repos/TaylanTatli/Moon/collaborators{/collaborator}",
+    "teams_url": "https://api.github.com/repos/TaylanTatli/Moon/teams",
+    "hooks_url": "https://api.github.com/repos/TaylanTatli/Moon/hooks",
+    "issue_events_url": "https://api.github.com/repos/TaylanTatli/Moon/issues/events{/number}",
+    "events_url": "https://api.github.com/repos/TaylanTatli/Moon/events",
+    "assignees_url": "https://api.github.com/repos/TaylanTatli/Moon/assignees{/user}",
+    "branches_url": "https://api.github.com/repos/TaylanTatli/Moon/branches{/branch}",
+    "tags_url": "https://api.github.com/repos/TaylanTatli/Moon/tags",
+    "blobs_url": "https://api.github.com/repos/TaylanTatli/Moon/git/blobs{/sha}",
+    "git_tags_url": "https://api.github.com/repos/TaylanTatli/Moon/git/tags{/sha}",
+    "git_refs_url": "https://api.github.com/repos/TaylanTatli/Moon/git/refs{/sha}",
+    "trees_url": "https://api.github.com/repos/TaylanTatli/Moon/git/trees{/sha}",
+    "statuses_url": "https://api.github.com/repos/TaylanTatli/Moon/statuses/{sha}",
+    "languages_url": "https://api.github.com/repos/TaylanTatli/Moon/languages",
+    "stargazers_url": "https://api.github.com/repos/TaylanTatli/Moon/stargazers",
+    "contributors_url": "https://api.github.com/repos/TaylanTatli/Moon/contributors",
+    "subscribers_url": "https://api.github.com/repos/TaylanTatli/Moon/subscribers",
+    "subscription_url": "https://api.github.com/repos/TaylanTatli/Moon/subscription",
+    "commits_url": "https://api.github.com/repos/TaylanTatli/Moon/commits{/sha}",
+    "git_commits_url": "https://api.github.com/repos/TaylanTatli/Moon/git/commits{/sha}",
+    "comments_url": "https://api.github.com/repos/TaylanTatli/Moon/comments{/number}",
+    "issue_comment_url": "https://api.github.com/repos/TaylanTatli/Moon/issues/comments{/number}",
+    "contents_url": "https://api.github.com/repos/TaylanTatli/Moon/contents/{+path}",
+    "compare_url": "https://api.github.com/repos/TaylanTatli/Moon/compare/{base}...{head}",
+    "merges_url": "https://api.github.com/repos/TaylanTatli/Moon/merges",
+    "archive_url": "https://api.github.com/repos/TaylanTatli/Moon/{archive_format}{/ref}",
+    "downloads_url": "https://api.github.com/repos/TaylanTatli/Moon/downloads",
+    "issues_url": "https://api.github.com/repos/TaylanTatli/Moon/issues{/number}",
+    "pulls_url": "https://api.github.com/repos/TaylanTatli/Moon/pulls{/number}",
+    "milestones_url": "https://api.github.com/repos/TaylanTatli/Moon/milestones{/number}",
+    "notifications_url": "https://api.github.com/repos/TaylanTatli/Moon/notifications{?since,all,participating}",
+    "labels_url": "https://api.github.com/repos/TaylanTatli/Moon/labels{/name}",
+    "releases_url": "https://api.github.com/repos/TaylanTatli/Moon/releases{/id}",
+    "deployments_url": "https://api.github.com/repos/TaylanTatli/Moon/deployments",
+    "created_at": "2016-04-13T21:13:26Z",
+    "updated_at": "2019-07-22T19:47:16Z",
+    "pushed_at": "2019-07-21T23:20:28Z",
+    "git_url": "git://github.com/TaylanTatli/Moon.git",
+    "ssh_url": "git@github.com:TaylanTatli/Moon.git",
+    "clone_url": "https://github.com/TaylanTatli/Moon.git",
+    "svn_url": "https://github.com/TaylanTatli/Moon",
+    "homepage": "https://taylantatli.github.io/Moon/",
+    "size": 6974,
+    "stargazers_count": 1743,
+    "watchers_count": 1743,
+    "language": "HTML",
+    "has_issues": true,
+    "has_projects": true,
+    "has_downloads": true,
+    "has_wiki": true,
+    "has_pages": true,
+    "forks_count": 1690,
+    "mirror_url": null,
+    "archived": false,
+    "disabled": false,
+    "open_issues_count": 71,
+    "license": {
+      "key": "mit",
+      "name": "MIT License",
+      "spdx_id": "MIT",
+      "url": "https://api.github.com/licenses/mit",
+      "node_id": "MDc6TGljZW5zZTEz"
+    },
+    "forks": 1690,
+    "open_issues": 71,
+    "watchers": 1743,
+    "default_branch": "master"
+  },
+  "source": {
+    "id": 56186554,
+    "node_id": "MDEwOlJlcG9zaXRvcnk1NjE4NjU1NA==",
+    "name": "Moon",
+    "full_name": "TaylanTatli/Moon",
+    "private": false,
+    "owner": {
+      "login": "TaylanTatli",
+      "id": 754514,
+      "node_id": "MDQ6VXNlcjc1NDUxNA==",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/754514?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/TaylanTatli",
+      "html_url": "https://github.com/TaylanTatli",
+      "followers_url": "https://api.github.com/users/TaylanTatli/followers",
+      "following_url": "https://api.github.com/users/TaylanTatli/following{/other_user}",
+      "gists_url": "https://api.github.com/users/TaylanTatli/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/TaylanTatli/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/TaylanTatli/subscriptions",
+      "organizations_url": "https://api.github.com/users/TaylanTatli/orgs",
+      "repos_url": "https://api.github.com/users/TaylanTatli/repos",
+      "events_url": "https://api.github.com/users/TaylanTatli/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/TaylanTatli/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "html_url": "https://github.com/TaylanTatli/Moon",
+    "description": "Moon is a minimal, one column jekyll theme.",
+    "fork": false,
+    "url": "https://api.github.com/repos/TaylanTatli/Moon",
+    "forks_url": "https://api.github.com/repos/TaylanTatli/Moon/forks",
+    "keys_url": "https://api.github.com/repos/TaylanTatli/Moon/keys{/key_id}",
+    "collaborators_url": "https://api.github.com/repos/TaylanTatli/Moon/collaborators{/collaborator}",
+    "teams_url": "https://api.github.com/repos/TaylanTatli/Moon/teams",
+    "hooks_url": "https://api.github.com/repos/TaylanTatli/Moon/hooks",
+    "issue_events_url": "https://api.github.com/repos/TaylanTatli/Moon/issues/events{/number}",
+    "events_url": "https://api.github.com/repos/TaylanTatli/Moon/events",
+    "assignees_url": "https://api.github.com/repos/TaylanTatli/Moon/assignees{/user}",
+    "branches_url": "https://api.github.com/repos/TaylanTatli/Moon/branches{/branch}",
+    "tags_url": "https://api.github.com/repos/TaylanTatli/Moon/tags",
+    "blobs_url": "https://api.github.com/repos/TaylanTatli/Moon/git/blobs{/sha}",
+    "git_tags_url": "https://api.github.com/repos/TaylanTatli/Moon/git/tags{/sha}",
+    "git_refs_url": "https://api.github.com/repos/TaylanTatli/Moon/git/refs{/sha}",
+    "trees_url": "https://api.github.com/repos/TaylanTatli/Moon/git/trees{/sha}",
+    "statuses_url": "https://api.github.com/repos/TaylanTatli/Moon/statuses/{sha}",
+    "languages_url": "https://api.github.com/repos/TaylanTatli/Moon/languages",
+    "stargazers_url": "https://api.github.com/repos/TaylanTatli/Moon/stargazers",
+    "contributors_url": "https://api.github.com/repos/TaylanTatli/Moon/contributors",
+    "subscribers_url": "https://api.github.com/repos/TaylanTatli/Moon/subscribers",
+    "subscription_url": "https://api.github.com/repos/TaylanTatli/Moon/subscription",
+    "commits_url": "https://api.github.com/repos/TaylanTatli/Moon/commits{/sha}",
+    "git_commits_url": "https://api.github.com/repos/TaylanTatli/Moon/git/commits{/sha}",
+    "comments_url": "https://api.github.com/repos/TaylanTatli/Moon/comments{/number}",
+    "issue_comment_url": "https://api.github.com/repos/TaylanTatli/Moon/issues/comments{/number}",
+    "contents_url": "https://api.github.com/repos/TaylanTatli/Moon/contents/{+path}",
+    "compare_url": "https://api.github.com/repos/TaylanTatli/Moon/compare/{base}...{head}",
+    "merges_url": "https://api.github.com/repos/TaylanTatli/Moon/merges",
+    "archive_url": "https://api.github.com/repos/TaylanTatli/Moon/{archive_format}{/ref}",
+    "downloads_url": "https://api.github.com/repos/TaylanTatli/Moon/downloads",
+    "issues_url": "https://api.github.com/repos/TaylanTatli/Moon/issues{/number}",
+    "pulls_url": "https://api.github.com/repos/TaylanTatli/Moon/pulls{/number}",
+    "milestones_url": "https://api.github.com/repos/TaylanTatli/Moon/milestones{/number}",
+    "notifications_url": "https://api.github.com/repos/TaylanTatli/Moon/notifications{?since,all,participating}",
+    "labels_url": "https://api.github.com/repos/TaylanTatli/Moon/labels{/name}",
+    "releases_url": "https://api.github.com/repos/TaylanTatli/Moon/releases{/id}",
+    "deployments_url": "https://api.github.com/repos/TaylanTatli/Moon/deployments",
+    "created_at": "2016-04-13T21:13:26Z",
+    "updated_at": "2019-07-22T19:47:16Z",
+100 16379  100 16379    0     0   8318      0  0:00:01  0:00:01 --:--:--  8318"2019-07-21T23:20:28Z",
+    "git_url": "git://github.com/TaylanTatli/Moon.git",
+    "ssh_url": "git@github.com:TaylanTatli/Moon.git",
+    "clone_url": "https://github.com/TaylanTatli/Moon.git",
+    "svn_url": "https://github.com/TaylanTatli/Moon",
+    "homepage": "https://taylantatli.github.io/Moon/",
+    "size": 6974,
+    "stargazers_count": 1743,
+    "watchers_count": 1743,
+    "language": "HTML",
+    "has_issues": true,
+    "has_projects": true,
+    "has_downloads": true,
+    "has_wiki": true,
+    "has_pages": true,
+    "forks_count": 1690,
+    "mirror_url": null,
+    "archived": false,
+    "disabled": false,
+    "open_issues_count": 71,
+    "license": {
+      "key": "mit",
+      "name": "MIT License",
+      "spdx_id": "MIT",
+      "url": "https://api.github.com/licenses/mit",
+      "node_id": "MDc6TGljZW5zZTEz"
+    },
+    "forks": 1690,
+    "open_issues": 71,
+    "watchers": 1743,
+    "default_branch": "master"
+  },
+  "network_count": 1690,
+  "subscribers_count": 0
+}
+
+   */
+  fork(owner: string, repositoryName: string) {
+    const url = `https://api.github.com/repos/${owner}/${repositoryName}/forks`;
+    let reposResponse = this.http.post<any>(url, null, { headers: { Authorization: `token ${this.token()}` } })
+    return reposResponse.toPromise();
+  }
+
+  forkList(owner: string, repositoryName: string) {
+    const url = `https://api.github.com/repos/${owner}/${repositoryName}/forks?sort=newest`;
+    let reposResponse = this.http.get<any[]>(url, { headers: { Authorization: `token ${this.token()}` } })
+    return reposResponse.toPromise();
+  }
+
+  /**
+   *  This is a test api.
+      curl \
+      -H "Authorization: Token " \
+      -H "Content-Type:application/json" \
+      -H "Accept: application/vnd.github.mister-fantastic-preview+json" \
+      -X POST  \
+      https://api.github.com/repos/qwefgh90/asdf/pages/builds -i
+      
+      {
+        "status": "queued",
+        "url": "https://api.github.com/repositories/198784207/pages/builds/latest"
+      }
+
+   */
+  buildPage(owner: string, repositoryName: string){
+    const url = `https://api.github.com/repos/${owner}/${repositoryName}/pages/builds`;
+    let reposResponse = this.http.post<any>(url, null, { headers: { Authorization: `token ${this.token()}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
+    return reposResponse.toPromise();
+  }
+
+  /**
+   * 
+    [
+      {
+        "url": "https://api.github.com/repos/qwefgh90/online-cv/pages/builds/138740078",
+        "status": "built",
+        "error": {
+          "message": null
+        },
+        "pusher": {
+          "login": "qwefgh90",
+          "id": 7572251,
+          "node_id": "MDQ6VXNlcjc1NzIyNTE=",
+          "avatar_url": "https://avatars2.githubusercontent.com/u/7572251?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/qwefgh90",
+          "html_url": "https://github.com/qwefgh90",
+          "followers_url": "https://api.github.com/users/qwefgh90/followers",
+          "following_url": "https://api.github.com/users/qwefgh90/following{/other_user}",
+          "gists_url": "https://api.github.com/users/qwefgh90/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/qwefgh90/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/qwefgh90/subscriptions",
+          "organizations_url": "https://api.github.com/users/qwefgh90/orgs",
+          "repos_url": "https://api.github.com/users/qwefgh90/repos",
+          "events_url": "https://api.github.com/users/qwefgh90/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/qwefgh90/received_events",
+          "type": "User",
+          "site_admin": false
+        },
+        "commit": "b91225665c76da2964bf48521f6ea70e6db884b6",
+        "duration": 13869,
+        "created_at": "2019-07-26T07:09:15Z",
+        "updated_at": "2019-07-26T07:09:28Z"
+      }
+    ]
+
+   * @param owner 
+   * @param repositoryName 
+   */
+  buildStatus(owner: string, repositoryName: string){
+    const url = `https://api.github.com/repos/${owner}/${repositoryName}/pages/builds`;
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
+    return reposResponse.toPromise();
+  }
+
+  createPageBranch(owner: string, repositoryName: string, branch: string){
+    const url = `https://api.github.com/repos/${owner}/${repositoryName}/pages`;
+    let data = {source: {branch: branch}}
+    let reposResponse = this.http.post<any>(url, data, { headers: { Authorization: `token ${this.token()}`, Accept: 'application/vnd.github.switcheroo-preview+json' } })
+    return reposResponse.toPromise();
+  }
+
+  updatePageBranch(owner: string, repositoryName: string, branch: string){
+    const url = `https://api.github.com/repos/${owner}/${repositoryName}/pages`;
+    let data = {source: branch};
+    let reposResponse = this.http.put<any>(url, data, { headers: { Authorization: `token ${this.token()}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
+    return reposResponse.toPromise();
+  }
+  /**
+   * {
+        "url": "https://api.github.com/repos/github/developer.github.com/pages",
+        "status": "built",
+        "cname": "developer.github.com",
+        "custom_404": false,
+        "html_url": "https://developer.github.com",
+        "source": {
+          "branch": "master",
+          "directory": "/"
+        }
+      }
+   * @param owner 
+   * @param repositoryName 
+   */
+  async getPageBranch(owner: string, repositoryName: string){
+    const url = `https://api.github.com/repos/${owner}/${repositoryName}/pages`;
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
+    return reposResponse.toPromise();
+  }
+  /**
+   * curl \
+    -H "Authorization: Token " \
+    -H "Content-Type:application/json" \
+    -H "Accept: application/json" \
+    -X PATCH \
+    --data '{ "name": "Moon2" }' \
+    https://api.github.com/repos/qwefgh90/Moon
+    HTTP/1.1 200 OK
+    Date: Wed, 24 Jul 2019 06:05:18 GMT
+    Content-Type: application/json; charset=utf-8
+    Content-Length: 16514
+    Server: GitHub.com
+    Status: 200 OK
+    X-RateLimit-Limit: 5000
+    X-RateLimit-Remaining: 4961
+    X-RateLimit-Reset: 1563951918
+    Cache-Control: private, max-age=60, s-maxage=60
+    Vary: Accept, Authorization, Cookie, X-GitHub-OTP
+    ETag: "58ce3d59329c06400b079b60be80969b"
+    X-OAuth-Scopes: public_repo
+    X-Accepted-OAuth-Scopes:
+    X-OAuth-Client-Id: 356859337d4e59d2fca2
+    X-GitHub-Media-Type: github.v3
+    Access-Control-Expose-Headers: ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type
+    Access-Control-Allow-Origin: *
+    Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
+    X-Frame-Options: deny
+    X-Content-Type-Options: nosniff
+    X-XSS-Protection: 1; mode=block
+    Referrer-Policy: origin-when-cross-origin, strict-origin-when-cross-origin
+    Content-Security-Policy: default-src 'none'
+    Vary: Accept-Encoding
+    X-GitHub-Request-Id: C781:84D2:238CEA:2A816A:5D37F51E
+
+    {
+      "id": 198392654,
+      "node_id": "MDEwOlJlcG9zaXRvcnkxOTgzOTI2NTQ=",
+      "name": "Moon3",
+      "full_name": "qwefgh90/Moon3",
+      "private": false,
+      "owner": {
+        "login": "qwefgh90",
+        "id": 7572251,
+        "node_id": "MDQ6VXNlcjc1NzIyNTE=",
+        "avatar_url": "https://avatars2.githubusercontent.com/u/7572251?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/qwefgh90",
+        "html_url": "https://github.com/qwefgh90",
+        "followers_url": "https://api.github.com/users/qwefgh90/followers",
+        "following_url": "https://api.github.com/users/qwefgh90/following{/other_user}",
+        "gists_url": "https://api.github.com/users/qwefgh90/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/qwefgh90/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/qwefgh90/subscriptions",
+        "organizations_url": "https://api.github.com/users/qwefgh90/orgs",
+        "repos_url": "https://api.github.com/users/qwefgh90/repos",
+        "events_url": "https://api.github.com/users/qwefgh90/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/qwefgh90/received_events",
+        "type": "User",
+        "site_admin": false
+      },
+      "html_url": "https://github.com/qwefgh90/Moon3",
+      "description": "Moon is a minimal, one column jekyll theme.",
+      "fork": true,
+      "url": "https://api.github.com/repos/qwefgh90/Moon3",
+      "forks_url": "https://api.github.com/repos/qwefgh90/Moon3/forks",
+      "keys_url": "https://api.github.com/repos/qwefgh90/Moon3/keys{/key_id}",
+      "collaborators_url": "https://api.github.com/repos/qwefgh90/Moon3/collaborators{/collaborator}",
+      "teams_url": "https://api.github.com/repos/qwefgh90/Moon3/teams",
+      "hooks_url": "https://api.github.com/repos/qwefgh90/Moon3/hooks",
+      "issue_events_url": "https://api.github.com/repos/qwefgh90/Moon3/issues/events{/number}",
+      "events_url": "https://api.github.com/repos/qwefgh90/Moon3/events",
+      "assignees_url": "https://api.github.com/repos/qwefgh90/Moon3/assignees{/user}",
+      "branches_url": "https://api.github.com/repos/qwefgh90/Moon3/branches{/branch}",
+      "tags_url": "https://api.github.com/repos/qwefgh90/Moon3/tags",
+      "blobs_url": "https://api.github.com/repos/qwefgh90/Moon3/git/blobs{/sha}",
+      "git_tags_url": "https://api.github.com/repos/qwefgh90/Moon3/git/tags{/sha}",
+      "git_refs_url": "https://api.github.com/repos/qwefgh90/Moon3/git/refs{/sha}",
+      "trees_url": "https://api.github.com/repos/qwefgh90/Moon3/git/trees{/sha}",
+      "statuses_url": "https://api.github.com/repos/qwefgh90/Moon3/statuses/{sha}",
+      "languages_url": "https://api.github.com/repos/qwefgh90/Moon3/languages",
+      "stargazers_url": "https://api.github.com/repos/qwefgh90/Moon3/stargazers",
+      "contributors_url": "https://api.github.com/repos/qwefgh90/Moon3/contributors",
+      "subscribers_url": "https://api.github.com/repos/qwefgh90/Moon3/subscribers",
+      "subscription_url": "https://api.github.com/repos/qwefgh90/Moon3/subscription",
+      "commits_url": "https://api.github.com/repos/qwefgh90/Moon3/commits{/sha}",
+      "git_commits_url": "https://api.github.com/repos/qwefgh90/Moon3/git/commits{/sha}",
+      "comments_url": "https://api.github.com/repos/qwefgh90/Moon3/comments{/number}",
+      "issue_comment_url": "https://api.github.com/repos/qwefgh90/Moon3/issues/comments{/number}",
+      "contents_url": "https://api.github.com/repos/qwefgh90/Moon3/contents/{+path}",
+      "compare_url": "https://api.github.com/repos/qwefgh90/Moon3/compare/{base}...{head}",
+      "merges_url": "https://api.github.com/repos/qwefgh90/Moon3/merges",
+      "archive_url": "https://api.github.com/repos/qwefgh90/Moon3/{archive_format}{/ref}",
+      "downloads_url": "https://api.github.com/repos/qwefgh90/Moon3/downloads",
+      "issues_url": "https://api.github.com/repos/qwefgh90/Moon3/issues{/number}",
+      "pulls_url": "https://api.github.com/repos/qwefgh90/Moon3/pulls{/number}",
+      "milestones_url": "https://api.github.com/repos/qwefgh90/Moon3/milestones{/number}",
+      "notifications_url": "https://api.github.com/repos/qwefgh90/Moon3/notifications{?since,all,participating}",
+      "labels_url": "https://api.github.com/repos/qwefgh90/Moon3/labels{/name}",
+      "releases_url": "https://api.github.com/repos/qwefgh90/Moon3/releases{/id}",
+      "deployments_url": "https://api.github.com/repos/qwefgh90/Moon3/deployments",
+      "created_at": "2019-07-23T09:00:01Z",
+      "updated_at": "2019-07-24T06:02:32Z",
+      "pushed_at": "2019-07-21T23:20:28Z",
+      "git_url": "git://github.com/qwefgh90/Moon3.git",
+      "ssh_url": "git@github.com:qwefgh90/Moon3.git",
+      "clone_url": "https://github.com/qwefgh90/Moon3.git",
+      "svn_url": "https://github.com/qwefgh90/Moon3",
+      "homepage": "https://taylantatli.github.io/Moon/",
+      "size": 6974,
+      "stargazers_count": 0,
+      "watchers_count": 0,
+      "language": "HTML",
+      "has_issues": false,
+      "has_projects": true,
+      "has_downloads": true,
+      "has_wiki": true,
+      "has_pages": true,
+      "forks_count": 0,
+      "mirror_url": null,
+      "archived": false,
+      "disabled": false,
+      "open_issues_count": 0,
+      "license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      },
+      "forks": 0,
+      "open_issues": 0,
+      "watchers": 0,
+      "default_branch": "master",
+      "permissions": {
+        "admin": true,
+        "push": true,
+        "pull": true
+      },
+      "allow_squash_merge": true,
+      "allow_merge_commit": true,
+      "allow_rebase_merge": true,
+      "parent": {
+        "id": 56186554,
+        "node_id": "MDEwOlJlcG9zaXRvcnk1NjE4NjU1NA==",
+        "name": "Moon",
+        "full_name": "TaylanTatli/Moon",
+        "private": false,
+        "owner": {
+          "login": "TaylanTatli",
+          "id": 754514,
+          "node_id": "MDQ6VXNlcjc1NDUxNA==",
+          "avatar_url": "https://avatars1.githubusercontent.com/u/754514?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/TaylanTatli",
+          "html_url": "https://github.com/TaylanTatli",
+          "followers_url": "https://api.github.com/users/TaylanTatli/followers",
+          "following_url": "https://api.github.com/users/TaylanTatli/following{/other_user}",
+          "gists_url": "https://api.github.com/users/TaylanTatli/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/TaylanTatli/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/TaylanTatli/subscriptions",
+          "organizations_url": "https://api.github.com/users/TaylanTatli/orgs",
+          "repos_url": "https://api.github.com/users/TaylanTatli/repos",
+          "events_url": "https://api.github.com/users/TaylanTatli/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/TaylanTatli/received_events",
+          "type": "User",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/TaylanTatli/Moon",
+        "description": "Moon is a minimal, one column jekyll theme.",
+        "fork": false,
+        "url": "https://api.github.com/repos/TaylanTatli/Moon",
+        "forks_url": "https://api.github.com/repos/TaylanTatli/Moon/forks",
+        "keys_url": "https://api.github.com/repos/TaylanTatli/Moon/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/TaylanTatli/Moon/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/TaylanTatli/Moon/teams",
+        "hooks_url": "https://api.github.com/repos/TaylanTatli/Moon/hooks",
+        "issue_events_url": "https://api.github.com/repos/TaylanTatli/Moon/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/TaylanTatli/Moon/events",
+        "assignees_url": "https://api.github.com/repos/TaylanTatli/Moon/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/TaylanTatli/Moon/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/TaylanTatli/Moon/tags",
+        "blobs_url": "https://api.github.com/repos/TaylanTatli/Moon/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/TaylanTatli/Moon/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/TaylanTatli/Moon/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/TaylanTatli/Moon/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/TaylanTatli/Moon/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/TaylanTatli/Moon/languages",
+        "stargazers_url": "https://api.github.com/repos/TaylanTatli/Moon/stargazers",
+        "contributors_url": "https://api.github.com/repos/TaylanTatli/Moon/contributors",
+        "subscribers_url": "https://api.github.com/repos/TaylanTatli/Moon/subscribers",
+        "subscription_url": "https://api.github.com/repos/TaylanTatli/Moon/subscription",
+        "commits_url": "https://api.github.com/repos/TaylanTatli/Moon/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/TaylanTatli/Moon/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/TaylanTatli/Moon/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/TaylanTatli/Moon/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/TaylanTatli/Moon/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/TaylanTatli/Moon/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/TaylanTatli/Moon/merges",
+        "archive_url": "https://api.github.com/repos/TaylanTatli/Moon/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/TaylanTatli/Moon/downloads",
+        "issues_url": "https://api.github.com/repos/TaylanTatli/Moon/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/TaylanTatli/Moon/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/TaylanTatli/Moon/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/TaylanTatli/Moon/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/TaylanTatli/Moon/labels{/name}",
+        "releases_url": "https://api.github.com/repos/TaylanTatli/Moon/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/TaylanTatli/Moon/deployments",
+        "created_at": "2016-04-13T21:13:26Z",
+        "updated_at": "2019-07-24T05:39:05Z",
+        "pushed_at": "2019-07-21T23:20:28Z",
+        "git_url": "git://github.com/TaylanTatli/Moon.git",
+        "ssh_url": "git@github.com:TaylanTatli/Moon.git",
+        "clone_url": "https://github.com/TaylanTatli/Moon.git",
+        "svn_url": "https://github.com/TaylanTatli/Moon",
+        "homepage": "https://taylantatli.github.io/Moon/",
+        "size": 6974,
+        "stargazers_count": 1745,
+        "watchers_count": 1745,
+        "language": "HTML",
+        "has_issues": true,
+        "has_projects": true,
+        "has_downloads": true,
+        "has_wiki": true,
+        "has_pages": true,
+        "forks_count": 1691,
+        "mirror_url": null,
+        "archived": false,
+        "disabled": false,
+        "open_issues_count": 71,
+        "license": {
+          "key": "mit",
+          "name": "MIT License",
+          "spdx_id": "MIT",
+          "url": "https://api.github.com/licenses/mit",
+          "node_id": "MDc6TGljZW5zZTEz"
+        },
+        "forks": 1691,
+        "open_issues": 71,
+        "watchers": 1745,
+        "default_branch": "master"
+      },
+      "source": {
+        "id": 56186554,
+        "node_id": "MDEwOlJlcG9zaXRvcnk1NjE4NjU1NA==",
+        "name": "Moon",
+        "full_name": "TaylanTatli/Moon",
+        "private": false,
+        "owner": {
+          "login": "TaylanTatli",
+          "id": 754514,
+          "node_id": "MDQ6VXNlcjc1NDUxNA==",
+          "avatar_url": "https://avatars1.githubusercontent.com/u/754514?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/TaylanTatli",
+          "html_url": "https://github.com/TaylanTatli",
+          "followers_url": "https://api.github.com/users/TaylanTatli/followers",
+          "following_url": "https://api.github.com/users/TaylanTatli/following{/other_user}",
+          "gists_url": "https://api.github.com/users/TaylanTatli/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/TaylanTatli/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/TaylanTatli/subscriptions",
+          "organizations_url": "https://api.github.com/users/TaylanTatli/orgs",
+          "repos_url": "https://api.github.com/users/TaylanTatli/repos",
+          "events_url": "https://api.github.com/users/TaylanTatli/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/TaylanTatli/received_events",
+          "type": "User",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/TaylanTatli/Moon",
+        "description": "Moon is a minimal, one column jekyll theme.",
+        "fork": false,
+        "url": "https://api.github.com/repos/TaylanTatli/Moon",
+        "forks_url": "https://api.github.com/repos/TaylanTatli/Moon/forks",
+        "keys_url": "https://api.github.com/repos/TaylanTatli/Moon/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/TaylanTatli/Moon/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/TaylanTatli/Moon/teams",
+        "hooks_url": "https://api.github.com/repos/TaylanTatli/Moon/hooks",
+        "issue_events_url": "https://api.github.com/repos/TaylanTatli/Moon/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/TaylanTatli/Moon/events",
+        "assignees_url": "https://api.github.com/repos/TaylanTatli/Moon/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/TaylanTatli/Moon/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/TaylanTatli/Moon/tags",
+        "blobs_url": "https://api.github.com/repos/TaylanTatli/Moon/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/TaylanTatli/Moon/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/TaylanTatli/Moon/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/TaylanTatli/Moon/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/TaylanTatli/Moon/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/TaylanTatli/Moon/languages",
+        "stargazers_url": "https://api.github.com/repos/TaylanTatli/Moon/stargazers",
+        "contributors_url": "https://api.github.com/repos/TaylanTatli/Moon/contributors",
+        "subscribers_url": "https://api.github.com/repos/TaylanTatli/Moon/subscribers",
+        "subscription_url": "https://api.github.com/repos/TaylanTatli/Moon/subscription",
+        "commits_url": "https://api.github.com/repos/TaylanTatli/Moon/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/TaylanTatli/Moon/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/TaylanTatli/Moon/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/TaylanTatli/Moon/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/TaylanTatli/Moon/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/TaylanTatli/Moon/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/TaylanTatli/Moon/merges",
+        "archive_url": "https://api.github.com/repos/TaylanTatli/Moon/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/TaylanTatli/Moon/downloads",
+        "issues_url": "https://api.github.com/repos/TaylanTatli/Moon/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/TaylanTatli/Moon/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/TaylanTatli/Moon/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/TaylanTatli/Moon/notifications{?since,all,participating}",
+    100 16533  100 16514  100    19  17605     20 --:--:-- --:--:-- --:--:-- 17625ame}",
+        "releases_url": "https://api.github.com/repos/TaylanTatli/Moon/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/TaylanTatli/Moon/deployments",
+        "created_at": "2016-04-13T21:13:26Z",
+        "updated_at": "2019-07-24T05:39:05Z",
+        "pushed_at": "2019-07-21T23:20:28Z",
+        "git_url": "git://github.com/TaylanTatli/Moon.git",
+        "ssh_url": "git@github.com:TaylanTatli/Moon.git",
+        "clone_url": "https://github.com/TaylanTatli/Moon.git",
+        "svn_url": "https://github.com/TaylanTatli/Moon",
+        "homepage": "https://taylantatli.github.io/Moon/",
+        "size": 6974,
+        "stargazers_count": 1745,
+        "watchers_count": 1745,
+        "language": "HTML",
+        "has_issues": true,
+        "has_projects": true,
+        "has_downloads": true,
+        "has_wiki": true,
+        "has_pages": true,
+        "forks_count": 1691,
+        "mirror_url": null,
+        "archived": false,
+        "disabled": false,
+        "open_issues_count": 71,
+        "license": {
+          "key": "mit",
+          "name": "MIT License",
+          "spdx_id": "MIT",
+          "url": "https://api.github.com/licenses/mit",
+          "node_id": "MDc6TGljZW5zZTEz"
+        },
+        "forks": 1691,
+        "open_issues": 71,
+        "watchers": 1745,
+        "default_branch": "master"
+      },
+      "network_count": 1691,
+      "subscribers_count": 0
+    }
+
+   * @param owner 
+   * @param oldName 
+   * @param newName 
+   */
+  rename(owner: string, oldName: string, newName: string){
+    const url = `https://api.github.com/repos/${owner}/${oldName}`;
+    let data = {name: newName};
+    let reposResponse = this.http.patch<any>(url, data, { headers: { Authorization: `token ${this.token()}` } })
+    return reposResponse.toPromise();
+  }
+
   /**
    * {
   "sha": "af24baf129c486558e37d797e54c9fd81c9c3407",
@@ -1138,6 +1941,12 @@ export class WrapperService {
     return reposResponse.toPromise();
   }
 
+  public async getResponse(url: string): Promise<HttpResponse<any>>{
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` }, observe: 'response'})
+    return reposResponse.toPromise();
+  }
+
+  
   /**
    * {
   "login": "qwefgh90",

@@ -5,12 +5,15 @@ import { MatExpansionModule, MatInputModule, MatIcon, MatIconModule, MatButtonTo
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { WrapperService } from 'src/app/github/wrapper.service';
 
 describe('ActionComponent', () => {
   let component: ActionComponent;
   let fixture: ComponentFixture<ActionComponent>;
 
   beforeEach(async(() => {
+    let wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['user','getPageBranch']);
+    wrapperServiceSpy.user.and.returnValue(new Promise((r) => {}));
     TestBed.configureTestingModule({
       declarations: [ ActionComponent ],
       schemas: [ NO_ERRORS_SCHEMA ],
@@ -20,7 +23,8 @@ describe('ActionComponent', () => {
         BrowserAnimationsModule,
         MatIconModule,
         MatButtonToggleModule,
-        MatBadgeModule]
+        MatBadgeModule],
+      providers: [{provide: WrapperService, useValue: wrapperServiceSpy}]
     })
     .compileComponents();
   }));

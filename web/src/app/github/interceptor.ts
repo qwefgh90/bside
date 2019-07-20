@@ -22,7 +22,11 @@ export class Interceptor implements HttpInterceptor {
         Observable<HttpEvent<any>> {
         let wrapperReq: HttpRequest<any>;
         if ((req.method.toLowerCase() == "get") && this.etagMap.has(this.getKey(req))) {
-            wrapperReq = req.clone({ headers: req.headers.set('If-None-Match', this.etagMap.get(this.getKey(req))) }); //use ETag
+            wrapperReq = req.clone({ headers: req.headers.set('If-None-Match', this.etagMap.get(this.getKey(req)))
+                // .set('Cache-Control', 'no-cache')
+                // .set('Pragma', 'no-cache')
+                // .set('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
+            }); //use ETag
         } else {
             wrapperReq = req;
         }

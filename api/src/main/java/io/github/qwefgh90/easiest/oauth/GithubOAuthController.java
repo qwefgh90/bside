@@ -1,9 +1,6 @@
 package io.github.qwefgh90.easiest.oauth;
 
 import io.github.qwefgh90.easiest.config.InitialData;
-import io.github.qwefgh90.easiest.http.HttpUtil;
-import io.github.qwefgh90.easiest.oauth.filter.OAuthToken;
-import io.github.qwefgh90.easiest.oauth.filter.OAuthUser;
 import io.github.qwefgh90.easiest.security.SecurityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,11 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.*;
 
 @RestController

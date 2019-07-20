@@ -25,6 +25,7 @@ import { TabComponent } from './tab/tab.component';
 import { DatabaseToken } from 'src/app/db/database';
 import { LocalDbService } from 'src/app/db/local-db.service';
 import { WorkspaceService } from './workspace.service';
+import { DeviceDetectorModule, DeviceDetectorService } from 'ngx-device-detector';
 
 @Component({selector: 'app-stage', template: ''})
 class StageComponent {
@@ -105,6 +106,7 @@ describe('WorkspaceComponent', () => {
   let branchesSpy;
   let treeSpy;
   let getBlobSpy;
+  let getPageBranchSpy;
   let workspaceService: WorkspaceService;
 
   function mockWrapperServiceSpy(){
@@ -112,6 +114,7 @@ describe('WorkspaceComponent', () => {
     branchesSpy.and.returnValue(Promise.resolve(branches));
     treeSpy.and.returnValue(Promise.resolve(tree));
     getBlobSpy.and.returnValue(Promise.resolve(blob1));
+    getPageBranchSpy.and.returnValue(Promise.resolve());
   }
 
   beforeEach(async(() => {
@@ -119,11 +122,12 @@ describe('WorkspaceComponent', () => {
     routeStub = new ActivatedRouteStub({});
     routeStub.setParamMap({userId: 'id', repositoryName: 'repo'});
     routeStub.setQueryParamMap( {branch:'master'});    
-    wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['repositoryDetails', 'branches', 'tree', 'getBlob']);
+    wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['repositoryDetails', 'branches', 'tree', 'getBlob', 'getPageBranch']);
     repositoryDetailsSpy = wrapperServiceSpy.repositoryDetails;
     branchesSpy = wrapperServiceSpy.branches;
     treeSpy = wrapperServiceSpy.tree;
     getBlobSpy = wrapperServiceSpy.getBlob;
+    getPageBranchSpy = wrapperServiceSpy.getPageBranch;
     mockWrapperServiceSpy();
     TestBed.configureTestingModule({
       declarations: [WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent, CommitProgressComponent, TabComponent],
@@ -150,7 +154,8 @@ describe('WorkspaceComponent', () => {
         MatInputModule,
         MatBadgeModule,
         MarkdownModule.forRoot(),
-        MatTabsModule
+        MatTabsModule,
+        DeviceDetectorModule.forRoot()
       ],
     }).compileComponents();
   }));
@@ -343,6 +348,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
   let branchesSpy;
   let treeSpy;
   let getBlobSpy;
+  let getPageBranchSpy;
   let workspaceService: WorkspaceService;
 
   function mockWrapperServiceSpy(){
@@ -350,6 +356,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     branchesSpy.and.returnValue(Promise.resolve(branches));
     treeSpy.and.returnValue(Promise.resolve(tree));
     getBlobSpy.and.returnValue(Promise.resolve(blob1));
+    getPageBranchSpy.and.returnValue(Promise.resolve());
   }
 
   beforeEach(async(() => {
@@ -357,11 +364,12 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     routeStub = new ActivatedRouteStub({});
     routeStub.setParamMap({userId: 'id', repositoryName: 'repo'});
     routeStub.setQueryParamMap( {branch:'master'});    
-    wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['repositoryDetails', 'branches', 'tree', 'getBlob']);
+    wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['repositoryDetails', 'branches', 'tree', 'getBlob', 'getPageBranch']);
     repositoryDetailsSpy = wrapperServiceSpy.repositoryDetails;
     branchesSpy = wrapperServiceSpy.branches;
     treeSpy = wrapperServiceSpy.tree;
     getBlobSpy = wrapperServiceSpy.getBlob;
+    getPageBranchSpy = wrapperServiceSpy.getPageBranch;
     mockWrapperServiceSpy();
     TestBed.configureTestingModule({
       declarations: [WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent, CommitProgressComponent, TabComponent],
@@ -388,7 +396,8 @@ describe('WorkspaceComponent with WorkspaceService', () => {
         MatInputModule,
         MatBadgeModule,
         MarkdownModule.forRoot(),
-        MatTabsModule
+        MatTabsModule,
+        DeviceDetectorModule.forRoot()
       ],
     }).compileComponents();
   }));

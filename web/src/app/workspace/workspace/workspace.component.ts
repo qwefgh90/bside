@@ -29,6 +29,7 @@ import {
   transition,
   // ...
 } from '@angular/animations';
+import { DeviceDetectorService } from 'ngx-device-detector';
 
 declare const monaco;
 
@@ -69,7 +70,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   WorkspaceStatus = WorkspaceStatus;
   constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute
     , private router: Router, private sanitizer: DomSanitizer, @Inject(DatabaseToken) private database: Database
-    , private workspaceService: WorkspaceService) { 
+    , private workspaceService: WorkspaceService
+    , public detector: DeviceDetectorService) { 
   }
 
   @ViewChild("tree") tree: GithubTreeComponent;
@@ -104,6 +106,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   modificationSubject = new Subject<void>();
   subjectWithoutSaveFile = new Subject<string>();
+  
   subjectWithSaveFile = new Subject<WorkspacePack>();
   refreshSubject = new Subject<void>()
   subscriptions: Array<Subscription> = []

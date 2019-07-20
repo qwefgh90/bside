@@ -21,6 +21,7 @@ import { TabComponent } from './workspace/tab/tab.component';
 import { MarkdownModule } from 'ngx-markdown';
 import { Database, DatabaseToken } from '../db/database'
 import { LocalDbService } from '../db/local-db.service'
+import { DeviceDetectorModule } from 'ngx-device-detector';
 
 @NgModule({
   declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent, UploadComponent, DiffEditorComponent, CommitProgressComponent, TabComponent],
@@ -44,7 +45,8 @@ import { LocalDbService } from '../db/local-db.service'
     MatButtonToggleModule,
     MatBadgeModule,
     MatTabsModule,
-    MarkdownModule.forRoot()
+    MarkdownModule.forRoot(),    
+    DeviceDetectorModule.forRoot()
   ],
   providers: [{provide: DatabaseToken, useClass: LocalDbService}]
 })

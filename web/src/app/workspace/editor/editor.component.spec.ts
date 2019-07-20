@@ -4,6 +4,7 @@ import { EditorComponent } from './editor.component';
 import { MatSidenavModule, MatProgressSpinnerModule } from '@angular/material';
 import { DiffEditorComponent } from '../diff-editor/diff-editor.component';
 import { MarkdownModule } from 'ngx-markdown';
+import { DeviceDetectorModule } from 'ngx-device-detector';
 
 describe('EditorComponent', () => {
   let component: EditorComponent;
@@ -14,7 +15,9 @@ describe('EditorComponent', () => {
       declarations: [ EditorComponent, DiffEditorComponent ],
       imports: [MatSidenavModule,
         MatProgressSpinnerModule,
-      MarkdownModule.forRoot()]
+      MarkdownModule.forRoot(),
+      DeviceDetectorModule.forRoot()
+    ]
     })
     .compileComponents();
   }));

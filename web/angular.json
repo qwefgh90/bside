@@ -21,7 +21,8 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
-              "src/.htaccess"
+              "src/.htaccess",
+              "src/assets/GitHub-Mark-32px.png"
             ],
             "styles": [
               "src/styles.css",
@@ -95,7 +96,8 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
-              "src/.htaccess"
+              "src/.htaccess",
+              "src/assets/GitHub-Mark-32px.png"
             ]
           }
         },

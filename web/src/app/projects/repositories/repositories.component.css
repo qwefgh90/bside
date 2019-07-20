@@ -11,7 +11,7 @@
 .repos{
     display: inline-block;
     text-align: left;
-    min-width: 30em;
+    /* min-width: 30em; */
     background-color: #f7f7f7;
     height: 100%;
 }

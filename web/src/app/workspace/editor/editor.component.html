@@ -1,4 +1,4 @@
-<div style="height: 100%; flex: 1;" (window:resize)="onResize($event)" [class.flex]="isNone" [class.none]="!isNone">
+<div style="height: 100%;" (window:resize)="onResize($event)" [class.flex]="isNone" [class.none]="!isNone">
   <div #editor class="monaco-editor" style="width:100%;height: 100%;" [class.shrink]="shrink"></div>
   <div style="align-items: center;
  display: flex;
@@ -9,7 +9,7 @@
   </div>
 </div>
 
-<div style="overflow: auto; flex: 1" [class.flex]="isMdOn" [class.none]="!isMdOn">
+<div style="overflow: auto; height: 100%;" [class.flex]="isMdOn" [class.none]="!isMdOn">
   <markdown [data]="markdown" style="width: 100%;"></markdown>
 </div>
-<app-diff-editor #diffeditor1 style="width: 100%; flex: 1;" [class.flex]="isDiffOn" [class.none]="!isDiffOn"></app-diff-editor>
+<app-diff-editor #diffeditor1 style="width: 100%; height: 100%;" [class.flex]="isDiffOn" [class.none]="!isDiffOn"></app-diff-editor>

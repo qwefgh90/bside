@@ -28,7 +28,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         var httpSecurity = http
                 .authorizeRequests()
-                .antMatchers("/login/github/", "/login/github/initialdata").permitAll()
+                .antMatchers("/login/github/", "/login/github/initialdata", "/templates", "/preview").permitAll()
                 .anyRequest().authenticated().and().csrf().disable();
         httpSecurity.addFilterBefore(oAuthFilter(authenticationManager()), BasicAuthenticationFilter.class);
 //                .and()

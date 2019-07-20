@@ -1,6 +1,6 @@
 package io.github.qwefgh90.easiest.oauth;
 
-import io.github.qwefgh90.easiest.http.HttpUtil;
+import io.github.qwefgh90.easiest.http.HttpUtilImpl;
 import org.eclipse.egit.github.core.User;
 import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.UserService;
@@ -35,7 +35,7 @@ public class GithubOAuthService {
     String access_token_url;
 
     @Resource
-    HttpUtil util;
+    HttpUtilImpl util;
 
     public Optional<String> getAccessToken(@RequestParam String state, @RequestParam String code) {
         HttpClient httpClient = HttpClient.newBuilder().build();

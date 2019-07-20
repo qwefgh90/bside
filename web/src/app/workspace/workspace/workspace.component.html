@@ -1,5 +1,5 @@
 <mat-drawer-container autosize style="width: 100%; height: 100%;">
-  <mat-drawer #leftDrawer mode="side">
+  <mat-drawer #leftDrawer mode="{{detector?.isDesktop() ? 'side' : 'over'}}">
     <div class="left-drawer" [class.none]="treeStatus == TreeStatus.Fail">
       <div class="left-drawer-content">
         <div style="width: 100%; height: 100%; display: flex; flex-flow: column">
@@ -90,7 +90,7 @@
     </div>
     <app-editor #editor1 style="flex:1; min-height: 0px;" 
       (changeContent)="nodeContentChanged($event)"
-      [class.flex]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
+      [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
       [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"></app-editor>
     <div style="flex:1; display: block; height: 100px "
       *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">

@@ -7,6 +7,7 @@ import { DiffEditor } from '../diff-editor/diff-editor';
 import { TypeState } from 'typestate';
 import { WorkspacePack } from '../workspace/workspace-pack';
 import { TextUtil, FileType } from '../text/text-util';
+import { DeviceDetectorService } from 'ngx-device-detector';
 
 const prefix: string = 'X'.repeat(100);
 enum EditorMode{
@@ -91,7 +92,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
     return this.fsm.currentState == EditorMode.None;
   }
 
-  constructor(private monacoService: MonacoService) {  
+  constructor(private monacoService: MonacoService, private deviceService: DeviceDetectorService) {  
     this.initFsm();
   }
 
@@ -134,10 +135,10 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
    * @param event 
    */
   onResize(event) {
-    if (window.innerHeight <= this.beforeHeight) {
-      this.shrinkExpand();
-    }
-    this.beforeHeight = window.innerHeight;
+    // if (window.innerHeight <= this.beforeHeight && this.deviceService.isDesktop()) {
+    //   this.shrinkExpand();
+    // }
+    // this.beforeHeight = window.innerHeight;
   }
   beforeHeight = 0;
   shrink = false;
