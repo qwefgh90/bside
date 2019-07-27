@@ -62,6 +62,7 @@
 
 .repository-tools{
     display: flex;
+    flex-direction: row;
     min-width: 12vw; 
     padding-bottom: 0.5em;
     font-size: 14px;

@@ -7,8 +7,11 @@
     padding-top: 2em; 
     padding-bottom: 2em; 
     text-align: center;
+    display: flex;
+    justify-content: center;
 }
 .repos{
+    flex: 0.1 0 auto;
     display: inline-block;
     text-align: left;
     /* min-width: 30em; */

@@ -10,17 +10,15 @@
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
     </div>
-    <div style="display:flex; align-items: center">
-      <button mat-icon-button>
-        <mat-icon aria-label="New file" title="New file" (click)="newNode('blob')">note_add</mat-icon>
-      </button>
-      <button mat-icon-button>
-        <mat-icon aria-label="New folder" title="New folder" (click)="newNode('tree')">create_new_folder</mat-icon>
-      </button>
-      <button mat-icon-button>
-        <mat-icon aria-label="Upload" title="Upload" (click)="uploadFile('')">cloud_upload</mat-icon>
-      </button>
-    </div>
+    <button mat-icon-button>
+      <mat-icon aria-label="New file" title="New file" (click)="newNode('blob')">note_add</mat-icon>
+    </button>
+    <button mat-icon-button>
+      <mat-icon aria-label="New folder" title="New folder" (click)="newNode('tree')">create_new_folder</mat-icon>
+    </button>
+    <button mat-icon-button>
+      <mat-icon aria-label="Upload" title="Upload" (click)="uploadFile('')">cloud_upload</mat-icon>
+    </button>
   </div>
   <mat-divider></mat-divider>
   <div class="tree-box">

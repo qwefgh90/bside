@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, ViewChildren, ViewChild, AfterContentInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, Inject, ViewChildren, ViewChild, AfterContentInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA, MatStepper } from '@angular/material';
 import { Validators, FormBuilder, FormGroup, AbstractControl, ValidationErrors } from '@angular/forms';
 import { WrapperService } from 'src/app/github/wrapper.service';
@@ -15,7 +15,7 @@ export interface ForkData {
   templateUrl: './fork.component.html',
   styleUrls: ['./fork.component.css']
 })
-export class ForkComponent implements OnInit, AfterContentInit {
+export class ForkComponent implements OnInit, AfterContentInit, OnDestroy {
 
   newName: string;
   firstFormGroup: FormGroup;
@@ -31,6 +31,9 @@ export class ForkComponent implements OnInit, AfterContentInit {
   selectedBranch = 'master';
   result: any;
   htmlUrl: string;
+  recommendedName: string;
+  recommendedBranch: string;
+  
 
   @ViewChild(MatStepper)
   stepper: MatStepper;
@@ -81,6 +84,7 @@ export class ForkComponent implements OnInit, AfterContentInit {
       });
       let branches = this.wrapper.branches(this.data.owner, this.data.repoName).then((arr: any[]) => {
         this.branches = arr.filter((b) => b.name == 'master' || b.name == 'gh-pages');
+        this.initBranch();
       }, () => {
         console.error("Branches can't be loaded.")
       })
@@ -94,30 +98,43 @@ export class ForkComponent implements OnInit, AfterContentInit {
         }
       )
       Promise.all([repos, branches, alreadyForkPromise]).then(() => {
-        this.firstFormGroup.get('newNameCtrl').setValue(this.recommendedName);
-        this.loading = false;
+        this._recommendedName().then((name) => {
+          this.firstFormGroup.get('newNameCtrl').setValue(name);
+          this.loading = false;
+          this.recommendedName = name;
+        })
       }, () => {
-        this.firstFormGroup.get('newNameCtrl').setValue(this.recommendedName);
-        this.loading = false;
+        this._recommendedName().then((name) => {
+          this.firstFormGroup.get('newNameCtrl').setValue(name);
+          this.loading = false;
+          this.recommendedName = name;
+        })
       })
     }, (reason) => {
       console.info("please sign in " + reason);
     });
-    
   }
 
-  ngAfterContentInit(){ 
+  initBranch(){
+    let isUserPage = this.isUserPageName(this.firstFormGroup.get('newNameCtrl').value);
+    this._recommendedBranch().then((b) => {
+      this.recommendedBranch = b;
+      if(b == 'master' || isUserPage){
+        this.secondFormGroup.get('branchCtrl').setValue("master");
+      }else{
+        this.secondFormGroup.get('branchCtrl').setValue(undefined);
+        this.secondFormGroup.get('branchCtrl').markAsUntouched;
+      }
+    });
+
+  }
+
+  ngAfterContentInit(){
     this.stepper.selectionChange.subscribe((v) => {
       if (v.selectedIndex == 0) {
-        let isUserPage = this.isUserPageName(this.firstFormGroup.get('newNameCtrl').value);
-        if (isUserPage)
-          this.secondFormGroup.get('branchCtrl').setValue("master");
-        else {
-          this.secondFormGroup.get('branchCtrl').setValue(undefined);
-          this.secondFormGroup.get('branchCtrl').markAsUntouched;
-        }
+        this.initBranch();
       }
-    })
+    });
   }
 
   exist(name: string){
@@ -132,91 +149,119 @@ export class ForkComponent implements OnInit, AfterContentInit {
       return false;
   }
 
-  async clone(){
+  async clone() {
     this.btnOpts.active = true;
     this.btnOpts.text = 'Cloning'
-    this.wrapper.fork(this.data.owner, this.data.repoName).then((v) => {
-      let owner = v.owner.login;
-      let oldName = v.name;
-      let newName = this.firstFormGroup.get('newNameCtrl').value;
-      let timeout = setInterval(() => {
+    let v = await this.wrapper.fork(this.data.owner, this.data.repoName)
+    let owner = v.owner.login;
+    let oldName = v.name;
+    let newName = this.firstFormGroup.get('newNameCtrl').value;
+    let intervalForCheckingBuild;
+    let intervalOfCreating;
+    let countOfCheckingCreating = 0;
+    intervalOfCreating = setInterval(async () => {
+      try {
         this.btnOpts.text = 'Checking'
-        this.wrapper.repositories(v.owner.login).then(repos => {
-          let idx = repos.findIndex((v) => 
-            v.name == oldName
-          );
-          if(idx != -1){
-            console.log(`fork() is successful. ${timeout} is stopped.`);
-            clearTimeout(timeout);
-              this.btnOpts.text = 'Renaming'
-              this.wrapper.rename(owner, oldName, newName).then((v) => {
-                console.log("rename() is successful.");
-                this.htmlUrl = v.html_url;
-                this.btnOpts.text = 'Updating page'
-                let pageInfo = this.wrapper.getPageBranch(owner, newName);
-                pageInfo.then((info) => {
-                  let branchChange;
-                  if(info == undefined){
-                    branchChange = this.wrapper.createPageBranch(owner, newName, this.secondFormGroup.get('branchCtrl').value).then(() => {
-                      this.result = v;
-                      console.log("createPageBranch() is successful.");
-                    });
-                  }else{
-                    branchChange = this.wrapper.updatePageBranch(owner, newName, this.secondFormGroup.get('branchCtrl').value).then(() => {
-                      this.result = v;
-                      console.log("setPageBranch() is successful.");
-                    });
-                  }
-                  this.btnOpts.text = 'Building page'
-                  setTimeout(() => {
-                    let build1 = branchChange.then(() => {
-                      this.wrapper.buildPage(owner, newName).then(() => {
-                        // this.complete = true;
-                        console.log("It requests to build the page at first time.");
-                      });
-                    });
-                    let build2 = branchChange.then(() => {
-                      this.wrapper.buildPage(owner, newName).then(() => {
-                        // this.complete = true;
-                        console.log("It requests to build the page at second time.");
-                      });
-                    });
-                    let build3 = branchChange.then(() => {
-                      this.wrapper.buildPage(owner, newName).then(() => {
-                        // this.complete = true;
-                        console.log("It requests to build the page at third time.");
-                      });
-                    });
-                    Promise.all([build1, build2, build3]).then(()=> {
-                      let timeoutForCheckingBuild = setInterval( () => {
-                        this.wrapper.buildStatus(owner, newName).then((v) => {
-                          if (v.length > 0) {
-                            if (v[0].status == 'built') {
-                              clearTimeout(timeoutForCheckingBuild);
-                              this.complete = true;
-                            }
-                          }
-                        }, () => {
-                          clearTimeout(timeoutForCheckingBuild);
-                        })
-                      }, 2000);
-                    });
-                  }, 3000);
-                })
-              });
+        let repos = await this.wrapper.repositories(v.owner.login);
+        let idx = repos.findIndex((v) =>
+          v.name == oldName
+        );
+        if (idx != -1) {
+          console.log(`fork() is successful. ${intervalOfCreating} is stopped.`);
+          clearTimeout(intervalOfCreating);
+          this.btnOpts.text = 'Renaming'
+          await this.wrapper.rename(owner, oldName, newName);
+          console.log("rename() is successful.");
+          this.htmlUrl = v.html_url;
+          this.btnOpts.text = 'Updating page'
+          let info = await this.wrapper.getPageBranch(owner, newName);
+          let branchChange;
+          if (info == undefined) {
+            await this.wrapper.createPageBranch(owner, newName, this.secondFormGroup.get('branchCtrl').value)
+            this.result = v;
+            console.log("createPageBranch() is successful.");
+          } else {
+            await this.wrapper.updatePageBranch(owner, newName, this.secondFormGroup.get('branchCtrl').value)
+            this.result = v;
+            console.log("setPageBranch() is successful.");
           }
-        })
-      }, 5000);
-    });
+          this.btnOpts.text = 'Building page'
+          let countOfCheckingBuild = 0;
+          await setTimeout(async () => { }, 3000);
+          await this.wrapper.buildPage(owner, newName);
+          // this.complete = true;
+          console.log("It requests to build the page at first time.");
+          intervalForCheckingBuild = setInterval(async () => {
+            try {
+              let buildStatus = await this.wrapper.buildStatus(owner, newName)
+              if (buildStatus.length > 0) {
+                if (buildStatus[0].status == 'built') {
+                  clearTimeout(intervalForCheckingBuild);
+                  this.complete = true;
+                } else if (buildStatus[0].status == 'errored') {
+                  clearTimeout(intervalForCheckingBuild);
+                  this.complete = true;
+                }
+              }
+              if (countOfCheckingBuild >= 10) {
+                clearTimeout(intervalForCheckingBuild);
+              }
+              countOfCheckingBuild++;
+            } catch (e) {
+              console.error(e);
+              if (intervalForCheckingBuild != undefined) {
+                clearInterval(intervalForCheckingBuild);
+              }
+            }
+          }, 2000);
+        }
+        if (countOfCheckingCreating >= 10) {
+          clearTimeout(countOfCheckingCreating);
+        }
+        countOfCheckingCreating++;
+
+      } catch (e) {
+        console.error(e);
+        if (intervalOfCreating != undefined) {
+          clearInterval(intervalOfCreating);
+        }
+      }
+    }, 5000);
   }
 
-  
-  get recommendedName(): string {
+  /**
+   * precedence
+   * 1) user page if repo name ends with github.io
+   * 2) user page if recommened branch is master
+   * 3) project page with old name
+   */
+  async _recommendedName(): Promise<string> {
     let oldName = this.data.repoName;
-    if(oldName.endsWith(".github.io") || oldName.endsWith(".github.com")){
-      return `${this.loginUserName}.github.io`;
+    let branch = await this._recommendedBranch();
+
+    if(oldName.endsWith(".github.io") 
+      || oldName.endsWith(".github.com")){
+      return Promise.resolve(`${this.loginUserName}.github.io`);
     }else
-      return oldName;
+      return Promise.resolve(oldName);
+  }
+
+  /**
+   * precedence
+   * 1) the branch which is selected for page
+   * 2) master branch if master exists alone
+   * 3) none
+   */
+  async _recommendedBranch(): Promise<string>{
+    let master = this.branches.find((b) => b.name.toLowerCase() == 'master')
+    let ghPage = this.branches.find((b) => b.name.toLowerCase() == 'gh-pages')
+    let pageBranch = await this.wrapper.getPageBranch(this.data.owner, this.data.repoName);
+    if(pageBranch != undefined){
+      return Promise.resolve(pageBranch.source.branch);
+    }else if(master != undefined && ghPage == undefined){
+      return Promise.resolve('master');
+    }else
+      return Promise.resolve(undefined);
   }
 
   // Button Options
@@ -235,4 +280,7 @@ export class ForkComponent implements OnInit, AfterContentInit {
     mode: 'indeterminate',
   };
 
+  ngOnDestroy(){
+
+  }
 }

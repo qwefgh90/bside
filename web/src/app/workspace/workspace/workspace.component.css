@@ -1,10 +1,12 @@
 .left-drawer-content{
     max-width: 30vw;
-    height: 100%;
+    /* height: 100%; */
+    display: flex;
+    margin-right: 1em;
+    margin-left: 1em;
 }
 
 .left-drawer{
-    padding-left: 1em;
     height: 100%;
     display: flex;
 }
@@ -13,17 +15,18 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    background-color: #eaeaea;
+    background: #673ab7;
+    cursor: pointer;
+    text-align: center;
 }
 
 .left-fold .mat-icon{
-    font-size: 20px;
-    width: 20px;
+    width: unset;
+    height: unset;
+    color: white;
+    font-size: 0.8em;
 }
 
-.left-fold :hover{
-    cursor: pointer;
-}
 
 .container {
     display: flex;
@@ -77,5 +80,8 @@
     word-break: break-word;
 }
 .loading{
-    display: flex; flex-direction: column; justify-content: center; align-items: center;  width: 100%; height: 100%;
+    margin-left: 1em;
+    margin-right: 1em;
+    justify-content: center;
+    align-items: center;
 }

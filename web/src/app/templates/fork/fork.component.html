@@ -41,6 +41,8 @@
                 {{branch.name}}
               </mat-option>
             </mat-select>
+            <mat-hint *ngIf="recommendedBranch != undefined"><strong>{{recommendedBranch}}</strong> is recommended.</mat-hint>
+            
             <mat-error *ngIf="secondFormGroup.get('branchCtrl').hasError('required')">
               Branch is <strong>required</strong>.
             </mat-error>

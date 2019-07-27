@@ -114,9 +114,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   @ViewChild("leftDrawer") leftPane: MatDrawer;
   @ViewChild("rightDrawer") rightPane: MatDrawer;
 
-  @HostListener('document:keydown.escape', ['$event']) onKeydownHandler(event: KeyboardEvent) {
-    this.toggle();  
-  }
+  // @HostListener('document:keydown.escape', ['$event']) onKeydownHandler(event: KeyboardEvent) {
+  //   this.toggle();  
+  // }
   
   saving = false;
   

@@ -24,7 +24,8 @@ describe('RepositoriesComponent', () => {
       imports: [MatListModule, MatIconModule, MatProgressSpinnerModule, MatDividerModule, MatInputModule,
         FormsModule,
         ReactiveFormsModule, 
-        BrowserAnimationsModule]
+        BrowserAnimationsModule,
+        FlexLayoutModule]
     })
       .compileComponents();
   }));
@@ -76,6 +77,7 @@ describe('RepositoriesComponent', () => {
 import { convertToParamMap, ParamMap, Params } from '@angular/router';
 import { ReplaySubject } from 'rxjs';
 import { Input, HostListener, Directive } from '@angular/core';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 export class ActivatedRouteStub {
   // Use a ReplaySubject to share previous values with subscribers

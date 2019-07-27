@@ -6,6 +6,7 @@ import { RepositoriesComponent } from './repositories/repositories.component';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule, MatProgressSpinnerModule, MatDividerModule, MatInputModule } from '@angular/material';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FlexLayoutModule } from '@angular/flex-layout';
 @NgModule({
   declarations: [RepositoriesComponent],
   imports: [
@@ -18,6 +19,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     MatInputModule,
     FormsModule,
     ReactiveFormsModule,
+    FlexLayoutModule
   ]
 })
 export class ProjectsModule { }
