@@ -9,5 +9,6 @@ router-outlet + ::ng-deep * {
     display: flex;
     justify-content: center;
     min-height: 0px;
+    flex-direction: column;
     /* height: 1000px; */
 }
