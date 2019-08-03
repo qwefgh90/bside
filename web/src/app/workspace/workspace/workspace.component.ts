@@ -110,6 +110,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   subjectWithSaveFile = new Subject<WorkspacePack>();
   refreshSubject = new Subject<void>()
   subscriptions: Array<Subscription> = []
+  leftPaneOpened = false;
 
   @ViewChild("leftDrawer") leftPane: MatDrawer;
   @ViewChild("rightDrawer") rightPane: MatDrawer;
@@ -383,7 +384,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   ngAfterContentInit() {
     this.toggle();
-    this.rightPane.toggle();
+    // this.rightPane.toggle();
   }
 
   ngOnDestroy() {
@@ -396,8 +397,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   toggle() {
-    this.leftPane.toggle();
-    this.editor1.shrinkExpand();
+    // this.leftPane.toggle();
+    this.leftPaneOpened = !this.leftPaneOpened;
+    if(this.leftPaneOpened)
+      this.editor1.shrinkExpand();
   }
  
   getImage(base64: string, mediaType: string): SafeResourceUrl{

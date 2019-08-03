@@ -26,6 +26,7 @@ import { DatabaseToken } from 'src/app/db/database';
 import { LocalDbService } from 'src/app/db/local-db.service';
 import { WorkspaceService } from './workspace.service';
 import { DeviceDetectorModule, DeviceDetectorService } from 'ngx-device-detector';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 @Component({selector: 'app-stage', template: ''})
 class StageComponent {
@@ -155,7 +156,8 @@ describe('WorkspaceComponent', () => {
         MatBadgeModule,
         MarkdownModule.forRoot(),
         MatTabsModule,
-        DeviceDetectorModule.forRoot()
+        DeviceDetectorModule.forRoot(),
+        FlexLayoutModule
       ],
     }).compileComponents();
   }));
@@ -397,7 +399,8 @@ describe('WorkspaceComponent with WorkspaceService', () => {
         MatBadgeModule,
         MarkdownModule.forRoot(),
         MatTabsModule,
-        DeviceDetectorModule.forRoot()
+        DeviceDetectorModule.forRoot(),
+        FlexLayoutModule
       ],
     }).compileComponents();
   }));

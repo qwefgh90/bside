@@ -25,17 +25,19 @@ export class ActionComponent implements OnInit, OnChanges {
   ngOnInit() {
   }
   ngOnChanges(s: SimpleChanges) {
-    let repo = s['repository'].currentValue;
-    if(repo != undefined){
-      let pageBranch = this.wrapper.getPageBranch(repo.owner.login, repo.name);
-      pageBranch.then((v) => {
-        if(v == undefined)
+    if (s['repository'] != undefined) {
+      let repo = s['repository'].currentValue;
+      if (repo != undefined) {
+        let pageBranch = this.wrapper.getPageBranch(repo.owner.login, repo.name);
+        pageBranch.then((v) => {
+          if (v == undefined)
+            this.htmlUrl = undefined;
+          else
+            this.htmlUrl = v.html_url;
+        }, () => {
           this.htmlUrl = undefined;
-        else
-          this.htmlUrl = v.html_url;
-      }, () => {
-        this.htmlUrl = undefined;
-      })
+        })
+      }
     }
   }
 

@@ -76,13 +76,13 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
         }
       },
       [KEYS.DOWN]: (tree, node, $event) => {//Prevent default behavior which is focus(true)
-        let nextNode = node.findNextNode();
+        let nextNode = node.findNextNode(false, true);
         if(nextNode != null){
           nextNode.focus(false);
         }
       },
       [KEYS.UP]: (tree, node, $event) => {//Prevent default behavior which is focus(true)
-        let previousNode = node.findPreviousNode();
+        let previousNode = node.findPreviousNode(true);
         if(previousNode != null){
           previousNode.focus(false);
         }

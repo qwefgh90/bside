@@ -14,6 +14,7 @@ import { GithubModule } from './github/github.module';
 import { OAuthService } from './oauth/service/o-auth.service';
 import { WorkspaceModule } from './workspace/workspace.module';
 import { TemplatesModule } from './templates/templates.module';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 export function initAuth(oauthService: OAuthService){
   return () => oauthService.initAccessTokenOnSession();
@@ -40,7 +41,8 @@ export function initAuth(oauthService: OAuthService){
     GithubModule,
     MatProgressSpinnerModule,
     MatDividerModule,
-    MatBadgeModule
+    MatBadgeModule,
+    FlexLayoutModule
   ],
   providers: [{ provide: APP_INITIALIZER, useFactory: initAuth, deps: [OAuthService], multi: true }],
   bootstrap: [AppComponent]

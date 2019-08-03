@@ -1,3 +1,19 @@
+.content-pane{
+    min-width: 0px;
+    flex: 1;
+}
+
+.right-pane-group{
+    display: flex; 
+    min-width: 0; 
+    flex-direction: row; 
+    flex:1;
+}
+
+.left-pane{
+    display: flex;
+}
+
 .left-drawer-content{
     max-width: 30vw;
     /* height: 100%; */
@@ -15,7 +31,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    background: #673ab7;
+    background: #c2c2c2;
     cursor: pointer;
     text-align: center;
 }

@@ -2,8 +2,8 @@
 <div class="frame">
     <app-header style="display: flex;"></app-header>
     <router-outlet></router-outlet>
-    <mat-divider></mat-divider>
-    <div style="background: #673ab7;height: 40px; display: flex; color: white; align-items: center;">
+    <mat-divider *ngIf="!inWorkspace"></mat-divider>
+    <div *ngIf="!inWorkspace" style="background: #673ab7;height: 40px; display: flex; color: white; align-items: center; height: 1.8em;">
         <div>
             <a href="https://github.com/qwefgh90/easiest" target="_blank" style="color: white; margin-left: 1em; font-size: 0.9em;">Github</a>
         </div>

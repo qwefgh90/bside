@@ -6,7 +6,7 @@
 
 router-outlet + ::ng-deep * {
     flex-grow: 1;
-    min-height: 0px;
+    display: flex;
+    justify-content: center;
     /* height: 1000px; */
-    /* display: flex; */
 }

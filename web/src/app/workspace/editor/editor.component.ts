@@ -135,12 +135,14 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
    * @param event 
    */
   onResize(event) {
-    // if (window.innerHeight <= this.beforeHeight && this.deviceService.isDesktop()) {
-    //   this.shrinkExpand();
-    // }
+    if (window.innerWidth < this.beforeWidth && this.deviceService.isDesktop()) {
+      this.shrinkExpand();
+    }
     // this.beforeHeight = window.innerHeight;
+    this.beforeWidth = window.innerWidth;
   }
-  beforeHeight = 0;
+  // beforeHeight = 0;
+  beforeWidth = 0;
   shrink = false;
 
   /**

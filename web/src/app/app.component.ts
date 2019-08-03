@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Route, ActivatedRoute, Router, ActivationEnd } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -7,4 +8,16 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'web';
+  inWorkspace = false;
+  constructor(private route: ActivatedRoute, private router: Router){
+    router.events.subscribe((e) => {
+      if(e instanceof ActivationEnd){
+        let route = e.snapshot.routeConfig;
+        if(route.path == 'repos/:userId/:repositoryName')
+          this.inWorkspace = true;
+        else
+          this.inWorkspace = false;
+      }
+    })
+  }
 }

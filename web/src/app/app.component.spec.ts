@@ -4,6 +4,7 @@ import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/header.component';
 import { MatButtonModule, MatIconModule, MatToolbarModule, MatMenuModule, MatProgressSpinnerModule, MatSpinner, MatDividerModule } from '@angular/material';
 import { AuthModule } from './oauth/auth.module';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
@@ -16,7 +17,8 @@ describe('AppComponent', () => {
         MatButtonModule,
         MatMenuModule,
         MatProgressSpinnerModule,
-        MatDividerModule
+        MatDividerModule,
+        FlexLayoutModule
       ],
       declarations: [
         AppComponent, HeaderComponent
