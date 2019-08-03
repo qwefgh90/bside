@@ -76,7 +76,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
         }
       },
       [KEYS.DOWN]: (tree, node, $event) => {//Prevent default behavior which is focus(true)
-        let nextNode = node.findNextNode(false, true);
+        let nextNode = node.findNextNode(true, true);
         if(nextNode != null){
           nextNode.focus(false);
         }
@@ -152,11 +152,11 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   }
 
   private visibleNodes(){
-    let all: TreeNode[] = [this.treeComponent.treeModel.virtualRoot.children[0]]
-    let currentNode = this.treeComponent.treeModel.virtualRoot.children[0].findNextNode(true);
+    let all: TreeNode[] = this.treeComponent.treeModel.virtualRoot.children[0].isHidden ? [] : [this.treeComponent.treeModel.virtualRoot.children[0]];
+    let currentNode = this.treeComponent.treeModel.virtualRoot.children[0].findNextNode(true, true);
     while(currentNode != null){
       all.push(currentNode);
-      currentNode = currentNode.findNextNode(true);
+      currentNode = currentNode.findNextNode(true, true);
     }
     return all;
   }
@@ -350,7 +350,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
 
   refreshTree() {
     this.treeComponent.treeModel.update();
-    this.searchInputFormControl.setValue('');
+    // this.searchInputFormControl.setValue('');
   }
 
   restore(packs: BlobPack[]){

@@ -1,4 +1,4 @@
-<div style="display:flex; flex-direction: column; flex:1;">
+<div style="display:flex; flex-direction: column; flex:1; min-width: 0px">
   <div style="display: flex; flex: 1" fxLayout.xs="column" fxLayout.sm="column">
     <div class="left-pane" fxFlex.xs="100" fxFlex.sm="100" [ngStyle.xs]="{'min-height.vh': 80}"
       [ngStyle.sm]="{'min-height.vh': 80}">
@@ -9,7 +9,7 @@
             <div style="display: flex; flex:1; justify-content: center; align-items: center;"
               *ngIf="(treeStatus == TreeStatus.Loading)">
               <div class="loading">
-                <mat-spinner [strokeWidth]="3"></mat-spinner>
+                <mat-spinner [strokeWidth]="4"></mat-spinner>
                 <div>Loading...</div>
               </div>
             </div>
@@ -43,7 +43,7 @@
         <mat-icon *ngIf="!leftPaneOpened">chevron_right</mat-icon>
       </div>
     </div>
-    <div class="right-pane-group" [ngStyle.xs]="{'min-height.vh': 100}" [ngStyle.sm]="{'min-height.vh': 100}">
+    <div class="right-pane-group" [ngStyle.xs]="{'min-height.vh': 100, 'margin-left.em': '1', 'margin-right.em': '0.2'}" [ngStyle.sm]="{'min-height.vh': 100, 'margin-left.em': '1', 'margin-right.em': '0.2'}">
       <div class="content-pane">
         <div style="display: flex; flex-direction: column; flex:1; height: 100%; width: 100%;">
           <div class="toolbar" *ngIf="selectedNodePath != undefined" [class.none]="treeStatus != TreeStatus.Done"
@@ -103,7 +103,7 @@
           <div style="display: flex; flex:1; justify-content: center; align-items: center;"
             *ngIf="(contentStatus == ContentStatus.Loading)">
             <div class="loading">
-              <mat-spinner [strokeWidth]="3"></mat-spinner>
+              <mat-spinner [strokeWidth]="4"></mat-spinner>
               <div>Loading...</div>
             </div>
           </div>

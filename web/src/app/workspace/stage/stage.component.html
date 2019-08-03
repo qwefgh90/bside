@@ -1,10 +1,11 @@
 <div style="width: 100%; height: 100%; display: flex; flex-flow: column">
   <div class="repository-title">
-    <div style="flex: 1;padding-left: 0.3em;">
+    <div style="flex: 1;">
       <h3 style="display:inline;">Staged</h3>
     </div>
     <div>
-      <mat-icon style="cursor: pointer" [matMenuTriggerFor]="appMenuForRoot" class="context-menu-button" title="Repository menu">
+      <mat-icon style="cursor: pointer" [matMenuTriggerFor]="appMenuForRoot" class="context-menu-button"
+        title="Repository menu">
         arrow_drop_down</mat-icon>
       <mat-menu #appMenuForRoot="matMenu" xPosition="before">
         <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="undoAll()">
@@ -13,30 +14,34 @@
       </mat-menu>
     </div>
   </div>
-  <mat-divider></mat-divider>
-  <div style="text-align: center; margin-top: 1em" *ngIf="modifiedNodes ? (modifiedNodes.length == 0) : false">
-    <span>Nothing to commit</span>
-  </div>
-  <div class="tree-box">
-    <!-- <div style="height: 100%; overflow-y: scroll;"> -->
-    <tree-root #tree1 id="tree" [nodes]="modifiedNodes" [options]="options" [focused]="true">
-      <ng-template #treeNodeWrapperTemplate let-node let-index="index" let-templates="templates">
-        <div class="node-wrapper" [style.padding-left]="node.getNodePadding()">
-          <div class="node-content-wrapper" style="width: 100%; display: flex"
-            [class.node-content-wrapper-active]="selectedNode == node"
-            [class.node-content-wrapper-focused]="node.isFocused" (click)="node.mouseAction('click', $event)"
-            (dblclick)="node.mouseAction('dblClick', $event)" (contextmenu)="node.mouseAction('contextMenu', $event)"
-            (treeDrop)="node.onDrop($event)" [treeAllowDrop]="node.allowDrop" [treeDrag]="node"
-            [treeDragEnabled]="node.allowDrag()">
-            <div class="node-title" (click)="selectNode(node)">
-              <mat-icon *ngIf="!(node.data.type == 'tree')">description</mat-icon>
-              <mat-icon *ngIf="node.data.type == 'tree'">
-                {{!node.isExpanded ? 'folder' : 'folder_open'}}
-              </mat-icon>
-              <span style="line-height: 24px; flex: 1">{{node.data.name}}</span>
-              <div style="margin-left: 1em;" *ngIf="getLabels(node.data).length != 0"><span style="font-size: 0.5em" *ngFor="let l of getLabels(node.data)" title="{{l.name}}">{{l.short}}&nbsp;</span></div>
-            </div>
-            <!-- <div>
+
+  <div class="tree-box-outer">
+    <label style="color:#b6b6b6;">Tree</label>
+    <mat-divider></mat-divider>
+    <div style="text-align: center; margin-top: 1em" *ngIf="modifiedNodes ? (modifiedNodes.length == 0) : false">
+      <span>Nothing to commit</span>
+    </div>
+    <div class="tree-box">
+      <!-- <div style="height: 100%; overflow-y: scroll;"> -->
+      <tree-root #tree1 id="tree" [nodes]="modifiedNodes" [options]="options" [focused]="true">
+        <ng-template #treeNodeWrapperTemplate let-node let-index="index" let-templates="templates">
+          <div class="node-wrapper" [style.padding-left]="node.getNodePadding()">
+            <div class="node-content-wrapper" style="width: 100%; display: flex"
+              [class.node-content-wrapper-active]="selectedNode == node"
+              [class.node-content-wrapper-focused]="node.isFocused" (click)="node.mouseAction('click', $event)"
+              (dblclick)="node.mouseAction('dblClick', $event)" (contextmenu)="node.mouseAction('contextMenu', $event)"
+              (treeDrop)="node.onDrop($event)" [treeAllowDrop]="node.allowDrop" [treeDrag]="node"
+              [treeDragEnabled]="node.allowDrag()">
+              <div class="node-title" (click)="selectNode(node)">
+                <mat-icon *ngIf="!(node.data.type == 'tree')">description</mat-icon>
+                <mat-icon *ngIf="node.data.type == 'tree'">
+                  {{!node.isExpanded ? 'folder' : 'folder_open'}}
+                </mat-icon>
+                <span style="line-height: 24px; flex: 1">{{node.data.name}}</span>
+                <div style="margin-left: 1em;" *ngIf="getLabels(node.data).length != 0"><span style="font-size: 0.5em"
+                    *ngFor="let l of getLabels(node.data)" title="{{l.name}}">{{l.short}}&nbsp;</span></div>
+              </div>
+              <!-- <div>
               <mat-icon [matMenuTriggerFor]="appMenu" class="context-menu-button" title="Menu">
                 arrow_drop_down</mat-icon>
               <mat-menu #appMenu="matMenu" xPosition="before">
@@ -45,19 +50,19 @@
                 </button>
               </mat-menu>
             </div> -->
+            </div>
           </div>
-        </div>
-      </ng-template>
-    </tree-root>
-  <!-- </div> -->
+        </ng-template>
+      </tree-root>
+      <!-- </div> -->
+    </div>
+    <mat-divider></mat-divider>
   </div>
   <mat-form-field appearance="outline" class="description">
     <mat-label>Leave an description</mat-label>
-    <textarea matInput placeholder="{{placeholder}}" [formControl]="description"
-    cdkTextareaAutosize
-    #autosize="cdkTextareaAutosize"
-    cdkAutosizeMinRows="4"
-    cdkAutosizeMaxRows="4"></textarea>
+    <textarea matInput placeholder="{{placeholder}}" [formControl]="description" cdkTextareaAutosize
+      #autosize="cdkTextareaAutosize" cdkAutosizeMinRows="4" cdkAutosizeMaxRows="4"></textarea>
   </mat-form-field>
-  <button mat-stroked-button style="margin-bottom: 1em" [disabled]="modifiedNodes ? (modifiedNodes.length == 0) : false" (click)="commit()">Commit</button>
+  <button mat-stroked-button style="margin-bottom: 1em" [disabled]="modifiedNodes ? (modifiedNodes.length == 0) : false"
+    (click)="commit()">Commit</button>
 </div>

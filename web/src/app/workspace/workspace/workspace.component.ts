@@ -271,8 +271,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         let doAfterLoadingTree: () => void;
         if (this.commitStatePack != undefined) {
           tree = Promise.resolve({ tree: this.commitStatePack.treePacks, sha: this.commitStatePack.tree_sha });
-          doAfterLoadingTree = () => this.subjectWithSaveFile.next(this.commitStatePack);
-          this.commitStatePack = undefined;
+          doAfterLoadingTree = () => {
+            this.subjectWithSaveFile.next(this.commitStatePack)
+            this.commitStatePack = undefined;
+          };
+          
         } else if (loadedPack != undefined) {
           tree = Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha });
           doAfterLoadingTree = () => this.subjectWithSaveFile.next(loadedPack);
@@ -492,7 +495,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   nodeMoved(fromPath: string, to: GithubTreeNode){
-    let isSelectedNode = this.selectedNodePath == fromPath;
+    let isSelectedNode = (this.selectedNodePath != undefined) && (this.selectedNodePath == fromPath);
     if(to.type == 'blob'){
       if (this.editor1.exist(fromPath)) {
         let content = this.editor1.getContent(fromPath);

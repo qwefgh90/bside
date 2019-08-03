@@ -54,7 +54,6 @@
     padding-top: 0.5em;
 }
 
-
 .context-menu-button{
     opacity: 0.4;
 }
@@ -67,4 +66,10 @@
     flex: 1;
     display: block;
     height: 10px;
+}
+
+.tree-box-outer{
+    flex: 1; 
+    flex-direction: column; 
+    display: flex;
 }
