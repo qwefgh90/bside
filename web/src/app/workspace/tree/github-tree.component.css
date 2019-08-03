@@ -88,4 +88,5 @@
     flex: 1; 
     flex-direction: column; 
     display: flex;
+    min-height: 0px;
 }

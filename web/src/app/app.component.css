@@ -8,5 +8,6 @@ router-outlet + ::ng-deep * {
     flex-grow: 1;
     display: flex;
     justify-content: center;
+    min-height: 0px;
     /* height: 1000px; */
 }
