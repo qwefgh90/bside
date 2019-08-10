@@ -3,7 +3,7 @@ import { Subject, Observable, Scheduler, ReplaySubject } from 'rxjs';
 import * as eq from 'fast-deep-equal';
 import { GithubTreeNode } from '../tree/github-tree-node';
 import { GithubTree } from '../tree/github-tree';
-import { observeOn, distinctUntilChanged, debounce, debounceTime } from 'rxjs/operators';
+import { observeOn, distinctUntilChanged, debounce, debounceTime, flatMap } from 'rxjs/operators';
 import { async } from 'rxjs/internal/scheduler/async';
 import { ReplaceSource } from 'webpack-sources';
 
@@ -21,12 +21,13 @@ export class WorkspaceService {
     WorkspaceCommand.CloseTab.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
     WorkspaceCommand.CreateNode.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
     WorkspaceCommand.RemoveNode.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
-    WorkspaceCommand.MoveNodeInTree.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
+    WorkspaceCommand.MoveNodeInTree.internalQueue.pipe(observeOn(async)).subscribe((v) => this.emit(v));
     WorkspaceCommand.UndoAll.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
     WorkspaceCommand.Save.internalQueue.pipe(observeOn(async))
-    .pipe(debounceTime(1000 + this.globalDebounceTime)).subscribe(
+    .pipe(debounceTime(2000 + this.globalDebounceTime)).subscribe(
       (v) => this.emit(v)
     );
+    WorkspaceCommand.NotifyContentChange.internalQueue.pipe(observeOn(async)).pipe(debounceTime(3000 + this.globalDebounceTime)).subscribe((v) => this.emit(v));
   }
 
   private emit(command: WorkspaceCommand.Command){
@@ -64,6 +65,11 @@ export class WorkspaceService {
   save(source: any){
     let c = new WorkspaceCommand.Save(source);
     WorkspaceCommand.Save.internalQueue.next(c);
+  }
+
+  notifyContentChange(source: any, path: string){
+    let c = new WorkspaceCommand.NotifyContentChange(path, source);
+    WorkspaceCommand.NotifyContentChange.internalQueue.next(c);
   }
   
   undoAll(source: any){
@@ -108,6 +114,13 @@ export namespace WorkspaceCommand {
     }
     static internalQueue = new Subject<SelectNode>();
   }
+  
+  export class NotifyContentChange{
+    constructor(public path: string, public source: any) {
+    }
+    static internalQueue = new Subject<SelectNode>();
+  }
+
   export class Save{
     constructor(public source: any) {
     }

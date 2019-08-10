@@ -214,7 +214,7 @@ describe('WorkspaceComponent', () => {
     let treeNodes = fixture.nativeElement.querySelectorAll('tree-node .node-title');
     treeNodes[0].click();
     fixture.detectChanges();
-    tick(3000);
+    tick(10000);
 
     expect(component.selectedNodePath).toBeDefined();
     expect(setContentSpy.calls.count()).toBe(1);
@@ -294,7 +294,7 @@ describe('WorkspaceComponent', () => {
 
     expect(setContentSpy.calls.all()[1].args[0]).toBe(arg.node.path);
     expect(setContentSpy.calls.all()[1].args[1]).toBe('aGVsbG8gd29ybGQh');
-    tick(3000);
+    tick(10000);
   }))
 
 });
@@ -435,7 +435,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     // let treeNodes = fixture.nativeElement.querySelectorAll('tree-node .node-title');
     // treeNodes[0].click();
     fixture.detectChanges();
-    tick(3000);
+    tick(10000);
 
     expect(nodeSelectedSpy.calls.count()).toBe(1);
     // expect(component.selectedNodePath).toBeDefined();
@@ -459,7 +459,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
 
     workspaceService.removeNode(undefined, GithubTreeNode.githubTreeNodeFactory.of(testNode));
     fixture.detectChanges();
-    tick(3000);
+    tick(10000);
 
     expect(nodeRemovedSpy.calls.count()).toBe(1);
   }))
@@ -481,7 +481,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
 
     workspaceService.createNode(undefined, GithubTreeNode.githubTreeNodeFactory.of(testNode));
     fixture.detectChanges();
-    tick(3000);
+    tick(10000);
 
     expect(nodeCreatedSpy.calls.count()).toBe(1);
   }))
@@ -502,7 +502,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
 
     workspaceService.moveNodeInTree(undefined, 'oldfile.txt', GithubTreeNode.githubTreeNodeFactory.of(testNode))
     fixture.detectChanges();
-    tick(3000);
+    tick(10000);
 
     expect(nodeMovedSpy.calls.count()).toBe(1);
   }))

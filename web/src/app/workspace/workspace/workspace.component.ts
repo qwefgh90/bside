@@ -127,13 +127,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     //It saves data when content is modified.
     this.subscriptions.push(this.modificationSubject.subscribe(() => {
       this.workspaceService.save(this);
-      this.saving = true;
     }));
     
     this.subscriptions.push(this.workspaceService.commandChannel.subscribe((command) => {
       if (command instanceof WorkspaceCommand.Save && (this.treeStatus == TreeStatusOnWorkspace.Done)) {
+        this.saving = true;
         this.database.save(this.pack);
-        this.saving = false;
+        setTimeout( () => this.saving = false, 1000);
       }else if(command instanceof WorkspaceCommand.UndoAll){
         this.database.delete(this.repositoryDetails.id, this.selectedBranch.commit.sha);
         this.selectedNodePath = undefined;
@@ -144,27 +144,26 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.subscriptions.push(this.workspaceService.commandChannel.subscribe((command) => {
       if (command.source != this) {
         if (command instanceof WorkspaceCommand.SelectNode) {
-            this.nodeSelected(command.path);
+          this.nodeSelected(command.path);
           this.workspaceService.save(this);
-          this.saving = true;
           this.editor1.shrinkExpand();
         }
         else if (command instanceof WorkspaceCommand.CreateNode) {
           if (this.selectedNodePath != command.node.path) {
             this.nodeCreated(command.node.path);
             this.workspaceService.save(this);
-            this.saving = true;
           }
         } else if (command instanceof WorkspaceCommand.RemoveNode) {
           this.nodeRemoved(command.node);
           this.workspaceService.save(this);
-          this.saving = true;
         } else if (command instanceof WorkspaceCommand.CloseTab) {
         } else if (command instanceof WorkspaceCommand.MoveNodeInTree) {
           this.nodeMoved(command.fromPath, command.to);
           this.workspaceService.save(this);
-          this.saving = true;
         } 
+        else if (command instanceof WorkspaceCommand.NotifyContentChange){
+          this.nodeContentChanged(command.path);
+        }
       }
       this.invalidateDirtyCount();
     }));

@@ -85,7 +85,7 @@
               </div>
             </div>
           </div>
-          <app-editor #editor1 style="flex:1; min-height: 0px;" (changeContent)="nodeContentChanged($event)"
+          <app-editor #editor1 style="flex:1; min-height: 0px;"
             [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
             [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"></app-editor>
           <div style="flex:1; display: block; height: 100px "

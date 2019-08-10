@@ -8,6 +8,7 @@ import { TypeState } from 'typestate';
 import { WorkspacePack } from '../workspace/workspace-pack';
 import { TextUtil, FileType } from '../text/text-util';
 import { DeviceDetectorService } from 'ngx-device-detector';
+import { WorkspaceService } from '../workspace/workspace.service';
 
 const prefix: string = 'X'.repeat(100);
 enum EditorMode{
@@ -92,7 +93,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
     return this.fsm.currentState == EditorMode.None;
   }
 
-  constructor(private monacoService: MonacoService, private deviceService: DeviceDetectorService) {  
+  constructor(private monacoService: MonacoService, private deviceService: DeviceDetectorService, private workspacecService: WorkspaceService) {  
     this.initFsm();
   }
 
@@ -197,7 +198,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       }else {
         this.model = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(path));
         this.model.onDidChangeContent((e) => {
-          this.changeContent.emit(path);
+          // this.changeContent.emit(path);
+          this.workspacecService.notifyContentChange(this, path);
         })
       }
     }else

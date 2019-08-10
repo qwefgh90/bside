@@ -264,25 +264,25 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
       if (alreadyExist) {
         console.log(`${this.renamingFormControl.value} already exists among siblings`);
       } else if ((this.renamingFormControl.value == undefined) || (this.renamingFormControl.value.length == 0)) {
-        console.log(`File name is empty`);
+        console.log(`There is nothing to type on form`);
       } else if(invalid) {
-        console.log(`${this.renamingFormControl.value} File name is invalid`);
+        console.log(`${this.renamingFormControl.value} abide by naming pattern`);
       } else {
         const githubNode = this.renamingNode.data as GithubTreeNode;
         githubNode.rename(this.renamingFormControl.value, (node, parent, pre, newPath) => {
           let stateArr = (githubNode as GithubTreeNode).state;
           if (stateArr.length == 2 && stateArr[0] == NodeStateAction.Created)
             this.workspaceService.createNode(this, node);
-          this.workspaceService.moveNodeInTree(this, pre, node);
-          // this.nodeMoved.emit({ 'fromPath': pre, 'to': node });
+          else
+            this.workspaceService.moveNodeInTree(this, pre, node);
         });
       }
       if (this.renamingNode.data.name == undefined) {
         this.remove(this.renamingNode);
         console.log(`It will be removed because it doesn't have any name`);
       }
+      this.renamingNode = undefined;
     }
-    this.renamingNode = undefined;
     this.refreshTree();
   }
 
