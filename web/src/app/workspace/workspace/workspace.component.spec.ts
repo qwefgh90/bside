@@ -36,6 +36,47 @@ class StageComponent {
   @Input("placeholder") placeholder;
 }
 
+@Component({selector: 'app-markdown-editor', template: ''})
+class MarkdownStubEditorComponent implements Editor{
+  
+  setContent(path: string, name: string){
+    return ''
+  }
+  selectTab(path: string): boolean{
+    return true;
+  }
+  exist(path: string): boolean{
+    return true;
+  }
+  getContent(path?: string): string{
+    return ''
+  }
+  removeContent(path: string): boolean{
+    return true;
+  } 
+  shrinkExpand(){}
+  diffWith(){}
+  md(){}
+
+  getPathList(): string[]{
+    return [];
+  }
+  isMdOn: boolean
+
+  get isDiffOn(){
+    return false;
+  }
+
+  readonly: boolean;
+
+  listOfContents = [];
+
+  @Input("loadedPack") loadedPack;
+
+  load(){
+
+  }
+}
 @Component({selector: 'app-editor', template: ''})
 class EditorStubComponent implements Editor{
   
@@ -131,7 +172,7 @@ describe('WorkspaceComponent', () => {
     getPageBranchSpy = wrapperServiceSpy.getPageBranch;
     mockWrapperServiceSpy();
     TestBed.configureTestingModule({
-      declarations: [WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent, CommitProgressComponent, TabComponent],
+      declarations: [MarkdownStubEditorComponent, WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent, CommitProgressComponent, TabComponent],
       providers: [{provide: ActivatedRoute, useValue: routeStub}, 
         {provide: WrapperService, useValue: wrapperServiceSpy}, 
         {provide: Router, useValue: routerSpy},
@@ -182,7 +223,7 @@ describe('WorkspaceComponent', () => {
     fixture.detectChanges();
     tick(3000);
     expect(component.tree).toBeDefined();
-    expect(component.editor1).toBeDefined();
+    expect(component.editor).toBeDefined();
   }))
 
   it('render GithubTreeComponent', fakeAsync(() => {
@@ -206,9 +247,9 @@ describe('WorkspaceComponent', () => {
     fixture.detectChanges();
     tick(3000);
     
-    let setContentSpy = spyOn(component.editor1, 'setContent');
-    let selectTabSpy = spyOn(component.editor1, 'selectTab');
-    let existSpy = spyOn(component.editor1, 'exist');
+    let setContentSpy = spyOn(component.editor, 'setContent');
+    let selectTabSpy = spyOn(component.editor, 'selectTab');
+    let existSpy = spyOn(component.editor, 'exist');
     existSpy.and.returnValue(false);
 
     let treeNodes = fixture.nativeElement.querySelectorAll('tree-node .node-title');
@@ -232,9 +273,9 @@ describe('WorkspaceComponent', () => {
     fixture.detectChanges();
     tick(3000);
 
-    let existSpy = spyOn(component.editor1, 'exist');
+    let existSpy = spyOn(component.editor, 'exist');
     existSpy.and.returnValue(false);
-    let removeContentSpy = spyOn(component.editor1, 'removeContent');
+    let removeContentSpy = spyOn(component.editor, 'removeContent');
     
     component.selectedNodePath = component.tree.root.children[0].path;
     component.nodeRemoved(component.tree.root.children[0]);
@@ -249,11 +290,11 @@ describe('WorkspaceComponent', () => {
     fixture.detectChanges();
     tick(3000);
 
-    let existSpy = spyOn(component.editor1, 'exist');
-    let removeContentSpy = spyOn(component.editor1, 'removeContent');
-    let setContentSpy = spyOn(component.editor1, 'setContent');
-    let getContentSpy = spyOn(component.editor1, 'getContent');
-    let selectTabSpy = spyOn(component.editor1, 'selectTab');
+    let existSpy = spyOn(component.editor, 'exist');
+    let removeContentSpy = spyOn(component.editor, 'removeContent');
+    let setContentSpy = spyOn(component.editor, 'setContent');
+    let getContentSpy = spyOn(component.editor, 'getContent');
+    let selectTabSpy = spyOn(component.editor, 'selectTab');
     let valueToReturn = 'this is value to return';
     getContentSpy.and.returnValue(valueToReturn)
 
@@ -278,9 +319,9 @@ describe('WorkspaceComponent', () => {
     fixture.detectChanges();
     tick(3000);
 
-    let existSpy = spyOn(component.editor1, 'exist');
-    let removeContentSpy = spyOn(component.editor1, 'removeContent');
-    let setContentSpy = spyOn(component.editor1, 'setContent');
+    let existSpy = spyOn(component.editor, 'exist');
+    let removeContentSpy = spyOn(component.editor, 'removeContent');
+    let setContentSpy = spyOn(component.editor, 'setContent');
 
     existSpy.and.returnValue(true);
     let arg = {base64: 'aGVsbG8gd29ybGQh', node: component.tree.root.children[0]};
@@ -374,7 +415,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     getPageBranchSpy = wrapperServiceSpy.getPageBranch;
     mockWrapperServiceSpy();
     TestBed.configureTestingModule({
-      declarations: [WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent, CommitProgressComponent, TabComponent],
+      declarations: [MarkdownStubEditorComponent, WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent, CommitProgressComponent, TabComponent],
       providers: [{provide: ActivatedRoute, useValue: routeStub}, 
         {provide: WrapperService, useValue: wrapperServiceSpy}, 
         {provide: Router, useValue: routerSpy},
@@ -427,8 +468,8 @@ describe('WorkspaceComponent with WorkspaceService', () => {
 
     
     let nodeSelectedSpy = spyOn(component, 'nodeSelected');
-    let setContentSpy = spyOn(component.editor1, 'setContent');
-    let existSpy = spyOn(component.editor1, 'exist');
+    let setContentSpy = spyOn(component.editor, 'setContent');
+    let existSpy = spyOn(component.editor, 'exist');
     existSpy.and.returnValue(false);
 
     workspaceService.selectNode(undefined, '.buildinfo')

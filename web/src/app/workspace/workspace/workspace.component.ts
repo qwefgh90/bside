@@ -30,6 +30,7 @@ import {
   // ...
 } from '@angular/animations';
 import { DeviceDetectorService } from 'ngx-device-detector';
+import { editor } from 'monaco-editor';
 
 declare const monaco;
 
@@ -72,15 +73,22 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     , private router: Router, private sanitizer: DomSanitizer, @Inject(DatabaseToken) private database: Database
     , private workspaceService: WorkspaceService
     , public detector: DeviceDetectorService) { 
+      this.isMobile = this.detector.isMobile();
   }
 
   @ViewChild("tree") tree: GithubTreeComponent;
   @ViewChild("editor1") editor1: Editor;
+  @ViewChild("editor2") editor2: Editor;
   @ViewChild("stage") stage: Stage;
   @ViewChild("action") action: ActionComponent;
   @ViewChild(CommitProgressComponent) commitProgress: CommitProgressComponent;
   @ViewChild(TabComponent) tab: Tab;
 
+  get editor(): Editor{
+    return !this.isMobile ? this.editor1 : this.editor2;
+  }
+
+  isMobile = false;
   userId;
   repositoryName;
   repositoryDetails;
@@ -146,7 +154,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         if (command instanceof WorkspaceCommand.SelectNode) {
           this.nodeSelected(command.path);
           this.workspaceService.save(this);
-          this.editor1.shrinkExpand();
+          this.editor.shrinkExpand();
         }
         else if (command instanceof WorkspaceCommand.CreateNode) {
           if (this.selectedNodePath != command.node.path) {
@@ -174,7 +182,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     */
     let s1 = combineLatest(this.subjectWithSaveFile, monacoLoaderSubject).subscribe((arr) => {
       let pack = arr[0];
-      this.editor1.load(pack);
+      this.editor.load(pack);
       this.tab.load(pack);
       console.log('workspace have been initialized with saved data.');
     })
@@ -332,8 +340,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   toggleDiff(){
-    if (this.editor1.isDiffOn) {
-      this.editor1.selectTab(this.selectedNodePath);
+    if (this.editor.isDiffOn) {
+      this.editor.selectTab(this.selectedNodePath);
     } else {
       let nodes = this.root.getBlobNodes();
       const filteredNodes = nodes.filter((v) => {
@@ -344,7 +352,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         let type = TextUtil.getFileType(node.name);
         if (type == FileType.Text) {
           this.getOriginalText(node.sha).then((content: string) => {
-            this.editor1.diffWith(this.selectedNodePath, content);
+            this.editor.diffWith(this.selectedNodePath, content);
           });
         }
       }else{
@@ -354,15 +362,15 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   toggleMd(){
-    if (this.editor1.isMdOn) {
-      this.editor1.selectTab(this.selectedNodePath);
+    if (this.editor.isMdOn) {
+      this.editor.selectTab(this.selectedNodePath);
     } else {
       let nodes = this.root.getBlobNodes();
       const filteredNodes = nodes.filter((v) => {
         return v.path == this.selectedNodePath;
       });
       if (filteredNodes.length == 1) {
-        this.editor1.md();
+        this.editor.md();
       }
     }
   }
@@ -401,8 +409,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   toggle() {
     // this.leftPane.toggle();
     this.leftPaneOpened = !this.leftPaneOpened;
-    if(this.leftPaneOpened)
-      this.editor1.shrinkExpand();
+    if(this.leftPaneOpened && this.editor != undefined)
+      this.editor.shrinkExpand();
   }
  
   getImage(base64: string, mediaType: string): SafeResourceUrl{
@@ -414,12 +422,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   private setContentAndFocusInEditor(path: string, content: string): void{
-    if (this.editor1 != undefined) {
-      if (this.editor1.exist(path))
-        this.editor1.selectTab(path);
+    if (this.editor != undefined) {
+      if (this.editor.exist(path))
+        this.editor.selectTab(path);
       else{
-        this.editor1.setContent(path, content)
-        this.editor1.selectTab(path);
+        this.editor.setContent(path, content)
+        this.editor.selectTab(path);
       }
     }
   }
@@ -447,8 +455,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         let type = TextUtil.getFileType(node.name);
         this.selectedFileType = type;
         if (node.state.filter((v) => v == NodeStateAction.Created).length == 1) {
-          if (this.editor1.exist(node.path)) {
-            let base64OrText = this.editor1.getContent(node.path);
+          if (this.editor.exist(node.path)) {
+            let base64OrText = this.editor.getContent(node.path);
             if (type == FileType.Image) {
               let mime = TextUtil.getMime(node.name);
               this.selectedImagePath = this.getImage(base64OrText, mime);
@@ -486,20 +494,20 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   nodeCreated(path: string){
-    this.editor1.setContent(path, '');
+    this.editor.setContent(path, '');
   }
 
   nodeRemoved(node: GithubTreeNode){
-    this.editor1.removeContent(node.path);
+    this.editor.removeContent(node.path);
   }
 
   nodeMoved(fromPath: string, to: GithubTreeNode){
     let isSelectedNode = (this.selectedNodePath != undefined) && (this.selectedNodePath == fromPath);
     if(to.type == 'blob'){
-      if (this.editor1.exist(fromPath)) {
-        let content = this.editor1.getContent(fromPath);
-        this.editor1.removeContent(fromPath);
-        this.editor1.setContent(to.path, content);
+      if (this.editor.exist(fromPath)) {
+        let content = this.editor.getContent(fromPath);
+        this.editor.removeContent(fromPath);
+        this.editor.setContent(to.path, content);
       }
       if(isSelectedNode){
         this.nodeSelected(to.path);
@@ -512,9 +520,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     if(type == FileType.Text){
       let bytes = TextUtil.base64ToBytes(event.base64.toString());
       let encoding = this.encoding;
-      this.editor1.setContent(event.node.path, TextUtil.decode(bytes, encoding));
+      this.editor.setContent(event.node.path, TextUtil.decode(bytes, encoding));
     }else {
-      this.editor1.setContent(event.node.path, event.base64);
+      this.editor.setContent(event.node.path, event.base64);
     }
     this.workspaceService.save(this);
   }
@@ -525,7 +533,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       if(node != undefined){
         const asyncText = this.getOriginalText(node.sha)
         asyncText.then((originalText) => {
-          if(this.editor1.getContent(path) == originalText)
+          if(this.editor.getContent(path) == originalText)
             node.setContentModifiedFlag(false);
           else
             node.setContentModifiedFlag(true);
@@ -562,21 +570,21 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   onStage(){
     this.workspaceStatus = WorkspaceStatus.Stage;
     this.invalidateDirtyCount()
-    this.editor1.readonly = true;
-    this.editor1.shrinkExpand();
+    this.editor.readonly = true;
+    this.editor.shrinkExpand();
   }
 
   onEdit(){
     this.workspaceStatus = WorkspaceStatus.View;
-    this.editor1.readonly = false;
-    this.editor1.shrinkExpand();
+    this.editor.readonly = false;
+    this.editor.shrinkExpand();
   }
 
   getBase64(path: string): string{
-    if (this.editor1.exist(path)) {
+    if (this.editor.exist(path)) {
       let type = TextUtil.getFileType(path);
       let base64;
-      let base64OrText = this.editor1.getContent(path);
+      let base64OrText = this.editor.getContent(path);
       if (type == FileType.Image || type == FileType.Other) {
         base64 = base64OrText;
       } else {
@@ -602,8 +610,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         let promise: Promise<{ sha: string, url: string }>;
         if (v.state.includes(NodeStateAction.ContentModified) ||
             v.state.includes(NodeStateAction.Created)){
-          if(this.editor1.exist(v.path)){
-            let base64OrText = this.editor1.getContent(v.path);
+          if(this.editor.exist(v.path)){
+            let base64OrText = this.editor.getContent(v.path);
             if(type == FileType.Image || type == FileType.Other){
               promise = this.wrapper.createBlob(this.userId, this.repositoryName, base64OrText);
             }else{
@@ -659,12 +667,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       const treeSha = this.root.sha;
       const name = this.selectedBranch.name;
       const tabs = Array.from(this.tab.tabs);
-      const packs = Array.from(this.editor1.getPathList())
+      const packs = Array.from(this.editor.getPathList())
         .map((path) => this.tree.get(path))
         .filter((node) => node != undefined)
         .map((node) => {
           let path = node.path;
-          const c = this.editor1.getContent(path);
+          const c = this.editor.getContent(path);
           let base64;
           let type = TextUtil.getFileType(path);
           if (type == FileType.Text)

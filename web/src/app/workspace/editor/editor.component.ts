@@ -24,10 +24,8 @@ enum EditorMode{
 })
 export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor {
 
-  @Output("changeContent") changeContent: EventEmitter<string> = new EventEmitter<string>();
-  @Output("modelChanged") modelChanged: EventEmitter<string> = new EventEmitter<string>();
-
-  @Input("loadedPack") loadedPack: WorkspacePack;
+  // @Output("modelChanged") modelChanged: EventEmitter<string> = new EventEmitter<string>();
+  // @Input("loadedPack") loadedPack: WorkspacePack;
 
   editor: monacoNameSpace.editor.IStandaloneCodeEditor;
   model: monacoNameSpace.editor.ITextModel
@@ -198,7 +196,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       }else {
         this.model = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(path));
         this.model.onDidChangeContent((e) => {
-          // this.changeContent.emit(path);
           this.workspacecService.notifyContentChange(this, path);
         })
       }
@@ -213,7 +210,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
       if (existsModel) {
         this.editor.setModel(existsModel);
-        this.modelChanged.emit(path);
+        // this.modelChanged.emit(path);
         return true;
       }
       return false;

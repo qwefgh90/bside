@@ -23,9 +23,10 @@ import { Database, DatabaseToken } from '../db/database'
 import { LocalDbService } from '../db/local-db.service'
 import { DeviceDetectorModule } from 'ngx-device-detector';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { MarkdownEditorComponent } from './editor/markdown-editor.component';
 
 @NgModule({
-  declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent, UploadComponent, DiffEditorComponent, CommitProgressComponent, TabComponent],
+  declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent, UploadComponent, DiffEditorComponent, CommitProgressComponent, TabComponent, MarkdownEditorComponent],
   imports: [
     CommonModule,
     WorkspaceRoutingModule,

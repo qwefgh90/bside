@@ -75,6 +75,10 @@
 .none{
     display: none !important;
 }
+.nosize{
+    width: 0px;
+    height: 0px;
+}
 .block{
     display: block;
 }

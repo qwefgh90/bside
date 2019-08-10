@@ -53,10 +53,10 @@
                 Saving...</span></span>
             <div class="spacer"></div>
             <div *ngIf="selectedNodePath != undefined && selectedFileType == FileType.Text">
-              <button mat-stroked-button title="Preview" (click)="toggleMd()">
+              <button mat-stroked-button title="Preview" (click)="toggleMd()" *ngIf="!isMobile">
                 <mat-icon>visibility</mat-icon>
               </button>
-              <button mat-stroked-button title="Compare with original" (click)="toggleDiff()">
+              <button mat-stroked-button title="Compare with original" (click)="toggleDiff()" *ngIf="!isMobile">
                 <mat-icon>compare</mat-icon>
               </button>
               <a href="{{selectedRawPath}}" target="_blank"
@@ -87,7 +87,10 @@
           </div>
           <app-editor #editor1 style="flex:1; min-height: 0px;"
             [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
-            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"></app-editor>
+            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)" *ngIf="!isMobile"></app-editor>
+          <app-markdown-editor #editor2 style="flex:1; min-height: 0px;"
+            [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
+            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)" *ngIf="isMobile"></app-markdown-editor>
           <div style="flex:1; display: block; height: 100px "
             *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">
             <div style="overflow-y: scroll; height: 100%;"><img [src]="selectedImagePath" /></div>
