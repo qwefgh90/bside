@@ -10,6 +10,10 @@
     flex:1;
 }
 
+.right-pane{
+    background-color: #f8f9f6;
+}
+
 .left-pane{
     display: flex;
 }
@@ -56,7 +60,9 @@
     flex: 1;
 }
 .workspace-right-pane{
-    display: flex; flex: 1;
+    display: flex; 
+    flex: 1;
+    
 }
 .workspace-center-pane{
     display: flex; flex: 4;
@@ -95,11 +101,10 @@
     padding-top: 0.5em;
 }
 .fileName{
-    margin-left: 1em;
     font-size: 1.4em;
     word-break: break-word;
 }
-.loading{
+.loading{    
     margin-left: 1em;
     margin-right: 1em;
     justify-content: center;

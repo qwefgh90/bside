@@ -251,6 +251,10 @@ export class GithubTreeNode {
     this.state.push(NodeStateAction.Uploaded);
   }
 
+  setSize(size: number){
+    this._size = size;
+  }
+
   getNameFromPath(path?: string) {
     path = path == undefined ? this.path : path;
     return path.match(new RegExp('[^/]*$'))[0];

@@ -1,0 +1,21 @@
+.list{
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+    word-break: break-all;
+}
+.label-box{
+    display: flex;
+    flex-direction: column;
+    /* text-align: right; */
+}
+
+.label-box label {
+    font-weight: 700;
+}
+.value-box{
+    flex:1;
+    display: flex;
+    flex-direction: column;
+}

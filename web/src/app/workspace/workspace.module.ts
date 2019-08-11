@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { WorkspaceRoutingModule } from './workspace-routing.module';
 import { GithubTreeComponent } from './tree/github-tree.component';
 import { WorkspaceComponent } from './workspace/workspace.component';
-import { MatSidenavModule, MatIcon, MatIconModule, MatButtonModule, MatDividerModule, MatInputModule, MatSelectModule, MatMenuModule, MatProgressSpinnerModule, MatBadgeModule, MatTabsModule } from '@angular/material';
+import { MatSidenavModule, MatIcon, MatIconModule, MatButtonModule, MatDividerModule, MatInputModule, MatSelectModule, MatMenuModule, MatProgressSpinnerModule, MatBadgeModule, MatTabsModule, MatDialogModule, MatTableModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {MatTreeModule} from '@angular/material/tree';
 import { EditorComponent } from './editor/editor.component';
@@ -24,9 +24,11 @@ import { LocalDbService } from '../db/local-db.service'
 import { DeviceDetectorModule } from 'ngx-device-detector';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MarkdownEditorComponent } from './editor/markdown-editor.component';
+import { InfoComponent } from './info/info.component';
+import { BuildHistoryComponent } from './build-history/build-history.component';
 
 @NgModule({
-  declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent, UploadComponent, DiffEditorComponent, CommitProgressComponent, TabComponent, MarkdownEditorComponent],
+  declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent, UploadComponent, DiffEditorComponent, CommitProgressComponent, TabComponent, MarkdownEditorComponent, InfoComponent, BuildHistoryComponent],
   imports: [
     CommonModule,
     WorkspaceRoutingModule,
@@ -49,8 +51,14 @@ import { MarkdownEditorComponent } from './editor/markdown-editor.component';
     MatTabsModule,
     MarkdownModule.forRoot(),    
     DeviceDetectorModule.forRoot(),
-    FlexLayoutModule
+    FlexLayoutModule,
+    MatDialogModule,
+    MatTableModule
   ],
-  providers: [{provide: DatabaseToken, useClass: LocalDbService}]
+  providers: [{provide: DatabaseToken, useClass: LocalDbService}],
+  entryComponents: [
+    InfoComponent,
+    BuildHistoryComponent
+  ]
 })
 export class WorkspaceModule { }

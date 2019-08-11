@@ -1,0 +1,12 @@
+.history-table{
+    width: 100%;
+}
+.loading{
+    display: flex;
+    flex-direction: column;
+    margin-left: 1em;
+    margin-right: 1em;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}

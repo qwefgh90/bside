@@ -16,6 +16,7 @@ import { GithubTree } from './github-tree';
 import { BlobPack } from '../workspace/pack';
 import { WorkspaceService, WorkspaceCommand } from '../workspace/workspace.service';
 import { filter } from 'rxjs/operators';
+import { TextUtil } from '../text/text-util';
 @Component({
   selector: 'app-tree',
   templateUrl: './github-tree.component.html',
@@ -363,6 +364,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     const newNode = this.newNode('blob', parentNode, f.name);
     if(newNode != undefined){
       newNode.data.setUploadedToLocal();
+      (<GithubTreeNode>newNode.data).setSize(TextUtil.base64ToBytes(f.base64.toString()).length);
       this.nodeUploaded.emit({node: newNode.data, base64: f.base64.toString()});
     }
   }

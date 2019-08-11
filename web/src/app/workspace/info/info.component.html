@@ -1,0 +1,12 @@
+<h2 mat-dialog-title>{{data.name}}</h2>
+<mat-dialog-content>
+  <div class="list">
+    <div class="label-box">
+      <div><label>path:&nbsp;</label><span>{{data.path}}</span></div>
+      <div><label>size:&nbsp;</label><span>{{data.size}}bytes</span></div>
+      <div *ngIf="data.states?.length > 0" ><label>states:&nbsp;</label><span *ngFor="let s of data.states" title="{{getLabel(s).name}}">{{getLabel(s).short}}&nbsp;</span></div>
+      <div *ngIf="data.mime != ''"><label>mime:&nbsp;</label><span>{{data.mime}}</span></div>
+      <div *ngIf="data.rawUrl != undefined"><label>raw url:&nbsp;</label><a href="{{data.rawUrl}}" target="_blank">{{data.rawUrl}}</a></div>
+    </div>
+  </div>
+</mat-dialog-content>

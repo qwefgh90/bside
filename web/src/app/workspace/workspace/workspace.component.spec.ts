@@ -1,7 +1,7 @@
 import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 
 import { WorkspaceComponent, TreeStatusOnWorkspace } from './workspace.component';
-import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule, MatExpansionModule, MatSelectModule, MatMenu, MatIcon, MatMenuModule, MatProgressSpinnerModule, MatButtonToggleModule, MatFormField, MatFormFieldModule, MatInputModule, MatBadgeModule, MatTabsModule } from '@angular/material';
+import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, MatTreeModule, MatExpansionModule, MatSelectModule, MatMenu, MatIcon, MatMenuModule, MatProgressSpinnerModule, MatButtonToggleModule, MatFormField, MatFormFieldModule, MatInputModule, MatBadgeModule, MatTabsModule, MatDialog } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WrapperService } from 'src/app/github/wrapper.service';
@@ -150,6 +150,7 @@ describe('WorkspaceComponent', () => {
   let getBlobSpy;
   let getPageBranchSpy;
   let workspaceService: WorkspaceService;
+  let matDialogSpy;
 
   function mockWrapperServiceSpy(){
     repositoryDetailsSpy.and.returnValue(Promise.resolve(repositoryDetails));
@@ -170,14 +171,16 @@ describe('WorkspaceComponent', () => {
     treeSpy = wrapperServiceSpy.tree;
     getBlobSpy = wrapperServiceSpy.getBlob;
     getPageBranchSpy = wrapperServiceSpy.getPageBranch;
+    matDialogSpy = jasmine.createSpyObj('MatDialog', ['closeAll']);
     mockWrapperServiceSpy();
     TestBed.configureTestingModule({
       declarations: [MarkdownStubEditorComponent, WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent, CommitProgressComponent, TabComponent],
       providers: [{provide: ActivatedRoute, useValue: routeStub}, 
         {provide: WrapperService, useValue: wrapperServiceSpy}, 
         {provide: Router, useValue: routerSpy},
-      {provide: MonacoService}, {provide: LocalUploadService},
-      {provide: DatabaseToken, useClass: LocalDbService}, WorkspaceService],
+        {provide: MatDialog, useValue: matDialogSpy},
+        {provide: MonacoService}, {provide: LocalUploadService},
+        {provide: DatabaseToken, useClass: LocalDbService}, WorkspaceService],
       imports: [MatSidenavModule,
         BrowserAnimationsModule,
         MatDividerModule,
@@ -392,6 +395,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
   let treeSpy;
   let getBlobSpy;
   let getPageBranchSpy;
+  let matDialogSpy;
   let workspaceService: WorkspaceService;
 
   function mockWrapperServiceSpy(){
@@ -413,12 +417,14 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     treeSpy = wrapperServiceSpy.tree;
     getBlobSpy = wrapperServiceSpy.getBlob;
     getPageBranchSpy = wrapperServiceSpy.getPageBranch;
+    matDialogSpy = jasmine.createSpyObj('MatDialog', ['closeAll']);
     mockWrapperServiceSpy();
     TestBed.configureTestingModule({
       declarations: [MarkdownStubEditorComponent, WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent, CommitProgressComponent, TabComponent],
       providers: [{provide: ActivatedRoute, useValue: routeStub}, 
         {provide: WrapperService, useValue: wrapperServiceSpy}, 
         {provide: Router, useValue: routerSpy},
+        {provide: MatDialog, useValue: matDialogSpy},
       {provide: MonacoService}, {provide: LocalUploadService},
       {provide: DatabaseToken, useClass: LocalDbService}, WorkspaceService],
       imports: [MatSidenavModule,

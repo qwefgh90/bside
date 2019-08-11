@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, ElementRef, 
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, Subject, combineLatest, from } from 'rxjs';
-import { MatDrawer, MatSelectChange } from '@angular/material';
+import { MatDrawer, MatSelectChange, MatDialog } from '@angular/material';
 import { GithubTreeNode, NodeStateAction, GithubNode } from '../tree/github-tree-node';
 import { MonacoService } from '../editor/monaco.service';
 import { Editor } from '../editor/editor';
@@ -31,6 +31,8 @@ import {
 } from '@angular/animations';
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { editor } from 'monaco-editor';
+import { InfoComponent, DisplayInfo } from '../info/info.component';
+import { BuildHistoryComponent } from '../build-history/build-history.component';
 
 declare const monaco;
 
@@ -72,7 +74,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute
     , private router: Router, private sanitizer: DomSanitizer, @Inject(DatabaseToken) private database: Database
     , private workspaceService: WorkspaceService
-    , public detector: DeviceDetectorService) { 
+    , public detector: DeviceDetectorService
+    , public dialog: MatDialog) { 
       this.isMobile = this.detector.isMobile();
   }
 
@@ -151,7 +154,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }));
     
     this.subscriptions.push(this.workspaceService.commandChannel.subscribe((command) => {
-      console.debug(command);
+      console.debug(command); 
       if (command.source != this) {
         if (command instanceof WorkspaceCommand.SelectNode) {
           this.nodeSelected(command.path);
@@ -451,6 +454,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     } else {
       const node = (typeof path == 'string') ? this.tree.get(path) : path;
       if (node.type == 'blob') {
+        this.selectedRawPath = undefined;
         this.selectedNodePath = node.path;
         this.contentStatus = ContentStatusOnWorkspace.Loading;
         let type = TextUtil.getFileType(node.name);
@@ -688,5 +692,25 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         return acc;
       }, [] as Array<GithubNode>, false);
       return WorkspacePack.of(repositoryId, repositoryName, commitSha, treeSha, name, packs, treeArr, tabs, this.selectedNodePath);
+  }
+
+  showInfo(path: string){
+    let node = this.tree.get(path);
+    let mime = TextUtil.getMime(node.name);
+    let size = node.size;
+    if(this.selectedFileType == FileType.Text){
+      size = TextUtil.encode(this.editor.getContent()).length;
+    }
+    const dialogRef = this.dialog.open(InfoComponent, {
+      width: '350px',
+      data: <DisplayInfo>{name: node.name, path: node.path, size: size, mime: (mime == null ? '' : mime), rawUrl: this.selectedRawPath, states: node.state}
+    });    
+  }
+
+  onBuildHistory(){
+    const dialogRef = this.dialog.open(BuildHistoryComponent, {
+      minWidth: this.isMobile ? 'unset' : '35em',
+      data: {owner: this.userId, repositoryName: this.repositoryName}
+    });    
   }
 }

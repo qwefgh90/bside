@@ -913,7 +913,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
    * @param owner 
    * @param repositoryName 
    */
-  buildStatus(owner: string, repositoryName: string){
+  buildStatus(owner: string, repositoryName: string): Promise<any[]>{
     const url = `https://api.github.com/repos/${owner}/${repositoryName}/pages/builds`;
     let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
     return reposResponse.toPromise();

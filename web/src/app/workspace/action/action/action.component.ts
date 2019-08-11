@@ -14,6 +14,7 @@ export class ActionComponent implements OnInit, OnChanges {
   ActionState = ActionState;
   @Input("repository") repository: any
   @Input("dirtyCount") dirtyCount: number
+  @Output("buildHistory") buildHistory = new EventEmitter<void>();
   @Output("stage") stage = new EventEmitter<void>();
   @Output("edit") edit = new EventEmitter<void>();
 
@@ -60,4 +61,8 @@ export class ActionComponent implements OnInit, OnChanges {
     this.edit.emit();
   }
 
+
+  showBuildHistory(){
+    this.buildHistory.emit();
+  }
 }

@@ -5,6 +5,7 @@ import { WrapperService } from 'src/app/github/wrapper.service';
 import { TreeNode } from 'angular-tree-component';
 import { FormControl } from '@angular/forms';
 import { WorkspaceService } from '../workspace/workspace.service';
+import { labelTable, getLabel } from '../info/info.component';
 
 @Component({
   selector: 'app-stage',
@@ -43,35 +44,38 @@ export class StageComponent implements OnInit, OnChanges, Stage {
     return result.acc.map(s => this.getLabel(s));
   }
 
-  labelTable = {
-    "C": {short: "C", name: "Created"},
-    "CM": {short: "CM", name: "Modified content"},
-    "M": {short: "M", name: "Moved"},
-    "NM": {short: "NM", name: "Modified name"},
-    "D": {short: "D", name: "Deleted"},
-    "T": {short: "T", name: "Changed tree"},
-    "U": {short: "U", name: "Uploaded"},
-    "E": {short: "E", name: "ETC"},
-  };
+  labelTable = labelTable 
+  // {
+  //   "C": {short: "C", name: "Created"},
+  //   "CM": {short: "CM", name: "Modified content"},
+  //   "M": {short: "M", name: "Moved"},
+  //   "NM": {short: "NM", name: "Modified name"},
+  //   "D": {short: "D", name: "Deleted"},
+  //   "T": {short: "T", name: "Changed tree"},
+  //   "U": {short: "U", name: "Uploaded"},
+  //   "E": {short: "E", name: "ETC"},
+  // };
 
-  getLabel(v: NodeStateAction) {
-    if (v == NodeStateAction.Created)
-      return this.labelTable["C"];
-    else if (v == NodeStateAction.ContentModified)
-      return this.labelTable["CM"];
-    else if (v == NodeStateAction.Moved)
-      return this.labelTable["M"];
-    else if (v == NodeStateAction.NameModified)
-      return this.labelTable["NM"];
-    else if (v == NodeStateAction.Deleted)
-      return this.labelTable["D"];
-    else if (v == NodeStateAction.NodesChanged)
-      return this.labelTable["T"];
-    else if (v == NodeStateAction.Uploaded)
-      return this.labelTable["U"];
-    else 
-      return this.labelTable["E"];
-  }
+  getLabel = getLabel;
+  
+  // {
+  //   if (v == NodeStateAction.Created)
+  //     return this.labelTable["C"];
+  //   else if (v == NodeStateAction.ContentModified)
+  //     return this.labelTable["CM"];
+  //   else if (v == NodeStateAction.Moved)
+  //     return this.labelTable["M"];
+  //   else if (v == NodeStateAction.NameModified)
+  //     return this.labelTable["NM"];
+  //   else if (v == NodeStateAction.Deleted)
+  //     return this.labelTable["D"];
+  //   else if (v == NodeStateAction.NodesChanged)
+  //     return this.labelTable["T"];
+  //   else if (v == NodeStateAction.Uploaded)
+  //     return this.labelTable["U"];
+  //   else 
+  //     return this.labelTable["E"];
+  // }
 
   commit(){
     this.clickCommit.emit(this.description.value.length == 0 ? this.placeholder : this.description.value);

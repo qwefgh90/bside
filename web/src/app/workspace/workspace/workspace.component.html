@@ -48,7 +48,12 @@
         <div style="display: flex; flex-direction: column; flex:1; height: 100%; width: 100%;">
           <div class="toolbar" *ngIf="selectedNodePath != undefined" [class.none]="treeStatus != TreeStatus.Done"
             [class.flex]="treeStatus == TreeStatus.Done">
-            <span class="fileName">{{selectedNodePath != undefined ? selectedNodePath : ''}} <span
+            <div style="margin-left: 1em;">
+              <button mat-icon-button title="info" class="button-with-toggle-style" (click)="showInfo(selectedNodePath)">
+                  <mat-icon aria-label="info">info</mat-icon>
+              </button>
+            </div>
+            <span class="fileName">{{selectedNodePath != undefined ? selectedNodePath : ''}}<span
                 [@savingChanged]="saving ? 'in' : 'out'" style="color: #673ab7; font-size: 0.7em">
                 Saving...</span></span>
             <div class="spacer"></div>
@@ -119,7 +124,7 @@
       </div>
 
       <div class="right-pane">
-        <app-action #action (stage)="onStage()" (edit)="onEdit()" [dirtyCount]="dirtyCount"
+        <app-action #action (stage)="onStage()" (edit)="onEdit()" [dirtyCount]="dirtyCount" (buildHistory)="onBuildHistory()"
           [repository]="repositoryDetails">
         </app-action>
       </div>
