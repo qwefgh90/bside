@@ -29,6 +29,7 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit {
   ngOnInit() {
     this.workspaceService.commandChannel.pipe(filter((v, idx) => v.source != this))
       .subscribe((command) => {
+        console.debug(command);
         if (command instanceof WorkspaceCommand.SelectNode) {
           if (command.path != undefined) {
             if (!this.exists(command.path)) {

@@ -213,6 +213,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     });
     this.workspaceService.commandChannel.pipe(filter((v, idx) => v.source != this))
       .subscribe((command) => {
+        console.debug(command);
       if(command instanceof WorkspaceCommand.SelectNode){
         if(this.selectedNode != undefined && command.path != this.selectedNode.data.path){
           this.selectNode(command.path);

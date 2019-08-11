@@ -75,6 +75,7 @@ export class StageComponent implements OnInit, OnChanges, Stage {
 
   commit(){
     this.clickCommit.emit(this.description.value.length == 0 ? this.placeholder : this.description.value);
+    this.description.setValue("");
   }
   
   selectNode(node: TreeNode){

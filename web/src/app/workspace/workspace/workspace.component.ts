@@ -138,6 +138,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }));
     
     this.subscriptions.push(this.workspaceService.commandChannel.subscribe((command) => {
+      console.debug(command);
       if (command instanceof WorkspaceCommand.Save && (this.treeStatus == TreeStatusOnWorkspace.Done)) {
         this.saving = true;
         this.database.save(this.pack);
@@ -150,6 +151,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }));
     
     this.subscriptions.push(this.workspaceService.commandChannel.subscribe((command) => {
+      console.debug(command);
       if (command.source != this) {
         if (command instanceof WorkspaceCommand.SelectNode) {
           this.nodeSelected(command.path);
@@ -394,7 +396,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   ngAfterContentInit() {
     this.toggle();
-    // this.rightPane.toggle();
   }
 
   ngOnDestroy() {
