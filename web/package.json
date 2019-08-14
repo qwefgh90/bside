@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --proxy-config=proxy.conf.js --extra-webpack-config webpack.partial.js -o",
+    "prod-start": "ng serve --prod --proxy-config=proxy.conf.js --extra-webpack-config webpack.partial.js -o",
     "travis-test": "ng test --watch false --browsers ChromeHeadless",
     "build": "ng build --extra-webpack-config webpack.partial.js",
     "prod-build": "ng build --extra-webpack-config webpack.partial.js --prod",
