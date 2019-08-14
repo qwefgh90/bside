@@ -151,4 +151,10 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
   get isMdOn(): boolean {        
     return this.mde.isPreviewActive();
   }
+
+  clear(){
+    this.getPathList().forEach(path => {
+      this.removeContent(path);
+    });
+  }
 }

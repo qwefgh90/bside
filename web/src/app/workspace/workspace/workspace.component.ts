@@ -142,6 +142,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         setTimeout( () => this.saving = false, 1000);
       }else if(command instanceof WorkspaceCommand.UndoAll){
         this.database.delete(this.repositoryDetails.id, this.selectedBranch.commit.sha);
+        this.editor.clear();
         this.selectedNodePath = undefined;
         this.refreshSubject.next();
       }

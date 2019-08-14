@@ -39,7 +39,7 @@ class StageComponent {
 
 @Component({selector: 'app-markdown-editor', template: ''})
 class MarkdownStubEditorComponent implements Editor{
-  
+  clear(){}
   setContent(path: string, name: string){
     return ''
   }
@@ -80,7 +80,7 @@ class MarkdownStubEditorComponent implements Editor{
 }
 @Component({selector: 'app-editor', template: ''})
 class EditorStubComponent implements Editor{
-  
+  clear(){}
   setContent(path: string, name: string){
     return ''
   }

@@ -32,6 +32,11 @@ export interface Editor extends WorkspaceChild{
      * @param path 
      */
     removeContent(path: string): boolean;
+    /**
+     * remove all contents in the editor
+     */
+    clear();
+
     diffWith(path: string, content: string, originalPath?: string)
 
     /**

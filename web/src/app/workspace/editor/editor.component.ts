@@ -306,6 +306,15 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       this.throwWhenNotInitialized();
   }
 
+  clear(){
+    if (this.monaco != undefined) {
+      this.getPathList().forEach(path => {
+        this.removeContent(path);
+      });
+    }else
+      this.throwWhenNotInitialized();    
+  }
+
   throwWhenNotInitialized(){
     throw new Error("A monaco is not initalized");
   }
