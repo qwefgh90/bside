@@ -9,6 +9,7 @@ import { WorkspacePack } from '../workspace/workspace-pack';
 import { TextUtil, FileType } from '../text/text-util';
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { WorkspaceService } from '../workspace/workspace.service';
+import { MarkdownEditorComponent } from './markdown-editor.component';
 
 const prefix: string = 'X'.repeat(100);
 enum EditorMode{
@@ -32,10 +33,10 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
 
   @ViewChild("editor") editorContent: ElementRef;
   @ViewChild("diffeditor1") diffEditor: DiffEditor;
+  @ViewChild("markdowneditor") markdownEditor: MarkdownEditorComponent;
 
-  markdown: string;
   diffTargetPath: string;
-  subscription: Subscription;
+  subscriptions: Subscription[] = [];
   monaco: any;
   option: monacoNameSpace.editor.IEditorConstructionOptions = {
     value: [""].join("\n"),
@@ -52,7 +53,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       return true;
     });
     this.fsm.onExit(EditorMode.Md, (to: EditorMode) => {
-      this.markdown = '';
+      this.markdownEditor.setContent('preview', '');
+      // this.markdown = '';
       return true;
     });
   }
@@ -106,11 +108,11 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   }
 
   ngOnInit() {
-    this.subscription = this.monacoService.monaco.subscribe((monaco) => {
+    this.subscriptions.push(this.monacoService.monaco.subscribe((monaco) => {
       console.log("monacoService loaded");
       this.monaco = monaco;
       this.createMonacoEditor(monaco);
-    })
+    }));
   }
 
   load(pack: WorkspacePack) {
@@ -184,8 +186,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   ngOnDestroy() {
     this.releaseEditor();
     this.releaseGlobalResource();
-    if(this.subscription)
-      this.subscription.unsubscribe();
+    this.subscriptions.forEach(s => s.unsubscribe());
   }
 
   setContent(path: string, content: string) {
@@ -288,7 +289,11 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   md(){
     if (this._isMdOn == false) {
       let targetModel= this.getModel();
-      this.markdown = targetModel.getValue();
+      // this.markdown = targetModel.getValue();
+      this.markdownEditor.setContent('preview', targetModel.getValue());
+      this.markdownEditor.selectTab('preview');
+      if(!this.markdownEditor.isMdOn)
+        setTimeout(() => this.markdownEditor.md(), 0);
       this._isMdOn = true;
     }
   }

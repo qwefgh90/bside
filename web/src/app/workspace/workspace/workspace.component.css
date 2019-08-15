@@ -107,7 +107,7 @@
 .loading{    
     margin-left: 1em;
     margin-right: 1em;
-    justify-content: center;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    text-align: center;
 }

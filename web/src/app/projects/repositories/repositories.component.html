@@ -13,7 +13,7 @@
       </div>
       <mat-divider></mat-divider>
       <div class="items" *ngIf="repositories">
-        <a mat-list-item routerLink="/repos/{{repo.full_name}}" *ngFor="let repo of getRepositories()">
+        <a mat-list-item routerLink="/repos/{{repo.full_name}}" (click)="startLoading(repo.name)" *ngFor="let repo of getRepositories()">
           <mat-icon mat-list-icon>folder</mat-icon>
           <div mat-line style="display: flex;">
             <h4 style="margin: 0px;font-weight: unset;">{{repo.name}}</h4>
@@ -22,11 +22,15 @@
             </div>
           </div>
           <p mat-line>{{repo.updated_at | date:'short'}}</p>
+          <div style="text-align: center;" *ngIf="repo.name == repositoryToLoad">
+            <mat-spinner style="display: inline-block" [strokeWidth]="2" [diameter]="25"></mat-spinner>
+          </div>
         </a>
       </div>
       <div class="progress-box" *ngIf="!repositories">
-        <div style="text-align: center;">
+        <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
           <mat-spinner style="display: inline-block" [strokeWidth]="3"></mat-spinner>
+          <span>Loading the list...</span>
         </div>
       </div>
       <!-- <mat-divider></mat-divider>

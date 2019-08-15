@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, ElementRef, OnChanges, SimpleChanges, HostListener, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, Inject } from '@angular/core';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, Subject, combineLatest, from } from 'rxjs';
@@ -10,7 +10,7 @@ import { Blob } from 'src/app/github/type/blob';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FileType, TextUtil } from '../text/text-util';
 import { Stage } from '../stage/stage';
-import { ActionComponent, ActionState } from '../action/action/action.component';
+import { ActionComponent, ActionState } from '../action/action.component';
 import { GithubTreeToTree } from '../tree/github-tree-to-tree';
 import { GithubTreeComponent } from '../tree/github-tree.component';
 import { CommitProgressComponent } from './commit-progress/commit-progress.component';
@@ -20,7 +20,6 @@ import { BlobPack } from './pack';
 import { WorkspacePack } from './workspace-pack';
 import { Database, DatabaseToken } from 'src/app/db/database';
 import { WorkspaceService, WorkspaceCommand } from './workspace.service';
-import { debounceTime, filter } from 'rxjs/operators';
 import {
   trigger,
   state,
@@ -30,7 +29,6 @@ import {
   // ...
 } from '@angular/animations';
 import { DeviceDetectorService } from 'ngx-device-detector';
-import { editor } from 'monaco-editor';
 import { InfoComponent, DisplayInfo } from '../info/info.component';
 import { BuildHistoryComponent } from '../build-history/build-history.component';
 
@@ -76,7 +74,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     , private workspaceService: WorkspaceService
     , public detector: DeviceDetectorService
     , public dialog: MatDialog) { 
-      this.isMobile = this.detector.isMobile();
+      this.isDesktop = this.detector.isDesktop();
   }
 
   @ViewChild("tree") tree: GithubTreeComponent;
@@ -88,10 +86,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   @ViewChild(TabComponent) tab: Tab;
 
   get editor(): Editor{
-    return !this.isMobile ? this.editor1 : this.editor2;
+    return this.isDesktop ? this.editor1 : this.editor2;
   }
 
-  isMobile = false;
+  isDesktop = false;
   userId;
   repositoryName;
   repositoryDetails;
@@ -125,10 +123,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   @ViewChild("leftDrawer") leftPane: MatDrawer;
   @ViewChild("rightDrawer") rightPane: MatDrawer;
-
-  // @HostListener('document:keydown.escape', ['$event']) onKeydownHandler(event: KeyboardEvent) {
-  //   this.toggle();  
-  // }
   
   saving = false;
   
@@ -167,7 +161,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
             this.workspaceService.save(this);
           }
         } else if (command instanceof WorkspaceCommand.RemoveNode) {
-          this.nodeRemoved(command.node);
+          this.nodeRemoved(command.path);
           this.workspaceService.save(this);
         } else if (command instanceof WorkspaceCommand.CloseTab) {
         } else if (command instanceof WorkspaceCommand.MoveNodeInTree) {
@@ -185,28 +179,28 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
      * After loading saved data and all children are loaded, 
      * pass the packs to others components.
     */
-    let s1 = combineLatest(this.subjectWithSaveFile, monacoLoaderSubject).subscribe((arr) => {
+   this.subscriptions.push(combineLatest(this.subjectWithSaveFile, monacoLoaderSubject).subscribe((arr) => {
       let pack = arr[0];
       this.editor.load(pack);
       this.tab.load(pack);
       console.log('workspace have been initialized with saved data.');
-    })
+    }))
 
     /**
      * After reloading component and all children are loaded, 
      * pass the packs to others components.
     */
-    let s2 = combineLatest(this.subjectWithoutSaveFile, monacoLoaderSubject).subscribe((arr) => {
+   this.subscriptions.push(combineLatest(this.subjectWithoutSaveFile, monacoLoaderSubject).subscribe((arr) => {
       let path = arr[0];
       this.nodeSelected(path);
       this.workspaceService.selectNode(this, path);
       console.log('workspace have been reloaded.');
-    })
+    }))
     
     /**
      * When parameters of url have some changes, initialize workspace again. 
      */
-    let s = combineLatest(this.route.paramMap, this.route.queryParamMap, this.refreshSubject).subscribe(([p, q]) => {
+    this.subscriptions.push(combineLatest(this.route.paramMap, this.route.queryParamMap, this.refreshSubject).subscribe(([p, q]) => {
       let promise: Promise<void>;
       if (p.has('userId') && p.has('repositoryName')) {
         const userId = p.get('userId');
@@ -223,12 +217,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.errorDescription = err;
         this.treeStatus = TreeStatusOnWorkspace.Fail;
       })
-    });
+    }));
 
     this.refreshSubject.next();
-    this.subscriptions.push(s);
-    this.subscriptions.push(s1);
-    this.subscriptions.push(s2);
   }
 
   initialize(userId, repositoryName, branchName): Promise<void>{
@@ -281,17 +272,16 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
         let tree;
         let doAfterLoadingTree: () => void;
-        if (this.commitStatePack != undefined) {
+        if (this.commitStatePack != undefined) { // load states of workspace before commit 
           tree = Promise.resolve({ tree: this.commitStatePack.treePacks, sha: this.commitStatePack.tree_sha });
           doAfterLoadingTree = () => {
             this.subjectWithSaveFile.next(this.commitStatePack)
             this.commitStatePack = undefined;
           };
-          
-        } else if (loadedPack != undefined) {
+        } else if (loadedPack != undefined) { // load the saved file
           tree = Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha });
           doAfterLoadingTree = () => this.subjectWithSaveFile.next(loadedPack);
-        } else {
+        } else {  // new start
           tree = this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha);
           doAfterLoadingTree = () => this.subjectWithoutSaveFile.next(this.selectedNodePath);
         }
@@ -328,7 +318,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   private initalizeLoader(): Promise<void>{
     let p = new Promise<void>((resolve, reject) => {
-      if (!(window as any).require) {
+      if (!(window as any).require && this.isDesktop) {
         const loaderScript = document.createElement("script");
         loaderScript.type = "text/javascript";
         loaderScript.src = "vs/loader.js";
@@ -339,6 +329,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           });
         });
         document.body.appendChild(loaderScript);
+      }else{
+        resolve();
       }
     });
     return p;
@@ -411,7 +403,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   toggle() {
-    // this.leftPane.toggle();
     this.leftPaneOpened = !this.leftPaneOpened;
     if(this.leftPaneOpened && this.editor != undefined)
       this.editor.shrinkExpand();
@@ -502,8 +493,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.editor.setContent(path, '');
   }
 
-  nodeRemoved(node: GithubTreeNode){
-    this.editor.removeContent(node.path);
+  nodeRemoved(path: string){
+    this.editor.removeContent(path);
   }
 
   nodeMoved(fromPath: string, to: GithubTreeNode){
@@ -709,7 +700,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   onBuildHistory(){
     const dialogRef = this.dialog.open(BuildHistoryComponent, {
-      minWidth: this.isMobile ? 'unset' : '35em',
+      minWidth: !this.isDesktop ? 'unset' : '35em',
       data: {owner: this.userId, repositoryName: this.repositoryName}
     });    
   }

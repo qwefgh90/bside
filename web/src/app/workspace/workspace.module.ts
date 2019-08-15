@@ -8,7 +8,7 @@ import { MatSidenavModule, MatIcon, MatIconModule, MatButtonModule, MatDividerMo
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {MatTreeModule} from '@angular/material/tree';
 import { EditorComponent } from './editor/editor.component';
-import { ActionComponent } from './action/action/action.component';
+import { ActionComponent } from './action/action.component';
 import {MatExpansionModule} from '@angular/material/expansion';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { TreeModule } from 'angular-tree-component';
@@ -33,7 +33,6 @@ import { BuildHistoryComponent } from './build-history/build-history.component';
     CommonModule,
     WorkspaceRoutingModule,
     MatSidenavModule,
-    BrowserAnimationsModule,
     MatTreeModule,
     MatIconModule,
     MatButtonModule,

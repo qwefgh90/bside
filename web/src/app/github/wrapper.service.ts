@@ -1922,7 +1922,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
       }
     ]
    */
-  async branches(login: string, repositoryName: string): Promise<any> {
+  async branches(login: string, repositoryName: string): Promise<any[]> {
     if (this.hasToken()) {
       // const repo = new Github({
       //   token: this.token()

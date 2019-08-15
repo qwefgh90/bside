@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, AfterContentInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, AfterContentInit, ViewChild, ElementRef, Input } from '@angular/core';
 import { Editor } from './editor';
 import { WorkspacePack } from '../workspace/workspace-pack';
 import * as EasyMDE from 'easymde';
@@ -6,7 +6,6 @@ import { togglePreview } from 'easymde';
 import { TextUtil, FileType } from '../text/text-util';
 import { WorkspaceService } from '../workspace/workspace.service';
 
-declare var hljs: any;
 
 @Component({
   selector: 'app-markdown-editor',
@@ -24,23 +23,29 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
   constructor(private workspaceService: WorkspaceService) {
   }
 
+  @Input("preview")
+  preview: boolean = false;
+
   @ViewChild("md")
   textArea: ElementRef;
 
   ngAfterContentInit(){
     this.mde = new EasyMDE(<any>{element: this.textArea.nativeElement,
-      // forceSync: true,
       spellChecker: false,
       status: true,
       renderingConfig: {
         singleLineBreaks: true,
-        codeSyntaxHighlighting: true,
-        hljs: hljs
-      }});
-    this.mde.codemirror.on("change", () => {
-      this.models.set(this.current.path, this.mde.value());
-      this.workspaceService.notifyContentChange(this, this.current.path);
+        codeSyntaxHighlighting: false,
+      },
+      toolbar: !this.preview ? true : false
     });
+      
+    if (!this.preview) {
+      this.mde.codemirror.on("change", () => {
+        this.models.set(this.current.path, this.mde.value());
+        this.workspaceService.notifyContentChange(this, this.current.path);
+      });
+    }
   }
 
   ngOnInit() {

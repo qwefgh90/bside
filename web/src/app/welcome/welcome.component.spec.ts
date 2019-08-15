@@ -2,6 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { WelcomeComponent } from './welcome.component';
 import { OAuthService } from '../oauth/service/o-auth.service';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 describe('WelcomeComponent', () => {
   let component: WelcomeComponent;
@@ -10,7 +11,8 @@ describe('WelcomeComponent', () => {
     
     TestBed.configureTestingModule({
       declarations: [ WelcomeComponent ],
-      providers: [{provide: OAuthService, useValue: {isLogin: false}}]
+      providers: [{provide: OAuthService, useValue: {isLogin: false}}],
+      imports: [FlexLayoutModule]
     })
     .compileComponents();
   }));

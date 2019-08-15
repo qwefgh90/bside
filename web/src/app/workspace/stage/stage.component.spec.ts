@@ -5,6 +5,7 @@ import { MatMenuModule, MatIconModule, MatButtonModule, MatDividerModule, MatInp
 import { TreeModule } from 'angular-tree-component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { WrapperService } from 'src/app/github/wrapper.service';
 
 describe('StageComponent', () => {
   let component: StageComponent;
@@ -16,7 +17,8 @@ describe('StageComponent', () => {
       imports: [MatMenuModule, MatIconModule, MatDividerModule, MatInputModule,
         FormsModule,
         ReactiveFormsModule, BrowserAnimationsModule, 
-        TreeModule.forRoot(), MatButtonModule]
+        TreeModule.forRoot(), MatButtonModule],
+      providers: [{provide: WrapperService, useValue: undefined}]
     })
     .compileComponents();
   }));

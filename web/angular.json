@@ -26,16 +26,11 @@
             ],
             "styles": [
               "src/styles.css",
-              "node_modules/prismjs/themes/prism-okaidia.css",
               "node_modules/easymde/dist/easymde.min.css"
             ],
             "scripts": [
               "node_modules/marked/lib/marked.js",
-              "node_modules/prismjs/prism.js",
-              "node_modules/prismjs/components/prism-csharp.min.js",
-              "node_modules/prismjs/components/prism-css.min.js",
-              "node_modules/easymde/dist/easymde.min.js",
-              "node_modules/highlight.js/lib/highlight.js"
+              "node_modules/easymde/dist/easymde.min.js"
             ]
               ,
             "es5BrowserSupport": true
@@ -93,12 +88,11 @@
             "karmaConfig": "src/karma.conf.js",
             "styles": [
               "src/styles.css",
-              "node_modules/prismjs/themes/prism-okaidia.css",
               "node_modules/easymde/dist/easymde.min.css"
             ],
             "scripts": [
-              "node_modules/easymde/dist/easymde.min.js",
-              "node_modules/highlight.js/lib/highlight.js"],
+              "node_modules/marked/lib/marked.js",
+              "node_modules/easymde/dist/easymde.min.js"],
             "assets": [
               "src/favicon.ico",
               "src/assets",

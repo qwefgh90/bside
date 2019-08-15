@@ -17,7 +17,7 @@
 .outer-box{
     height: 100%;
     width: 100%;
-    max-width: 1060px;
+    max-width: 960px;
     display:flex;
     margin-left: 1em;
     margin-right: 1em;

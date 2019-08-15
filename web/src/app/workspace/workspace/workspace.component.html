@@ -10,7 +10,7 @@
               *ngIf="(treeStatus == TreeStatus.Loading)">
               <div class="loading">
                 <mat-spinner [strokeWidth]="4"></mat-spinner>
-                <div>Loading...</div>
+                <div>Loading tree...</div>
               </div>
             </div>
             <div style="flex:1;" [class.block]="(treeStatus == TreeStatus.Committing)"
@@ -21,7 +21,7 @@
               (nodeUploaded)="nodeUploaded($event)"
               [class.none]="(workspaceStatus == WorkspaceStatus.Stage) || (treeStatus != TreeStatus.Done)">
             </app-tree>
-            <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="root"
+            <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="root" [branch]="selectedBranch"
               [modifiedNodes]="nodesToStage"
               [class.none]="(workspaceStatus == WorkspaceStatus.View) || (treeStatus != TreeStatus.Done)"
               (commit)="onCommit($event)" [placeholder]="placeholderForCommit">
@@ -43,7 +43,7 @@
         <mat-icon *ngIf="!leftPaneOpened">chevron_right</mat-icon>
       </div>
     </div>
-    <div class="right-pane-group" [ngStyle.xs]="{'min-height.vh': 100, 'margin-left.em': '1', 'margin-right.em': '0.2'}" [ngStyle.sm]="{'min-height.vh': 100, 'margin-left.em': '1', 'margin-right.em': '0.2'}">
+    <div class="right-pane-group" [ngStyle.xs]="{'min-height.vh': 100, 'max-height.vh': 100, 'margin-left.em': '1', 'margin-right.em': '0.2'}" [ngStyle.sm]="{'min-height.vh': 100, 'max-height.vh': 100, 'margin-left.em': '1', 'margin-right.em': '0.2'}">
       <div class="content-pane">
         <div style="display: flex; flex-direction: column; flex:1; height: 100%; width: 100%;">
           <div class="toolbar" *ngIf="selectedNodePath != undefined" [class.none]="treeStatus != TreeStatus.Done"
@@ -58,10 +58,10 @@
                 Saving...</span></span>
             <div class="spacer"></div>
             <div *ngIf="selectedNodePath != undefined && selectedFileType == FileType.Text">
-              <button mat-stroked-button title="Preview" (click)="toggleMd()" *ngIf="!isMobile">
+              <button mat-stroked-button title="Preview" (click)="toggleMd()" *ngIf="isDesktop">
                 <mat-icon>visibility</mat-icon>
               </button>
-              <button mat-stroked-button title="Compare with original" (click)="toggleDiff()" *ngIf="!isMobile">
+              <button mat-stroked-button title="Compare with original" (click)="toggleDiff()" *ngIf="isDesktop">
                 <mat-icon>compare</mat-icon>
               </button>
               <a href="{{selectedRawPath}}" target="_blank"
@@ -92,10 +92,10 @@
           </div>
           <app-editor #editor1 style="flex:1; min-height: 0px;"
             [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
-            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)" *ngIf="!isMobile"></app-editor>
-          <app-markdown-editor #editor2 style="flex:1; min-height: 0px;"
+            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)" *ngIf="isDesktop"></app-editor>
+          <app-markdown-editor #editor2 style="margin-bottom: 2em; flex:1; min-height: 0px;"
             [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
-            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)" *ngIf="isMobile"></app-markdown-editor>
+            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)" *ngIf="!isDesktop"></app-markdown-editor>
           <div style="flex:1; display: block; height: 100px "
             *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">
             <div style="overflow-y: scroll; height: 100%;"><img [src]="selectedImagePath" /></div>

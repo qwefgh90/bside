@@ -1,4 +1,7 @@
 import { Blob } from '../github/type/blob';
+import { WorkspacePack } from '../workspace/workspace/workspace-pack';
+import { BlobPack } from '../workspace/workspace/pack';
+import { GithubTreeNode } from '../workspace/tree/github-tree-node';
 
 export let simpleTree = {
   "sha": "xxxxxxf129c486558e37d797e54c9fd81c9c3407",
@@ -554,3 +557,5 @@ export let blob1 = {
   "content": "6raB7J20IOq2geuztCDrs7bsnYzrsKU=\n",
   "encoding": "base64"
 }
+
+export let mockWorkspacePack: WorkspacePack = WorkspacePack.of(1,'mockrepo','commitsha1111', 'tresha1111', 'gh-pages', [BlobPack.of('blobsha1111', GithubTreeNode.githubTreeNodeFactory.of(tree.tree[0]), 'aGVsbG8gd29ybGQh')], tree.tree, ['.buildinfo'], '.buildinfo');

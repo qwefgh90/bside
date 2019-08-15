@@ -3,8 +3,9 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { EditorComponent } from './editor.component';
 import { MatSidenavModule, MatProgressSpinnerModule } from '@angular/material';
 import { DiffEditorComponent } from '../diff-editor/diff-editor.component';
-import { MarkdownModule } from 'ngx-markdown';
+import { MarkdownModule, MarkdownComponent } from 'ngx-markdown';
 import { DeviceDetectorModule } from 'ngx-device-detector';
+import { MarkdownEditorComponent } from './markdown-editor.component';
 
 describe('EditorComponent', () => {
   let component: EditorComponent;
@@ -12,12 +13,11 @@ describe('EditorComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ EditorComponent, DiffEditorComponent ],
+      declarations: [EditorComponent, DiffEditorComponent, MarkdownEditorComponent],
       imports: [MatSidenavModule,
         MatProgressSpinnerModule,
-      MarkdownModule.forRoot(),
-      DeviceDetectorModule.forRoot()
-    ]
+        DeviceDetectorModule.forRoot()
+      ]
     })
     .compileComponents();
   }));

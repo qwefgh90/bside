@@ -3,7 +3,11 @@ import { Routes, RouterModule } from '@angular/router';
 import { WelcomeComponent } from './welcome/welcome.component';
 
 const routes: Routes = [
-  {path: "", component: WelcomeComponent}
+  {path: "", component: WelcomeComponent},
+  {
+    path: "repos", 
+    loadChildren: () => import('./workspace/workspace.module').then(mod => mod.WorkspaceModule)
+  }
 ];
 
 @NgModule({

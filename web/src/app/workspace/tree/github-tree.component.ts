@@ -208,21 +208,25 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     scrollOnActivate: false,
   };
 
-  ngOnInit(){
-    this.searchInputFormControl.valueChanges.subscribe( (v: string) =>{
-      this.treeComponent.treeModel.filterNodes(v, false);
-    });
-    this.workspaceService.commandChannel.pipe(filter((v, idx) => v.source != this))
-      .subscribe((command) => {
-        console.debug(command);
-      if(command instanceof WorkspaceCommand.SelectNode){
-        if(this.selectedNode != undefined && command.path != this.selectedNode.data.path){
-          this.selectNode(command.path);
+  ngOnInit() {
+    this.subscriptions.push(
+      this.searchInputFormControl.valueChanges.subscribe((v: string) => {
+        this.treeComponent.treeModel.filterNodes(v, false);
+      }));
+    this.subscriptions.push(
+      this.workspaceService.commandChannel.pipe(filter((v, idx) => v.source != this))
+        .subscribe((command) => {
+          console.debug(command);
+          if (command instanceof WorkspaceCommand.SelectNode) {
+            if (this.selectedNode != undefined && command.path != this.selectedNode.data.path) {
+              this.selectNode(command.path);
+            }
+          } else {
+            // console.trace(`It can't handle ${typeof command}.`)
+          }
         }
-      }else{
-      // console.trace(`It can't handle ${typeof command}.`)
-      }
-    })
+      )
+    );
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -345,7 +349,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   remove(node: TreeNode){
     node.data.remove((node: GithubTreeNode) => {
       console.debug(`${node.path} is removed`);
-      this.workspaceService.removeNode(this, node);
+      this.workspaceService.removeNode(this, node.path);
     });
     this.refreshTree();
   }

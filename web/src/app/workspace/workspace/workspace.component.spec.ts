@@ -5,7 +5,7 @@ import { MatSidenavModule, MatDividerModule, MatButtonModule, MatIconModule, Mat
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WrapperService } from 'src/app/github/wrapper.service';
-import { ActionComponent } from '../action/action/action.component';
+import { ActionComponent } from '../action/action.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TreeModule } from 'angular-tree-component';
 import { convertToParamMap, ParamMap, Params } from '@angular/router';
@@ -34,6 +34,7 @@ class StageComponent {
   @Input("tree") tree: GithubTreeNode;
   @Input("modifiedNodes") modifiedNodes: GithubTreeNode[];
   @Input("placeholder") placeholder;
+  @Input("branch") branch;
 }
 
 @Component({selector: 'app-markdown-editor', template: ''})
@@ -220,7 +221,7 @@ describe('WorkspaceComponent', () => {
     fixture.detectChanges();
   })
 
-  it('children', fakeAsync(() => {
+  it('define child components', fakeAsync(() => {
     fixture.detectChanges();
     tick(3000);
     fixture.detectChanges();
@@ -229,7 +230,7 @@ describe('WorkspaceComponent', () => {
     expect(component.editor).toBeDefined();
   }))
 
-  it('render GithubTreeComponent', fakeAsync(() => {
+  it('render nodes in GithubTreeComponent', fakeAsync(() => {
     fixture.detectChanges();
     tick(3000);
     fixture.detectChanges();
@@ -261,9 +262,9 @@ describe('WorkspaceComponent', () => {
     tick(10000);
 
     expect(component.selectedNodePath).toBeDefined();
-    expect(setContentSpy.calls.count()).toBe(1);
     expect(selectTabSpy.calls.first().args[0]).toBe(tree.tree[0].path);
     
+    expect(setContentSpy.calls.count()).toBe(1);
     let pathArg = setContentSpy.calls.first().args[0];
     let contentArg = setContentSpy.calls.first().args[1];
     expect(tree.tree[0].path).toBe(pathArg);
@@ -281,7 +282,7 @@ describe('WorkspaceComponent', () => {
     let removeContentSpy = spyOn(component.editor, 'removeContent');
     
     component.selectedNodePath = component.tree.root.children[0].path;
-    component.nodeRemoved(component.tree.root.children[0]);
+    component.nodeRemoved(component.tree.root.children[0].path);
 
     expect(removeContentSpy.calls.count()).toBe(1);
     expect(removeContentSpy.calls.first().args[0]).toBe(component.tree.root.children[0].path);
@@ -298,9 +299,10 @@ describe('WorkspaceComponent', () => {
     let setContentSpy = spyOn(component.editor, 'setContent');
     let getContentSpy = spyOn(component.editor, 'getContent');
     let selectTabSpy = spyOn(component.editor, 'selectTab');
-    let valueToReturn = 'this is value to return';
+    let valueToReturn = 'this is the value to return';
     getContentSpy.and.returnValue(valueToReturn)
-
+  
+    // if the path exists
     existSpy.and.returnValue(true);
     component.nodeMoved('test', component.tree.root.children[0]);
 
@@ -310,9 +312,10 @@ describe('WorkspaceComponent', () => {
     expect(setContentSpy.calls.first().args[1]).toBe(valueToReturn);
 
     setContentSpy.calls.reset();
+    
+    // if the path doesn't exists
     existSpy.and.returnValue(false);
     component.nodeMoved('test', component.tree.root.children[0]);
-
     expect(setContentSpy.calls.count()).toBe(0);
   }))
 
@@ -333,56 +336,15 @@ describe('WorkspaceComponent', () => {
     expect(setContentSpy.calls.first().args[0]).toBe(arg.node.path);
     expect(setContentSpy.calls.first().args[1]).toBe('hello world!');
 
+    setContentSpy.calls.reset();
     arg = {base64: 'aGVsbG8gd29ybGQh', node: component.tree.root.children[5].children[1].children[0]};
     component.nodeUploaded(arg);
 
-    expect(setContentSpy.calls.all()[1].args[0]).toBe(arg.node.path);
-    expect(setContentSpy.calls.all()[1].args[1]).toBe('aGVsbG8gd29ybGQh');
+    expect(setContentSpy.calls.first().args[0]).toBe(arg.node.path);
+    expect(setContentSpy.calls.first().args[1]).toBe('aGVsbG8gd29ybGQh');
     tick(10000);
   }))
-
 });
-
-export class ActivatedRouteStub {
-  // Use a ReplaySubject to share previous values with subscribers
-  // and pump new values into the `paramMap` observable
-  private subject = new ReplaySubject<ParamMap>();
-  private qsubject = new ReplaySubject<ParamMap>();
-
-  constructor(initialParams?: Params) {
-    this.setParamMap(initialParams);
-  }
-
-  /** The mock paramMap observable */
-  readonly paramMap = this.subject.asObservable();
-  /** The mock paramMap observable */
-  readonly queryParamMap = this.qsubject.asObservable();
-
-  snapshot = new ActivatedRouteSnapshotStub();
-
-  /** Set the paramMap observables's next value */
-  setParamMap(params?: Params) {
-    this.subject.next(convertToParamMap(params));
-    this.snapshot.paramMap = convertToParamMap(params);
-    this.snapshot.params = params;
-  };
-  /** Set the paramMap observables's next value */
-  setQueryParamMap(params?: Params) {
-    this.qsubject.next(convertToParamMap(params));
-    this.snapshot.queryParamMap = convertToParamMap(params);
-    this.snapshot.queryParams = params;
-  };
-}
-class ActivatedRouteSnapshotStub{
-    constructor(){
-        this.paramMap = convertToParamMap({});
-        this.queryParamMap = convertToParamMap({});
-    }
-    params: Params;
-    queryParams: Params;
-    paramMap: ParamMap;
-    queryParamMap: ParamMap;
-}
 
 describe('WorkspaceComponent with WorkspaceService', () => {
   let component: WorkspaceComponent;
@@ -472,21 +434,15 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     fixture.detectChanges();
     tick(3000);
 
-    
     let nodeSelectedSpy = spyOn(component, 'nodeSelected');
-    let setContentSpy = spyOn(component.editor, 'setContent');
     let existSpy = spyOn(component.editor, 'exist');
     existSpy.and.returnValue(false);
 
     workspaceService.selectNode(undefined, '.buildinfo')
-    // let treeNodes = fixture.nativeElement.querySelectorAll('tree-node .node-title');
-    // treeNodes[0].click();
     fixture.detectChanges();
     tick(10000);
 
     expect(nodeSelectedSpy.calls.count()).toBe(1);
-    // expect(component.selectedNodePath).toBeDefined();
-    // expect(setContentSpy.calls.count()).toBe(1);
   }))
   
   it('RemoveNode() from service', fakeAsync(() => {
@@ -494,17 +450,13 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     tick(3000);
     fixture.detectChanges();
     tick(3000);
-
     
-    let nodeSelectedSpy = spyOn(component, 'nodeSelected');
-    let nodeMovedSpy = spyOn(component, 'nodeMoved');
-    let nodeCreatedSpy = spyOn(component, 'nodeCreated');
     let nodeRemovedSpy = spyOn(component, 'nodeRemoved');
 
-    let testNode = Object.assign({}, tree.tree[0]);
-    testNode.path = '.buildinfo';
+    // let testNode = Object.assign({}, tree.tree[0]);
+    // testNode.path = '.buildinfo';
 
-    workspaceService.removeNode(undefined, GithubTreeNode.githubTreeNodeFactory.of(testNode));
+    workspaceService.removeNode(undefined, '.buildinfo');
     fixture.detectChanges();
     tick(10000);
 
@@ -516,12 +468,8 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     tick(3000);
     fixture.detectChanges();
     tick(3000);
-
     
-    let nodeSelectedSpy = spyOn(component, 'nodeSelected');
-    let nodeMovedSpy = spyOn(component, 'nodeMoved');
     let nodeCreatedSpy = spyOn(component, 'nodeCreated');
-    let nodeRemovedSpy = spyOn(component, 'nodeRemoved');
 
     let testNode = Object.assign({}, tree.tree[0]);
     testNode.path = '.buildinfo';
@@ -539,10 +487,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     fixture.detectChanges();
     tick(3000);
 
-    let nodeSelectedSpy = spyOn(component, 'nodeSelected');
     let nodeMovedSpy = spyOn(component, 'nodeMoved');
-    let nodeCreatedSpy = spyOn(component, 'nodeCreated');
-    let nodeRemovedSpy = spyOn(component, 'nodeRemoved');
 
     let testNode = Object.assign({}, tree.tree[0]);
     testNode.path = 'newfile.txt';
@@ -553,5 +498,63 @@ describe('WorkspaceComponent with WorkspaceService', () => {
 
     expect(nodeMovedSpy.calls.count()).toBe(1);
   }))
+  
+  it('NotifyContentChange() from service', fakeAsync(() => {
+    fixture.detectChanges();
+    tick(3000);
+    fixture.detectChanges();
+    tick(3000);
+
+    let nodeContentChangedSpy = spyOn(component, 'nodeContentChanged');
+
+    workspaceService.notifyContentChange(undefined, 'newfile.txt')
+    fixture.detectChanges();
+    tick(10000);
+
+    expect(nodeContentChangedSpy.calls.count()).toBe(1);
+    expect(nodeContentChangedSpy.calls.first().args[0]).toBe('newfile.txt');
+  }))
 
 });
+
+
+export class ActivatedRouteStub {
+  // Use a ReplaySubject to share previous values with subscribers
+  // and pump new values into the `paramMap` observable
+  private subject = new ReplaySubject<ParamMap>();
+  private qsubject = new ReplaySubject<ParamMap>();
+
+  constructor(initialParams?: Params) {
+    this.setParamMap(initialParams);
+  }
+
+  /** The mock paramMap observable */
+  readonly paramMap = this.subject.asObservable();
+  /** The mock paramMap observable */
+  readonly queryParamMap = this.qsubject.asObservable();
+
+  snapshot = new ActivatedRouteSnapshotStub();
+
+  /** Set the paramMap observables's next value */
+  setParamMap(params?: Params) {
+    this.subject.next(convertToParamMap(params));
+    this.snapshot.paramMap = convertToParamMap(params);
+    this.snapshot.params = params;
+  };
+  /** Set the paramMap observables's next value */
+  setQueryParamMap(params?: Params) {
+    this.qsubject.next(convertToParamMap(params));
+    this.snapshot.queryParamMap = convertToParamMap(params);
+    this.snapshot.queryParams = params;
+  };
+}
+class ActivatedRouteSnapshotStub{
+    constructor(){
+        this.paramMap = convertToParamMap({});
+        this.queryParamMap = convertToParamMap({});
+    }
+    params: Params;
+    queryParams: Params;
+    paramMap: ParamMap;
+    queryParamMap: ParamMap;
+}

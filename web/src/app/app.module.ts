@@ -26,7 +26,6 @@ export function initAuth(oauthService: OAuthService){
     WelcomeComponent,
   ],
   imports: [
-    WorkspaceModule,
     ProjectsModule,
     TemplatesModule,
     AuthModule,

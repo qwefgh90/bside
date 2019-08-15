@@ -60,4 +60,9 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
         return -1;
     });
   }
+
+  repositoryToLoad = '';
+  startLoading(repoName: string){
+    this.repositoryToLoad = repoName;
+  }
 }

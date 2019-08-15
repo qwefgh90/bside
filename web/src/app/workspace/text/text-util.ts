@@ -1,5 +1,4 @@
 import { toByteArray, fromByteArray } from 'base64-js';
-import * as jschardet from 'jschardet';
 import { TextDecoderLite, TextEncoderLite } from 'text-encoder-lite';
 import * as mime from 'mime';
 import * as mimeDb from 'mime-db'
@@ -54,15 +53,15 @@ export class TextUtil {
      * can return null
      * @param bytes 
      */
-    static getEncoding(bytes): string {
-        let string = '';
-        for (var i = 0; i < bytes.length; ++i) {
-            string += String.fromCharCode(bytes[i]);
-        }
-        let encoding = jschardet.detect(string, { minimumThreshold: 0 }).encoding;
-        console.debug('detected encoding: ' + encoding);
-        return encoding;
-    }
+    // static getEncoding(bytes): string {
+    //     let string = '';
+    //     for (var i = 0; i < bytes.length; ++i) {
+    //         string += String.fromCharCode(bytes[i]);
+    //     }
+    //     let encoding = jschardet.detect(string, { minimumThreshold: 0 }).encoding;
+    //     console.debug('detected encoding: ' + encoding);
+    //     return encoding;
+    // }
 
     static getFileType(name: string) {
         const mimeName: string = mime.getType(name);

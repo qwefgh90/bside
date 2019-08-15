@@ -52,8 +52,8 @@ export class WorkspaceService {
     WorkspaceCommand.CreateNode.internalQueue.next(c);
   }
 
-  removeNode(source: any, node: GithubTreeNode){
-    let c = new WorkspaceCommand.RemoveNode(node, source);
+  removeNode(source: any, path: string){
+    let c = new WorkspaceCommand.RemoveNode(path, source);
     WorkspaceCommand.RemoveNode.internalQueue.next(c);
   }
 
@@ -86,7 +86,7 @@ export namespace WorkspaceCommand {
   export type Command =  RemoveNode | CloseTab | MoveNodeInTree | SelectNode | Save | UndoAll;
 
   export class RemoveNode{
-    constructor(public node: GithubTreeNode, public source: any) {
+    constructor(public path: string, public source: any) {
     }
     static internalQueue = new Subject<RemoveNode>();
   }

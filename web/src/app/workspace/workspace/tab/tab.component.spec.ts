@@ -120,12 +120,10 @@ describe('TabComponent', () => {
     tick(3000);
 
     let fileName = 'test.txt';
-    let testNode = Object.assign({}, tree.tree[0]);
-    testNode.path = fileName;
     component.addTab(fileName);
     let removeTabSpy = spyOn(component, 'removeTab');
 
-    workspaceService.removeNode(undefined, GithubTreeNode.githubTreeNodeFactory.of(testNode));
+    workspaceService.removeNode(undefined, 'test.txt');
     fixture.detectChanges();
     tick(3000);
 

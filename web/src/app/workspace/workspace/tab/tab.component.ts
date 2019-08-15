@@ -1,33 +1,33 @@
-import { Component, OnInit, EventEmitter, Output, ViewChild, Input, OnChanges, SimpleChanges, AfterContentInit } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output, ViewChild, Input, OnChanges, SimpleChanges, AfterContentInit, OnDestroy } from '@angular/core';
 import { Tab } from './tab';
 import { MatTab, MatTabGroup } from '@angular/material';
 import { WorkspaceService, WorkspaceCommand } from '../workspace.service';
 import { filter } from 'rxjs/operators';
 import { WorkspacePack } from '../workspace-pack';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-tab',
   templateUrl: './tab.component.html',
   styleUrls: ['./tab.component.css']
 })
-export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit {
+export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, OnDestroy {
 
   constructor(private workspaceService: WorkspaceService) { }
-
-  contentInit = new Subject<void>();
 
   actionAfterTabInitialized: () => void;
   _tabs: string[] = [];
   _tabsSet: Set<string> = new Set<string>();
 
+  subscriptions: Subscription[] = [];
   selectedTabindex: number;
   selectedPath: string;
 
   @ViewChild(MatTabGroup) group: MatTabGroup;
 
   ngOnInit() {
-    this.workspaceService.commandChannel.pipe(filter((v, idx) => v.source != this))
+    
+    let s = this.workspaceService.commandChannel.pipe(filter((v, idx) => v.source != this))
       .subscribe((command) => {
         console.debug(command);
         if (command instanceof WorkspaceCommand.SelectNode) {
@@ -39,7 +39,7 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit {
           }
         }
         else if (command instanceof WorkspaceCommand.RemoveNode) {
-          this.removeTab(command.node.path);
+          this.removeTab(command.path);
         }
         else if (command instanceof WorkspaceCommand.CloseTab) {
         } else if (command instanceof WorkspaceCommand.MoveNodeInTree) {
@@ -48,10 +48,13 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit {
           }
         }
       });
-      this.contentInit.subscribe(() => {
-      });
+      this.subscriptions.push(s);
   }
 
+  ngOnDestroy(){
+    this.subscriptions.forEach(s => s.unsubscribe());
+  }
+  
   ngOnChanges(changes: SimpleChanges) {
   }
 
@@ -71,7 +74,6 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit {
   }
 
   ngAfterContentInit(){
-    this.contentInit.next();
   }
 
   changeTab(path: string) {

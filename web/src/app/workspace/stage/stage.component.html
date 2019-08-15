@@ -58,11 +58,11 @@
     </div>
     <mat-divider></mat-divider>
   </div>
-  <mat-form-field appearance="outline" class="description">
+  <mat-form-field appearance="outline" class="description" *ngIf="!((modifiedNodes ? (modifiedNodes.length == 0) : false) || !isPossibleCommit)">
     <mat-label>Leave an description</mat-label>
     <textarea matInput placeholder="{{placeholder}}" [formControl]="description" cdkTextareaAutosize
       #autosize="cdkTextareaAutosize" cdkAutosizeMinRows="4" cdkAutosizeMaxRows="4"></textarea>
   </mat-form-field>
-  <button mat-stroked-button style="margin-bottom: 1em" [disabled]="modifiedNodes ? (modifiedNodes.length == 0) : false"
+  <button mat-stroked-button style="margin-bottom: 1em" [title]="erorrDescription" [disabled]="(modifiedNodes ? (modifiedNodes.length == 0) : false) || !isPossibleCommit"
     (click)="commit()">Commit</button>
 </div>
