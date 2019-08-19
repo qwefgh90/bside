@@ -5,25 +5,35 @@ before_install:
 - openssl aes-256-cbc -K $encrypted_5aa0ff0f8511_key -iv $encrypted_5aa0ff0f8511_iv
   -in id_rsa.enc -out id_rsa -d
 - cd web
-script:
-- npm run travis-test
-- npm run prod-build
-after_success:
-- eval $(ssh-agent -s)
-- chmod 600 ../id_rsa
-- ssh-add ../id_rsa
-- ssh-keyscan -p ${port} ${addr} >> ~/.ssh/known_hosts
-- ssh -p ${port} root@${addr} "rm -rf /opt/bside/httpd/htdocs/*"
-- scp -P ${port} -r dist/web/* root@${addr}:/opt/bside/httpd/htdocs
+jobs:
+  include:
+    - stage: "Tests"
+      name: "Test in Chrome"
+      cache:
+        directories:
+        - node_modules
+      script: 
+        - npm run travis-test      
+      addons:
+        chrome: stable
+    - stage: "Build"
+      name: "Build in production"
+      cache:
+        directories:
+        - node_modules
+      script:
+        - npm run prod-build
+      after_success:
+        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash eval $(ssh-agent -s); fi'
+        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash chmod 600 ../id_rsa; fi'
+        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ssh-add ../id_rsa; fi'
+        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ssh-keyscan -p ${port} ${addr} >> ~/.ssh/known_hosts; fi'
+        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ssh -p ${port} root@${addr} "rm -rf /opt/bside/httpd/htdocs/*"; fi'
+        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash scp -P ${port} -r dist/web/* root@${addr}:/opt/bside/httpd/htdocs; fi'
 notifications:
   email: false
-cache:
-  directories:
-  - node_modules
 branches:
   only:
   - master
-addons:
-  chrome: stable
 dist: trusty
 sudo: required
