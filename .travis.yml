@@ -24,12 +24,12 @@ jobs:
       script:
         - npm run prod-build
       after_success:
-        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash eval $(ssh-agent -s); fi'
-        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash chmod 600 ../id_rsa; fi'
-        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ssh-add ../id_rsa; fi'
-        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ssh-keyscan -p ${port} ${addr} >> ~/.ssh/known_hosts; fi'
-        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ssh -p ${port} root@${addr} "rm -rf /opt/bside/httpd/htdocs/*"; fi'
-        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash scp -P ${port} -r dist/web/* root@${addr}:/opt/bside/httpd/htdocs; fi'
+        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then eval $(ssh-agent -s); fi'
+        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then chmod 600 ../id_rsa; fi'
+        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then ssh-add ../id_rsa; fi'
+        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then ssh-keyscan -p ${port} ${addr} >> ~/.ssh/known_hosts; fi'
+        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then ssh -p ${port} root@${addr} "rm -rf /opt/bside/httpd/htdocs/*"; fi'
+        - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then scp -P ${port} -r dist/web/* root@${addr}:/opt/bside/httpd/htdocs; fi'
 notifications:
   email: false
 branches:
