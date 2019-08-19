@@ -48,21 +48,7 @@ export class TextUtil {
     static base64ToString(base64: string, encoding: string = 'utf-8'): string {
         return this.decode(this.base64ToBytes(base64), encoding);
     }
-
-    /**
-     * can return null
-     * @param bytes 
-     */
-    // static getEncoding(bytes): string {
-    //     let string = '';
-    //     for (var i = 0; i < bytes.length; ++i) {
-    //         string += String.fromCharCode(bytes[i]);
-    //     }
-    //     let encoding = jschardet.detect(string, { minimumThreshold: 0 }).encoding;
-    //     console.debug('detected encoding: ' + encoding);
-    //     return encoding;
-    // }
-
+    
     static getFileType(name: string) {
         const mimeName: string = mime.getType(name);
         const mimeInfo = mimeDb[mime.getType(name)]

@@ -12,7 +12,8 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "bundle-report": "webpack-bundle-analyzer dist/web/stats.json"
+    "bundle-report": "webpack-bundle-analyzer dist/web/stats.json",
+    "add-licenses": "license-checker > LICENSE-THIRD-PARTY"
   },
   "private": true,
   "dependencies": {
@@ -37,7 +38,7 @@
     "fast-deep-equal": "^2.0.1",
     "github-api": "^3.2.0",
     "highlight.js": "^9.15.9",
-    "jschardet": "^2.1.0",
+    "license-checker": "^25.0.1",
     "mat-progress-buttons": "^8.0.4",
     "mime": "^2.4.3",
     "mime-types": "^2.1.24",
