@@ -27,6 +27,20 @@ export class LocalDbService implements Database {
       return Promise.reject("Data for last workspace doesn't exist.");
   }
 
+  list(repositoryId: number): Promise<Array<WorkspacePack>>{
+    let res = [];
+    Object.keys(this.storage).forEach(k => {
+        let json = localStorage.getItem(k);
+        if(json != undefined && json != ''){
+          let pack = JSON.parse(json) as WorkspacePack;
+          if(repositoryId == pack.repositoryId)
+            return res.push(pack);
+        }
+      }
+    )
+    return Promise.resolve(res);
+  }
+
   delete(repositoryId: number, commit_sha: string){
     this.storage.removeItem(repositoryId + '-' + commit_sha);
   }

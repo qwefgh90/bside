@@ -60,7 +60,8 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   }
   
   selectNode(node: TreeNode){
-    this.workspaceService.selectNode(this, node.data.path);
+    if((node.data.state as NodeStateAction[]).findIndex(v => v == NodeStateAction.Deleted) == -1)
+      this.workspaceService.selectNode(this, node.data.path);
   }
 
   undoAll(){
