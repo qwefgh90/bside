@@ -273,7 +273,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
         let tree;
         let doAfterLoadingTree: () => void;
-        if (this.commitStatePack != undefined) { // load states of workspace before commit 
+        if (this.commitStatePack != undefined) { // load last states of workspace
           tree = Promise.resolve({ tree: this.commitStatePack.treePacks, sha: this.commitStatePack.tree_sha });
           doAfterLoadingTree = () => {
             this.subjectWithSaveFile.next(this.commitStatePack)
@@ -653,8 +653,17 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       console.error(e);
     } finally {
       this.commitStatePack = this.pack;
+      this.clearCommits();
       this.refreshSubject.next();
     }
+  }
+
+  private clearCommits(){
+    this.database.list(this.repositoryDetails.id).then((arr) => {
+      arr.forEach(p => {
+        this.database.delete(p.repositoryId, p.commit_sha);
+      })
+    });
   }
 
   private get pack(): WorkspacePack{
