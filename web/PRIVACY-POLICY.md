@@ -25,10 +25,10 @@ We may use the information.
 - to collect a bug and related environment information
 - to make usuful statistics such as the user activity statistics
 
-Information Sharing and Disclosure
-We don't share information with other groups in a official or unoffical way.
+### Information Sharing and Disclosure
+We don't share information with other groups in any official or unoffical way.
 
-Data Security
+### Data Security
 We only save your works to a isolated namespace which is based on the technology of the local storage. And we clear out old works when you go to the new commit. This means that BSide depends the security of your browser and if you keeping latest version, your data will be fine. The communication between the client and server over SSL connection. It make all information to be encrypted.
 
 Although we take appropriate measures to safeguard against unauthorized disclosures of information, we cannot assure you that information will never be disclosed, altered or destroyed in a manner that is inconsistent with this Privacy Policy.
