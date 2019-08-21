@@ -14,7 +14,7 @@ import { UploadFile } from '../upload/upload-file';
 import { LocalUploadService } from '../upload/local-upload.service';
 import { GithubTree } from './github-tree';
 import { BlobPack } from '../workspace/pack';
-import { WorkspaceService, WorkspaceCommand } from '../workspace/workspace.service';
+import { WorkspaceService, WorkspaceCommand } from '../workspace.service';
 import { filter } from 'rxjs/operators';
 import { TextUtil } from '../text/text-util';
 @Component({

@@ -3,8 +3,8 @@ import { Tab } from './tab';
 import { MatTab, MatTabGroup } from '@angular/material';
 import { WorkspaceService, WorkspaceCommand } from '../workspace.service';
 import { filter } from 'rxjs/operators';
-import { WorkspacePack } from '../workspace-pack';
 import { Subject, Subscription } from 'rxjs';
+import { WorkspacePack } from '../workspace/workspace-pack';
 
 @Component({
   selector: 'app-tab',

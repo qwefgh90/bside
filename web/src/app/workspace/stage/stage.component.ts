@@ -4,7 +4,7 @@ import { Stage } from './stage';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { TreeNode } from 'angular-tree-component';
 import { FormControl } from '@angular/forms';
-import { WorkspaceService } from '../workspace/workspace.service';
+import { WorkspaceService } from '../workspace.service';
 import { labelTable, getLabel } from '../info/info.component';
 
 @Component({

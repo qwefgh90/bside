@@ -14,12 +14,12 @@ import { ActionComponent, ActionState } from '../action/action.component';
 import { GithubTreeToTree } from '../tree/github-tree-to-tree';
 import { GithubTreeComponent } from '../tree/github-tree.component';
 import { CommitProgressComponent } from './commit-progress/commit-progress.component';
-import { TabComponent } from './tab/tab.component';
-import { Tab } from './tab/tab';
+import { TabComponent } from '../tab/tab.component';
+import { Tab } from '../tab/tab';
 import { BlobPack } from './pack';
 import { WorkspacePack } from './workspace-pack';
 import { Database, DatabaseToken } from 'src/app/db/database';
-import { WorkspaceService, WorkspaceCommand } from './workspace.service';
+import { WorkspaceService, WorkspaceCommand } from '../workspace.service';
 import {
   trigger,
   state,

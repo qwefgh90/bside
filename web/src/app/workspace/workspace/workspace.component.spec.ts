@@ -21,10 +21,10 @@ import { GithubTreeComponent } from '../tree/github-tree.component';
 import { Editor } from '../editor/editor';
 import { MarkdownModule } from 'ngx-markdown';
 import { CommitProgressComponent } from './commit-progress/commit-progress.component';
-import { TabComponent } from './tab/tab.component';
+import { TabComponent } from '../tab/tab.component';
 import { DatabaseToken } from 'src/app/db/database';
 import { LocalDbService } from 'src/app/db/local-db.service';
-import { WorkspaceService } from './workspace.service';
+import { WorkspaceService } from '../workspace.service';
 import { DeviceDetectorModule, DeviceDetectorService } from 'ngx-device-detector';
 import { FlexLayoutModule } from '@angular/flex-layout';
 

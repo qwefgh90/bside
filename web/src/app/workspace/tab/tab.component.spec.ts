@@ -3,10 +3,10 @@ import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core
 import { TabComponent } from './tab.component';
 import { MatTabsModule, MatIconModule, MatTab } from '@angular/material';
 import { WorkspaceService } from '../workspace.service';
-import { GithubTreeNode } from '../../tree/github-tree-node';
+import { GithubTreeNode } from '../tree/github-tree-node';
 import { tree } from 'src/app/testing/mock-data';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { WorkspacePack } from '../workspace-pack';
+import { WorkspacePack } from '../workspace/workspace-pack';
 
 describe('TabComponent', () => {
   let component: TabComponent;

@@ -10,8 +10,6 @@
     "prod-build": "ng build --extra-webpack-config webpack.partial.js --prod",
     "stats": "ng build --extra-webpack-config webpack.partial.js --prod --stats-json",
     "test": "ng test",
-    "lint": "ng lint",
-    "e2e": "ng e2e",
     "bundle-report": "webpack-bundle-analyzer dist/web/stats.json",
     "add-licenses": "license-checker > LICENSE-THIRD-PARTY"
   },

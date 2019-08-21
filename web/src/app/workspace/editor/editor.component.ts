@@ -8,8 +8,8 @@ import { TypeState } from 'typestate';
 import { WorkspacePack } from '../workspace/workspace-pack';
 import { TextUtil, FileType } from '../text/text-util';
 import { DeviceDetectorService } from 'ngx-device-detector';
-import { WorkspaceService } from '../workspace/workspace.service';
-import { MarkdownEditorComponent } from './markdown-editor.component';
+import { WorkspaceService } from '../workspace.service';
+import { MarkdownEditorComponent } from '../markdown-editor/markdown-editor.component';
 
 const prefix: string = 'X'.repeat(100);
 enum EditorMode{

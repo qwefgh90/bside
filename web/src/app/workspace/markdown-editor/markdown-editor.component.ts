@@ -1,10 +1,10 @@
 import { Component, OnInit, AfterViewInit, AfterContentInit, ViewChild, ElementRef, Input } from '@angular/core';
-import { Editor } from './editor';
+import { Editor } from '../editor/editor';
 import { WorkspacePack } from '../workspace/workspace-pack';
 import * as EasyMDE from 'easymde';
 import { togglePreview } from 'easymde';
 import { TextUtil, FileType } from '../text/text-util';
-import { WorkspaceService } from '../workspace/workspace.service';
+import { WorkspaceService } from '../workspace.service';
 
 
 @Component({

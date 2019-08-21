@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Subject, Observable, Scheduler, ReplaySubject } from 'rxjs';
 import * as eq from 'fast-deep-equal';
-import { GithubTreeNode } from '../tree/github-tree-node';
-import { GithubTree } from '../tree/github-tree';
+import { GithubTreeNode } from './tree/github-tree-node';
+import { GithubTree } from './tree/github-tree';
 import { observeOn, distinctUntilChanged, debounce, debounceTime, flatMap } from 'rxjs/operators';
 import { async } from 'rxjs/internal/scheduler/async';
 import { ReplaceSource } from 'webpack-sources';
