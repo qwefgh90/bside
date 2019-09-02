@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PostConstruct;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,7 +23,15 @@ public class TopicSearchController {
 
     Logger log = LoggerFactory.getLogger(TopicSearchController.class);
 
-    ExecutorService imageEs = Executors.newFixedThreadPool(5);
+    @Value("${topicsearch.http.thread-count}")
+    int threadCount;
+
+    ExecutorService imageEs;
+
+    @PostConstruct
+    void init(){
+        imageEs = Executors.newFixedThreadPool(threadCount);
+    }
 
     @Autowired
     TopicSearchService topicSearchService;

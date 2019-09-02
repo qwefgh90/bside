@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -26,7 +27,7 @@ public class ScreenshotService {
     String providedCacheDir;
     Path storagePath;
 
-    private ExecutorService es = Executors.newSingleThreadExecutor();
+    private ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
     private Map<String, File> cache = new HashMap<>();
 
     public ScreenshotService() throws IOException {
@@ -45,10 +46,10 @@ public class ScreenshotService {
                 var f = cache.get(fullRepoName);
                 try {
                     return Files.readAllBytes(f.toPath());
-                }catch(IOException e){
+                }catch(Exception e){
                     throw new RuntimeException("It failed to read from " + f.toString(), e);
                 }
-            }, es);
+            }, ioExecutor);
         }else{
             var filePath = storagePath.resolve(fullRepoName + ".png");
             try {
@@ -59,16 +60,18 @@ public class ScreenshotService {
                     log.error("An error occurs when creating " + filePath.getParent().toString(), e);
                 }
             }
-            var f = browserService.takeScreenshot(url, filePath);
-            return f.thenApply((path) -> {
+            var f = browserService.takeScreenshot(url);
+            return f.thenApplyAsync((screenShotPath) -> {
+                log.debug(screenShotPath.toString() + " will be copied to " + filePath.toString());
                 try {
-                    var bytes =  Files.readAllBytes(path);
-                    cache.put(fullRepoName, path.toFile());
+                    Files.copy(screenShotPath, filePath, StandardCopyOption.REPLACE_EXISTING);
+                    cache.put(fullRepoName, filePath.toFile());
+                    var bytes =  Files.readAllBytes(filePath);
                     return bytes;
-                }catch(IOException e){
-                    throw new RuntimeException("It failed to read from " + f.toString(), e);
+                }catch(Exception e){
+                    throw new RuntimeException("It failed to copy from " + screenShotPath.toString() + " to " + filePath.toString() + " and read from" + filePath.toString(), e);
                 }
-            });
+            }, ioExecutor);
         }
     }
 }
