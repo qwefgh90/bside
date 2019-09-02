@@ -22,6 +22,10 @@ export class RedirectComponent implements OnInit {
         console.log("RedirectUrl : " + url);
         this.oauth.redirectUrl = TextUtil.base64ToString(url);
       }
+      let isPrivate = false;
+      if (map.has("private")) {
+        isPrivate = map.get("private") == "true";
+      }
       this.state = map.get("state");
       this.code = map.get("code");
 

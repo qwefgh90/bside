@@ -16,16 +16,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   subscriptions: Array<Subscription> = []
 
+  isPrivate;
   user;
   redirecting = false;
 
   ngOnInit() {
     var s = this.oauth.channel.login.subscribe((isLogin) => {
-      console.log("::" + isLogin);
       if(isLogin){
-         this.wrapperService.user().then(user => {
-           this.user = user;
-         });
+          this.wrapperService.user().then(user => {
+            this.user = user;
+          });
+          
+          this.wrapperService.scope().then(v => {
+            this.isPrivate = (v == 'repo');
+          })
       }else{
         this.user = undefined;
       }
@@ -46,7 +50,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   logout(){
     this.oauth.logout().then(() => {
-      this.router.navigate(["/"]);
+      this.router.navigate(["/login"]);
     });
   }
 
