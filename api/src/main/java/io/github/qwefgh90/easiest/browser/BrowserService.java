@@ -6,6 +6,7 @@ import jdk.jshell.spi.ExecutionControl;
 import org.apache.commons.exec.OS;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -25,8 +26,10 @@ import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.concurrent.*;
@@ -38,6 +41,8 @@ public class BrowserService {
 
     private ExecutorService es = Executors.newSingleThreadExecutor();
 
+    @Value("${screenshot.page-timeout}")
+    int pageTimeout;
 
     @Autowired
     ResourceLoader resourceLoader;
@@ -52,14 +57,15 @@ public class BrowserService {
         else
             resource = resourceLoader.getResource("classpath:chromedriver");
         var copiedDriver = Files.createTempDirectory("chromedriver").resolve(resource.getFilename());
-        Files.copy(resource.getInputStream(), copiedDriver);
+        Files.copy(resource.getInputStream(), copiedDriver, StandardCopyOption.REPLACE_EXISTING);
         if(!OS.isFamilyWindows())
             Files.setPosixFilePermissions(copiedDriver, PosixFilePermissions.fromString("rwxrwx---"));
-        log.debug("driver path: " + copiedDriver.toAbsolutePath().toString());
+        log.info("driver path: " + copiedDriver.toAbsolutePath().toString());
         System.setProperty("webdriver.chrome.driver", copiedDriver.toAbsolutePath().toString());
         var opt = new ChromeOptions();
         opt.addArguments("--headless","--hide-scrollbars","--disable-dev-shm-usage", "--no-sandbox");
         driver = new ChromeDriverEx(opt);
+        driver.manage().timeouts().pageLoadTimeout(pageTimeout, TimeUnit.SECONDS);
     }
 
     @PreDestroy
@@ -69,17 +75,27 @@ public class BrowserService {
         }
     }
 
-    public CompletableFuture<Path> takeScreenshot(String url, Path dest) {
+    void restart(){
+        try {
+            log.info("chromedriver will be restarted because cleaning the error in chromedriver.");
+            clean();
+            init();
+        }catch(Exception e){
+            log.error("It failed to restart chromedriver.", e);
+        }
+    }
+
+    public CompletableFuture<Path> takeScreenshot(String url) {
         return CompletableFuture.supplyAsync(() -> {
-            driver.get(url);
-            File src = driver.getFullScreenshotAs(OutputType.FILE);
-            log.debug("" + src.toString() + " will be copied to " + dest.toString());
             try {
-                Files.copy(src.toPath(), dest);
-            }catch(IOException e){
-                throw new RuntimeException("Tt failed to copy to " + dest.toString(), e);
+                driver.get(url);
+                File src = driver.getFullScreenshotAs(OutputType.FILE);
+                return src.toPath();
+            }catch(Exception e){
+                restart();
+                throw new RuntimeException("An error occurs while navigating to " + url, e);
             }
-            return dest;
         }, es);
     }
 }
+

@@ -8,10 +8,13 @@ import { Subject, ReplaySubject } from 'rxjs';
   providedIn: 'root'
 })
 export class OAuthService {
-  constructor(private httpClient: HttpClient) { this.isLogin = false; }
+  constructor(private httpClient: HttpClient) { 
+    this.isLogin = false; 
+    // this.intialOAuthInfo();
+  }
 
   isLogin;
-
+  clientId: string;
   accessToken: string;
 
   private updateLogin(isLogin, accessToken){
@@ -28,7 +31,10 @@ export class OAuthService {
   intialOAuthInfo(): Promise<{state: string, client_id: string}> {
     return this.httpClient
       .get<{state: string, client_id: string}>(`${environment.apiServer}/login/github/initialdata`)
-      .toPromise();
+      .toPromise().then(info => {
+        this.clientId = info.client_id;
+        return info;
+      });
   }
 
   login(state: string, code: string){

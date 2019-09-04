@@ -2,6 +2,7 @@ import { Component, OnInit, InjectionToken, Inject } from '@angular/core';
 import { OAuthService } from '../service/o-auth.service';
 import { environment } from 'src/environments/environment';
 import { TextUtil } from 'src/app/workspace/text/text-util';
+import { ActivatedRoute } from '@angular/router';
 
 export const LOCATION_TOKEN = new InjectionToken<Location>('Window location object');
 
@@ -21,10 +22,14 @@ export class LoginComponent implements OnInit {
   status: LoginStatus = LoginStatus.Loading;
   
   includingPrivate = false;
-  constructor(private oauthService: OAuthService, @Inject(LOCATION_TOKEN) private location: Location) { 
+  constructor(private oauthService: OAuthService, @Inject(LOCATION_TOKEN) private location: Location, private route: ActivatedRoute) { 
   }
 
   ngOnInit() {
+    if(this.route.snapshot.queryParamMap.has('private')){
+      
+      this.includingPrivate = this.route.snapshot.queryParamMap.get('private') == "true";
+    }
     const oauthInfo = this.oauthService.intialOAuthInfo(); 
     oauthInfo.then((info) => {
       if(info == undefined){
