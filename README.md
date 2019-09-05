@@ -26,5 +26,54 @@ As if you use the desktop IDE, You can directly create, rename, edit, remove con
 
 ### Mobile support
 
-Software developers can use it when they think of the idea or want to manage the blog without the desktop. 
-It support Chrome, Firefox, Safari.
+Software developers can use it when they think of the idea or want to manage the blog. 
+It supports Chrome, Firefox, Safari.
+
+## Development
+
+[NodeJS 10+](https://nodejs.org/ko/download/), [JDK 11+](https://jdk.java.net/archive/) and Maven 3+ are requried.
+
+### Angular (/web)
+
+A Web application is based on Angular 7+. So you should consider Angular CLI as the first tool when creating some files.
+
+#### Running in localhost
+
+There are predefined scripts to make it easy to develop this project.
+
+```
+npm install
+npm run start
+```
+
+#### Testing
+
+All unit tests should be passed. There is no other test than unit test until now.
+
+```
+npm run test
+```
+
+### Server API (/api)
+
+#### Creating A OAuth App for local authenticating
+
+It is important to get your own **Client ID** and **Client Secret** by creating new oauth application in [Github](https://github.com/settings/developers).
+And then ensure that `application-oauth.properties` has Client ID and Client Secret. Otherwise, ouath authenticating will fail.
+**`application-oauth.properties` is being ignored** to not be contained in a next commit.
+
+#### Running in localhost
+
+You can run a main class on IntelliJ.
+
+#### Testing
+
+All unit tests should be passed. There is no other test than unit test until now.
+
+```
+mvn test
+```
+
+## Contributing
+
+We are waiting for your issues and pull requests.
