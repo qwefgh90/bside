@@ -4,7 +4,7 @@ import { RepositoriesComponent } from './repositories.component';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule, MatProgressSpinnerModule, MatDividerModule, MatInputModule } from '@angular/material';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 describe('RepositoriesComponent', () => {
@@ -12,13 +12,17 @@ describe('RepositoriesComponent', () => {
   let fixture: ComponentFixture<RepositoriesComponent>;
   let wrapperSpy;
   let routeStub;
+  let routerSpy;
   beforeEach(async(() => {
-    wrapperSpy = jasmine.createSpyObj('WrapperService', ['repositories'])
+    wrapperSpy = jasmine.createSpyObj('WrapperService', ['repositories', 'user'])
     wrapperSpy.repositories.and.returnValue(Promise.resolve([]));
+    wrapperSpy.user.and.returnValue(Promise.resolve({login:"testuser"}));
+    routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     routeStub = new ActivatedRouteStub({'userId': 'test'});
     TestBed.configureTestingModule({
       declarations: [RepositoriesComponent, RouterLinkDirectiveStub],
       providers: [{provide: ActivatedRoute, useValue: routeStub},
+        { provide: Router, useValue: routerSpy},
         { provide: WrapperService, useValue: wrapperSpy }
       ],
       imports: [MatListModule, MatIconModule, MatProgressSpinnerModule, MatDividerModule, MatInputModule,

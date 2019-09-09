@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, AfterContentInit } from '@angular/core';
 import { WrapperService } from 'src/app/github/wrapper.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { FormControl } from '@angular/forms';
+import { OAuthService } from 'src/app/oauth/service/o-auth.service';
 
 @Component({
   selector: 'app-repositories',
@@ -11,7 +12,7 @@ import { FormControl } from '@angular/forms';
 })
 export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
 
-  constructor(private wrapper: WrapperService, private route: ActivatedRoute) { }
+  constructor(private wrapper: WrapperService, private route: ActivatedRoute, private router: Router) { }
 
   repositories: Array<any>;
   userId;
@@ -27,6 +28,11 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.repositories = result;
         }, () =>{
           console.error("Repositories can't be loaded.")
+        });
+      }else{
+        this.wrapper.user().then(user => {
+          // this.userId = user.login;
+          this.router.navigate(["repos",user.login]);
         });
       }
     });

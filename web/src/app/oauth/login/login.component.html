@@ -2,7 +2,8 @@
   <div style="flex: 0.5"></div>
   <div style="align-items: center;justify-content:center; display: flex; width: 100%; flex: 8.5">
     <div style="text-align: center; height: 100%; " *ngIf="status == LoginStatus.Loading">
-      <mat-spinner style="display: inline-block"></mat-spinner>
+      <mat-spinner [strokeWidth]="10" style="display: inline-block"></mat-spinner>
+      <div style="text-align: center">Connecting the server...</div>
     </div>
     <div style="text-align: center; height: 100%; " *ngIf="status == LoginStatus.Failure">
       <mat-card class="card" [class.mat-elevation-z8]="true">

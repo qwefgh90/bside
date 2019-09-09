@@ -29,7 +29,6 @@
               "node_modules/easymde/dist/easymde.min.css"
             ],
             "scripts": [
-              "node_modules/marked/lib/marked.js",
               "node_modules/easymde/dist/easymde.min.js"
             ]
               ,
@@ -91,7 +90,6 @@
               "node_modules/easymde/dist/easymde.min.css"
             ],
             "scripts": [
-              "node_modules/marked/lib/marked.js",
               "node_modules/easymde/dist/easymde.min.js"],
             "assets": [
               "src/favicon.ico",

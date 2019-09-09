@@ -71,15 +71,26 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   isPossibleCommit: boolean = true;
   erorrDescription: string = "The current commit is not lastest. Please backup your works offline and refresh this page and paste them."
 
-  checkoutLastestCommit(){
+  async checkoutLastestCommit(){
     if(this.repository != undefined && this.branch != undefined){
+      let user = await this.wrapper.user();
       return this.wrapper.branches(this.repository.owner.login, this.repository.name).then(v => {
         return v.find(b => b.name == this.branch.name);
-      }).then(lastestBranch => {
-        this.isPossibleCommit = this.branch.commit.sha == lastestBranch.commit.sha;
+      }).then(branch => { 
+          let lastestBranch = branch;
+          
+          let isLastest = (this.branch.commit.sha == lastestBranch.commit.sha)
+          let isMine = (user.login == this.repository.owner.login);
+          this.erorrDescription = ''
+          if(!isLastest)
+            this.erorrDescription = "The current commit is not lastest. Please backup your works offline and refresh this page and paste them."
+          if(!isMine)
+            this.erorrDescription = "It is not supported to push a repository you don't own."
+
+          this.isPossibleCommit = isLastest && isMine;
       })
     }else{
-      Promise.reject('the repository is not provided.');
+      Promise.reject('invalid state.');
     }
   }
 }

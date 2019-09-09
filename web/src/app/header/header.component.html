@@ -7,8 +7,8 @@
     </a>
     <a [routerLink]="['templates']"><button mat-button class="menu-btn"><span
           style="font-size: 1.2em; vertical-align: baseline;">Templates</span></button></a>
-    <a [routerLink]="['repos', user?.login]" *ngIf="user"><button mat-button class="menu-btn"><span
-          style="font-size: 1.2em; vertical-align: baseline;">Repos</span></button></a>
+    <a [routerLink]="user ? ['repos', user?.login] : ['repos']" ><button mat-button class="menu-btn"><span
+          style="font-size: 1.2em; vertical-align: baseline;">Workspace</span></button></a>
     <span class="spacer"></span>
   </div>
   <div>

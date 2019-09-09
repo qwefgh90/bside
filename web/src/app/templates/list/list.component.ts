@@ -5,40 +5,51 @@ import { MatDialog } from '@angular/material';
 import { ForkComponent } from '../fork/fork.component';
 import { Router, ActivatedRoute, UrlSerializer, DefaultUrlSerializer } from '@angular/router';
 import { LoginGuard } from 'src/app/oauth/guard/login.guard';
+import { TypeState } from 'typestate';
 
+enum UIStatus{
+  None,
+  Loading,
+  PartialLoading,
+  Completed,
+  Error
+}
 @Component({
   selector: 'app-list',
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.css']
 })
 export class ListComponent implements OnInit {
-
+  UIStatus = UIStatus;
   constructor(private templateService: TemplateService, public dialog: MatDialog, private router: Router, private route: ActivatedRoute, private guard: LoginGuard) { }
 
-  ready: boolean = false;
-  // templates: Array<any>;
   partialTemplates: Array<any> = [];
   chunkSize = 24;
   page = 0;
   totalCount: number = undefined;// = this.chunkSize;
-  loading = false;
+
+  fsm = new TypeState.FiniteStateMachine<UIStatus>(UIStatus.None);
 
   ngOnInit() {
+    this.fsm.fromAny(UIStatus).toAny(UIStatus);
     this.page = 0;
     this.route.queryParamMap.subscribe((pMap) => {
       let page: number = pMap.get('page') != undefined ? Number.parseInt(pMap.get('page')) : undefined;
       let view: string = this.route.snapshot.fragment != undefined ? this.route.snapshot.fragment : undefined;
-      this.loading = true;
+      if(page > 1)
+        this.fsm.go(UIStatus.PartialLoading);
+      else
+        this.fsm.go(UIStatus.Loading);
       this.loadNext(page).then(() => {
-        this.ready = true;
-        this.loading = false;
+        this.fsm.go(UIStatus.Completed);
         setTimeout(() => {
           if(view != undefined){
             document.getElementById(view).scrollIntoView();
           }
         }, 300);
       }, () => {
-        this.loading = false;
+        this.fsm.go(UIStatus.Error);
+        // this.loading = false;
         console.warn(`It failed to load ${page}`);
       });
     });
@@ -54,12 +65,7 @@ export class ListComponent implements OnInit {
     let queryParams = {};
     if (page != undefined)
       queryParams['page'] = page;
-    // if (view != undefined)
-      // queryParams['view'] = view;
     let tree = this.router.createUrlTree(this.route.snapshot.url, {queryParams: queryParams, fragment: view});
-    // let redirectedUrl = new DefaultUrlSerializer().serialize(tree);
-
-      // , fragment: `${repo.id}`
     if(this.guard.checkLogin(tree.toString())){
       // let arr = repo.full_name.split('/');
       const dialogRef = this.dialog.open(ForkComponent, {
@@ -73,7 +79,6 @@ export class ListComponent implements OnInit {
         if(res != undefined){
           this.router.navigate([`/repos/${res.repo.full_name}`], {queryParams: {branch: res.pageBranch}}) 
         }
-        // this.animal = result;
       });
     }
   }
@@ -83,18 +88,17 @@ export class ListComponent implements OnInit {
     let boxList = e.querySelectorAll('.box');
     if (boxList.length > 0) {
       let lastElement = boxList.item(boxList.length - 1);
-      if (this.isScrolledIntoView(lastElement) && !this.loading) {
+      if (this.isScrolledIntoView(lastElement) && !this.fsm.is(UIStatus.Loading)) {
         this.router.navigate([], {queryParams: {page: this.page+1}});
       }
     }
   }
 
   onLoadMore(){
-    if(!this.loading){
+    if(!this.fsm.is(UIStatus.Loading)){
       this.router.navigate([], {queryParams: {page: this.page+1}});
     }
   }
-
 
   /**
    * It must not be called more than twoice at the time.
