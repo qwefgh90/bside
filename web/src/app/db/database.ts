@@ -5,7 +5,7 @@ export let DatabaseToken = new InjectionToken<Database>( "Database token" );
 
 export interface Database {
     save(packProvider: WorkspacePack);
-    get(repositoryId: number, commit_sha: string): Promise<WorkspacePack>;
+    get(repositoryId: number, branchName:string, commit_sha: string): Promise<WorkspacePack>;
     list(repositoryId: number): Promise<Array<WorkspacePack>>
-    delete(repositoryId: number, commit_sha: string);
+    delete(repositoryId: number, branchName:string, commit_sha: string);
 }

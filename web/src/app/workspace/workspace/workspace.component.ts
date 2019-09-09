@@ -141,7 +141,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.database.save(this.pack);
         setTimeout( () => this.saving = false, 1000);
       }else if(command instanceof WorkspaceCommand.UndoAll){
-        this.database.delete(this.repositoryDetails.id, this.selectedBranch.commit.sha);
+        this.database.delete(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
         this.editor.clear();
         this.selectedNodePath = undefined;
         this.refreshSubject.next();
@@ -261,7 +261,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           this.setBranchByName(defaultBranchName);
 
         // if it have already loaded packs, do nothing.
-        let loadedPack = await this.database.get(this.repositoryDetails.id, this.selectedBranch.commit.sha)
+        let loadedPack = await this.database.get(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha)
           .then(v => {
             console.log(`${v.commit_sha} have been loaded completely.`)
             return v;
@@ -661,7 +661,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   private clearCommits(){
     this.database.list(this.repositoryDetails.id).then((arr) => {
       arr.forEach(p => {
-        this.database.delete(p.repositoryId, p.commit_sha);
+        if(this.selectedBranch.name == p.branchName)
+          this.database.delete(p.repositoryId, p.branchName, p.commit_sha);
       })
     });
   }
