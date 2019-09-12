@@ -59,8 +59,12 @@ npm run test
 #### Creating A OAuth App for local authenticating
 
 It is important to get your own **Client ID** and **Client Secret** by creating new oauth application in [Github](https://github.com/settings/developers).
-And then ensure that `application-oauth.properties` has Client ID and Client Secret. Otherwise, ouath authenticating will fail.
-**`application-oauth.properties` is being ignored** to not be contained in a next commit.
+And then ensure that spring boot find Client ID and Client Secret by adding them to `application-oauth.properties` or make them environment variables. Otherwise, ouath authenticating will fail. **`application-oauth.properties` is being ignored** so it is not contained in a next commit.
+
+``` properties
+github.client_id=your_temporary_client_id
+github.client_secret=your_temporary_client_secret
+```
 
 #### Running in localhost
 

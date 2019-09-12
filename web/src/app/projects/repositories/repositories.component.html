@@ -23,13 +23,13 @@
           </div>
           <p mat-line>{{repo.updated_at | date:'short'}}</p>
           <div style="text-align: center;" *ngIf="repo.name == repositoryToLoad">
-            <mat-spinner style="display: inline-block" [strokeWidth]="2" [diameter]="25"></mat-spinner>
+            <mat-spinner style="display: inline-block" [diameter]="25"></mat-spinner>
           </div>
         </a>
       </div>
       <div class="progress-box" *ngIf="!repositories">
         <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
-          <mat-spinner style="display: inline-block" [strokeWidth]="3"></mat-spinner>
+          <mat-spinner style="display: inline-block" [strokeWidth]="10"></mat-spinner>
           <span>Repositories...</span>
         </div>
       </div>

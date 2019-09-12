@@ -19,7 +19,6 @@ import { LocalUploadService } from '../upload/local-upload.service';
 import { UploadComponent } from '../upload/upload.component';
 import { GithubTreeComponent } from '../tree/github-tree.component';
 import { Editor } from '../editor/editor';
-import { MarkdownModule } from 'ngx-markdown';
 import { CommitProgressComponent } from './commit-progress/commit-progress.component';
 import { TabComponent } from '../tab/tab.component';
 import { DatabaseToken } from 'src/app/db/database';
@@ -199,7 +198,6 @@ describe('WorkspaceComponent', () => {
         MatFormFieldModule,
         MatInputModule,
         MatBadgeModule,
-        MarkdownModule.forRoot(),
         MatTabsModule,
         DeviceDetectorModule.forRoot(),
         FlexLayoutModule
@@ -406,7 +404,6 @@ describe('WorkspaceComponent with WorkspaceService', () => {
         MatFormFieldModule,
         MatInputModule,
         MatBadgeModule,
-        MarkdownModule.forRoot(),
         MatTabsModule,
         DeviceDetectorModule.forRoot(),
         FlexLayoutModule

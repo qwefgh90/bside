@@ -27,7 +27,7 @@ export class WorkspaceService {
     .pipe(debounceTime(2000 + this.globalDebounceTime)).subscribe(
       (v) => this.emit(v)
     );
-    WorkspaceCommand.NotifyContentChange.internalQueue.pipe(observeOn(async)).pipe(debounceTime(3000 + this.globalDebounceTime)).subscribe((v) => this.emit(v));
+    WorkspaceCommand.NotifyContentChange.internalQueue.pipe(observeOn(async)).pipe(debounceTime(1000 + this.globalDebounceTime)).subscribe((v) => this.emit(v));
   }
 
   private emit(command: WorkspaceCommand.Command){

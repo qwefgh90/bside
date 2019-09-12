@@ -40,6 +40,11 @@ public class GithubOAuthController {
     @Resource
     SecurityService securityService;
 
+    @GetMapping(path="/ping")
+    public ResponseEntity<Void> ping() {
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping(path="/initialdata")
     public InitialData initialData(){
         var generator = new RandomValueStringGenerator();

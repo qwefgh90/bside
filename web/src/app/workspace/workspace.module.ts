@@ -17,7 +17,6 @@ import { UploadComponent } from './upload/upload.component';
 import { DiffEditorComponent } from './diff-editor/diff-editor.component';
 import { CommitProgressComponent } from './workspace/commit-progress/commit-progress.component';
 import { TabComponent } from './tab/tab.component';
-import { MarkdownModule } from 'ngx-markdown';
 import { DatabaseToken } from '../db/database'
 import { LocalDbService } from '../db/local-db.service'
 import { DeviceDetectorModule } from 'ngx-device-detector';
@@ -47,7 +46,6 @@ import { BuildHistoryComponent } from './build-history/build-history.component';
     MatButtonToggleModule,
     MatBadgeModule,
     MatTabsModule,
-    MarkdownModule.forRoot(),    
     DeviceDetectorModule.forRoot(),
     FlexLayoutModule,
     MatDialogModule,

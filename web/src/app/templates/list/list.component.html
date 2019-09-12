@@ -1,4 +1,4 @@
-<div fxFlex fxLayout="column" fxLayoutGap="10px" class="list" (scroll)="onScroll($event)"  *ngIf="ready">
+<div fxFlex fxLayout="column" fxLayoutGap="10px" class="list" (scroll)="onScroll($event)"  *ngIf="fsm.is(UIStatus.Completed) || fsm.is(UIStatus.PartialLoading)">
   <div #parent fxLayout="row wrap">
     <!-- loop over the cardList and show the cards -->
     <ng-container *ngFor="let repo of partialTemplates; let i = index">
@@ -21,11 +21,9 @@
           <p class="readme">
             {{repo.description}}
           </p>
-          <!-- <a href="{{repo.html_url}}" target="_blank" style="text-decoration: none;color: unset;margin-right: 1em"> -->
             <button mat-stroked-button title="Fork" (click)="openDialog(repo)">
               <b>Start here</b>
             </button>
-          <!-- </a> -->
         </div>
       </div>
     </ng-container>
@@ -40,11 +38,18 @@
     </div>
   </div>
 </div>
-<div style="display:flex" *ngIf="!ready">
+<div style="display:flex" *ngIf="fsm.is(UIStatus.Loading)">
   <div style="flex:1; display: block;">
     <div class="loading">
       <mat-spinner [strokeWidth]="10"></mat-spinner>
-      <div>Loading templates...</div>
+      <div>Templates...</div>
+    </div>
+  </div>
+</div>
+<div style="display:flex" *ngIf="fsm.is(UIStatus.Error)">
+  <div style="flex:1; display: block;">
+    <div class="loading">
+      <div style="text-align: center;">Sorry.<br>It is not available now.<div>
     </div>
   </div>
 </div>

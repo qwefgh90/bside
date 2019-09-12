@@ -1930,7 +1930,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
       //   token: this.token()
       // });
       let repo = await this.repositoryDetails(login, repositoryName);
-      return this.get((repo.branches_url as string).replace("{/branch}", ""));
+      return this.get((repo.branches_url as string).replace("{/branch}", "") + '?per_page=100');
       // let promise: Promise<any> = repo.getRepo(login, repositoryName).listBranches();
       // return promise.then(result => result.data);
     } else {
@@ -1938,6 +1938,49 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
     }
   }
 
+  /**
+   * [
+      {
+        "login": "octocat",
+        "id": 1,
+        "node_id": "MDQ6VXNlcjE=",
+        "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/octocat",
+        "html_url": "https://github.com/octocat",
+        "followers_url": "https://api.github.com/users/octocat/followers",
+        "following_url": "https://api.github.com/users/octocat/following{/other_user}",
+        "gists_url": "https://api.github.com/users/octocat/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/octocat/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/octocat/subscriptions",
+        "organizations_url": "https://api.github.com/users/octocat/orgs",
+        "repos_url": "https://api.github.com/users/octocat/repos",
+        "events_url": "https://api.github.com/users/octocat/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/octocat/received_events",
+        "type": "User",
+        "site_admin": false,
+        "permissions": {
+          "pull": true,
+          "push": true,
+          "admin": false
+        }
+      }
+    ]
+   * @param login 
+   * @param repositoryName 
+   */
+  // async isCollaborator(login: string, repositoryName: string, checkUser: string): Promise<boolean> {
+  //   if (this.hasToken()) {
+  //     let repo = await this.repositoryDetails(login, repositoryName);
+  //     return this.getResponse((repo.collaborators_url as string)
+  //       .replace("{/collaborator}", `/${checkUser}`))
+  //       .then(res => {
+  //         return res.ok;
+  //       });
+  //   } else {
+  //     return Promise.reject();
+  //   }
+  // }
   /**
    * [
       {
