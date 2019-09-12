@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { OAuthServiceChannel } from './o-auth-service-channel';
 import { Subject, ReplaySubject } from 'rxjs';
@@ -67,5 +67,16 @@ export class OAuthService {
       .toPromise().then<void>((value) => {
         this.updateLogin(true, value.access_token);
       }).catch(() => Promise.resolve());
+  }
+
+  checkSession(){
+    return this.httpClient
+      .get<HttpResponse<void>>(`${environment.apiServer}/login/github/ping`, { observe: 'response' })
+      .toPromise().then<void>((res) => {
+        if(!res.ok)
+          this.updateLogin(false, undefined);
+      }).catch(() => {
+        this.updateLogin(false, undefined);
+      });
   }
 }

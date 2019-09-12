@@ -35,16 +35,23 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    background: #c2c2c2;
     cursor: pointer;
     text-align: center;
+    border-right: #c2c2c2;
+    border-right-width: 1px;
+    border-right-style: solid;
+}
+
+.left-fold:hover{
+    background-color:#f1f1f1;
+    border-radius: 1em;
 }
 
 .left-fold .mat-icon{
     width: unset;
     height: unset;
     color: black;
-    font-size: 0.5em;
+    font-size: 1em;
 }
 
 
@@ -97,6 +104,7 @@
 .toolbar{
     display: flex;
     flex-direction: row; 
+    align-items: baseline;
     width: 100%;
     padding-top: 0.5em;
 }
