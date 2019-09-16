@@ -23,7 +23,8 @@ describe('HeaderComponent', () => {
         MatButtonModule,
         MatIconModule,
         MatMenuModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        FlexLayoutModule
       ], providers: [{provide: OAuthService, useValue: oauthServiceSpy},
         {provide: Router, useValue: routerSpy},
         {provide: ActivatedRoute, useValue: new ActivatedRouteStub}]
@@ -54,6 +55,7 @@ describe('HeaderComponent', () => {
 import { convertToParamMap, ParamMap, Params } from '@angular/router';
 import { ReplaySubject } from 'rxjs';
 import { Directive, Input, HostListener } from '@angular/core';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 export class ActivatedRouteStub {
   // Use a ReplaySubject to share previous values with subscribers
