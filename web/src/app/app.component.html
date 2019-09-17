@@ -2,6 +2,17 @@
 <div class="frame">
     <app-header style="display: flex;"></app-header>
     <router-outlet></router-outlet>
+    <div class="cookie-outer" *ngIf="!cookieDisabled">
+        <div class="cookie-box">
+            <h3>Cookie Policy</h3>
+            If you use this service, you implicitly agree that we use cookies
+            <br>to improve your convenience and collect your data for the analysis.
+            <br>Please check policies for details.
+            <button mat-icon-button color="primary" aria-label="Close" style="right: 0px;top: 0px; position: absolute; color: white;" (click)="close()">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+    </div>
     <mat-divider *ngIf="!inWorkspace"></mat-divider>
     <div *ngIf="!inWorkspace" style="background: #673ab7;height: 40px; display: flex; color: white; align-items: center; height: 1.8em;"
         >

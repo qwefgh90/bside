@@ -9,7 +9,11 @@ import { Route, ActivatedRoute, Router, ActivationEnd } from '@angular/router';
 export class AppComponent {
   title = 'web';
   inWorkspace = false;
+  cookieDisabled = false;
   constructor(private route: ActivatedRoute, private router: Router) {
+    if(localStorage.getItem('cookieDisabled') == "1"){
+      this.cookieDisabled = true;
+    }
     router.events.subscribe((e) => {
       if (e instanceof ActivationEnd) {
         let route = e.snapshot.routeConfig;
@@ -21,5 +25,10 @@ export class AppComponent {
         }
       }
     })
+  }
+
+  close(){
+    localStorage.setItem('cookieDisabled', "1");
+    this.cookieDisabled = true;
   }
 }

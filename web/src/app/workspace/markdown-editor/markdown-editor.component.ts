@@ -30,15 +30,18 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
   textArea: ElementRef;
 
   ngAfterContentInit(){
-    this.mde = new EasyMDE(<any>{element: this.textArea.nativeElement,
+    let opt: any = {element: this.textArea.nativeElement,
       spellChecker: false,
       status: true,
       renderingConfig: {
         singleLineBreaks: true,
         codeSyntaxHighlighting: false,
-      },
-      toolbar: !this.preview ? true : false
-    });
+      }
+    }
+    if(this.preview){
+      opt.toolbar = false;
+    }
+    this.mde = new EasyMDE(opt);
       
     if (!this.preview) {
       this.mde.codemirror.on("change", () => {

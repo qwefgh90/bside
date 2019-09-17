@@ -24,9 +24,9 @@ export class ListComponent implements OnInit {
   constructor(private templateService: TemplateService, public dialog: MatDialog, private router: Router, private route: ActivatedRoute, private guard: LoginGuard) { }
 
   partialTemplates: Array<any> = [];
-  chunkSize = 24;
+  chunkSize = 18;
   page = 0;
-  totalCount: number = undefined;// = this.chunkSize;
+  totalCount: number = undefined;
 
   fsm = new TypeState.FiniteStateMachine<UIStatus>(UIStatus.None);
 

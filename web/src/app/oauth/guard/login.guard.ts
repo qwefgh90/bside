@@ -13,12 +13,11 @@ export class LoginGuard implements CanActivate {
   }
   canActivate(
     next: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot): Promise<boolean> {
+    state: RouterStateSnapshot): boolean {
     console.log('LoginGuard#CanActivate called');
     let url: string = state.url;
-    return this.oauthService.checkSession().then(() => {
-      return this.checkLogin(url);
-    });
+    this.oauthService.checkSession();
+    return this.checkLogin(url);
   }
   
   checkLogin(url: string): boolean {

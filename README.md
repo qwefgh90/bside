@@ -27,7 +27,7 @@ As if you use the desktop IDE, You can directly create, rename, edit, remove con
 ### Mobile support
 
 Software developers can use it when they think of the idea or want to manage the blog. 
-It supports Chrome, Firefox, Safari.
+It supports Chrome, Firefox, Safari, Edge beta.
 
 ## Development
 
