@@ -34,11 +34,13 @@ export class LocalDbService implements Database {
     let res = [];
     Object.keys(this.storage).forEach(k => {
         let json = localStorage.getItem(k);
-        if(json != undefined && json != ''){
-          let pack = JSON.parse(LZString.decompressFromUTF16(json)) as WorkspacePack;
-          if(repositoryId == pack.repositoryId)
-            return res.push(pack);
-        }
+        try{
+          if(json != undefined && json != ''){
+            let pack = JSON.parse(LZString.decompressFromUTF16(json)) as WorkspacePack;
+            if(repositoryId == pack.repositoryId)
+              return res.push(pack);
+          }
+        }catch(e){}
       }
     )
     return Promise.resolve(res);

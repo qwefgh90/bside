@@ -26,7 +26,7 @@ export class ListComponent implements OnInit {
   partialTemplates: Array<any> = [];
   chunkSize = 18;
   page = 0;
-  totalCount: number = undefined;// = this.chunkSize;
+  totalCount: number = undefined;
 
   fsm = new TypeState.FiniteStateMachine<UIStatus>(UIStatus.None);
 

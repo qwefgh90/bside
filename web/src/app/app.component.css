@@ -12,3 +12,24 @@ router-outlet + ::ng-deep * {
     flex-direction: column;
     /* height: 1000px; */
 }
+
+.cookie-outer {
+    position: absolute; 
+    bottom: 40px; 
+    left: 0px; 
+    width: 100%; 
+    opacity: 0.6; 
+    filter: alpha(opacity=60);
+}
+
+.cookie-box{
+    padding-right: 1em;
+    padding-left: 1em;
+    text-align: center; 
+    color: white; 
+    background-color: #000000;
+    position: relative;
+    margin-left: auto; 
+    width: fit-content; 
+    margin-right: auto;
+}
