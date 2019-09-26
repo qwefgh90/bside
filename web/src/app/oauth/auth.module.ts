@@ -45,6 +45,9 @@ import {
 } from '@angular/material';
 import { OAuthService } from './service/o-auth.service';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { DatabaseToken } from '../db/database';
+import { LocalDbService } from '../db/local-db.service';
+import { CookieToken } from '../db/cookie';
 
 @NgModule({
   declarations: [LoginComponent, RedirectComponent],
@@ -62,6 +65,6 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
     FormsModule,
     ReactiveFormsModule,
   ],
-  providers: [{provide: LOCATION_TOKEN, useValue: window.location}]
+  providers: [{provide: LOCATION_TOKEN, useValue: window.location}, {provide: CookieToken, useClass: LocalDbService}]
 })
 export class AuthModule { }

@@ -2,12 +2,42 @@ import { Injectable } from '@angular/core';
 import { Database } from './database';
 import { WorkspacePack } from '../workspace/workspace/workspace-pack';
 import * as LZString from 'lz-string';
+import { Cookie } from './cookie';
 
 @Injectable({
   providedIn: 'root'
 })
-export class LocalDbService implements Database {
+export class LocalDbService implements Database, Cookie {
   
+  constructor(){
+    this.initCookie();
+  }
+
+  private initCookie(){
+    this.autoLogin = localStorage.getItem(this.autoLoginKey) == "1" ? true : false;
+    this.includingPrivate = localStorage.getItem(this.includingPrivateKey) == "1" ? true : false;
+  }
+
+  autoLoginKey = "autoLogin";
+  _autoLogin: boolean;
+  set autoLogin(_autoLogin: boolean){
+    this._autoLogin = _autoLogin;
+    localStorage.setItem(this.autoLoginKey, _autoLogin ? "1" : "0");
+  }
+  get autoLogin(){
+    return this._autoLogin;
+  }
+  
+  includingPrivateKey = "includingPrivate";
+  _includingPrivate: boolean;
+  set includingPrivate(_includingPrivate: boolean){
+    this._includingPrivate = _includingPrivate;
+    localStorage.setItem(this.includingPrivateKey, _includingPrivate ? "1" : "0");
+  }
+  get includingPrivate(){
+    return this._includingPrivate;
+  }
+
   storage = window.localStorage;
 
   save(pack: WorkspacePack): void {

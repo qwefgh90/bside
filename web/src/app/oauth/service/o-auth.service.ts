@@ -1,14 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { OAuthServiceChannel } from './o-auth-service-channel';
 import { Subject, ReplaySubject } from 'rxjs';
+import { CookieToken, Cookie } from 'src/app/db/cookie';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OAuthService {
-  constructor(private httpClient: HttpClient) { 
+  constructor(private httpClient: HttpClient, @Inject(CookieToken) private cookie: Cookie) { 
     this.isLogin = false; 
     // this.intialOAuthInfo();
   }
@@ -49,6 +50,7 @@ export class OAuthService {
     return this.httpClient
       .post<{access_token: string}>(`${environment.apiServer}/login/github/accesstoken`, httpParams)
       .toPromise().then<void>((value) => {
+        this.cookie.autoLogin = true; // when a user sign in or sign out by oneself, update autoLogin true otherwise false.
         this.updateLogin(true, value.access_token);
       });
   }
@@ -57,6 +59,7 @@ export class OAuthService {
     return this.httpClient
       .post<void>(`${environment.apiServer}/login/github/logout`, '')
       .toPromise().then<void>(() => {
+        this.cookie.autoLogin = false; // when a user sign in or sign out by oneself, update autoLogin true otherwise false.
         this.updateLogin(false, undefined);
       });
   }

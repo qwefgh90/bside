@@ -3,16 +3,19 @@ import { TestBed, async, inject } from '@angular/core/testing';
 import { LoginGuard } from './login.guard';
 import { OAuthService } from '../service/o-auth.service';
 import { Router } from '@angular/router';
+import { CookieToken } from 'src/app/db/cookie';
 
 describe('LoginGuard', () => {
   let routerSpy;
   let oauthServiceDummy;
+  let cookie = {autoLogin: false, includingPrivate: false};
   beforeEach(() => {
     oauthServiceDummy = {isLogin: false, redirectUrl: ''}; // it is copied on oauthService
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     TestBed.configureTestingModule({
       providers: [LoginGuard, {provide: OAuthService, useValue: oauthServiceDummy},
-        {provide: Router, useValue: routerSpy}] 
+        {provide: Router, useValue: routerSpy},
+        {provide: CookieToken, useValue: cookie}] 
     });
   });
 

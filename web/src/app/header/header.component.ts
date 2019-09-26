@@ -50,7 +50,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   logout(){
     this.oauth.logout().then(() => {
-      this.router.navigate(["/login"]);
+      this.router.navigate(["/"]);
     });
   }
 
