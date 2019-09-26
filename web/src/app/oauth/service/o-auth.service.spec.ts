@@ -2,10 +2,13 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
 import { OAuthService } from './o-auth.service';
+import { CookieToken } from 'src/app/db/cookie';
 
 describe('OAuthService', () => {
+  let cookie = {autoLogin: false, includingPrivate: false};
   beforeEach(() => TestBed.configureTestingModule({
-    imports:[HttpClientTestingModule]
+    imports:[HttpClientTestingModule],
+    providers: [{provide: CookieToken, useValue: cookie}]
   }));
 
   it('intialOAuthInfo()', (done: DoneFn) => {

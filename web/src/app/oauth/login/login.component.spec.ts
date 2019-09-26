@@ -8,6 +8,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { environment } from 'src/environments/environment';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Params, convertToParamMap } from '@angular/router';
+import { CookieToken } from 'src/app/db/cookie';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -15,6 +16,7 @@ describe('LoginComponent', () => {
   let oauthServiceSpy;
   let locationSpy;
   let routeStub;
+  let cookie = {autoLogin: false, includingPrivate: false};
   beforeEach(async(() => {
     oauthServiceSpy = jasmine.createSpyObj('OAuthService', ['intialOAuthInfo'])
     oauthServiceSpy.intialOAuthInfo.and.returnValue(asyncData({state: 'state', client_id: 'client_id'}).toPromise())
@@ -25,7 +27,8 @@ describe('LoginComponent', () => {
       providers: [
         {provide: ActivatedRoute, useValue: routeStub},
         {provide: OAuthService, useValue: oauthServiceSpy},
-        {provide: LOCATION_TOKEN, useValue: locationSpy}],
+        {provide: LOCATION_TOKEN, useValue: locationSpy},
+        {provide: CookieToken, useValue: cookie}],
       imports: [
           BrowserAnimationsModule,
           MatCardModule,

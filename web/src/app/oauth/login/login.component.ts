@@ -3,8 +3,11 @@ import { OAuthService } from '../service/o-auth.service';
 import { environment } from 'src/environments/environment';
 import { TextUtil } from 'src/app/workspace/text/text-util';
 import { ActivatedRoute } from '@angular/router';
+import { CookieToken, Cookie } from 'src/app/db/cookie';
+import { MatCheckboxChange } from '@angular/material';
 
 export const LOCATION_TOKEN = new InjectionToken<Location>('Window location object');
+const SCOPE_KEY = "includingPrivate"
 
 export enum LoginStatus{
   Loading, Failure, Initialized
@@ -20,15 +23,19 @@ export class LoginComponent implements OnInit {
   state: string;
   redirect_uri: string;
   status: LoginStatus = LoginStatus.Loading;
-  
+
+  autoLogin = false;
   includingPrivate = false;
-  constructor(private oauthService: OAuthService, @Inject(LOCATION_TOKEN) private location: Location, private route: ActivatedRoute) { 
+  constructor(private oauthService: OAuthService, @Inject(LOCATION_TOKEN) private location: Location, private route: ActivatedRoute
+  , @Inject(CookieToken) private cookie: Cookie) { 
   }
 
   ngOnInit() {
     if(this.route.snapshot.queryParamMap.has('private')){
-      
       this.includingPrivate = this.route.snapshot.queryParamMap.get('private') == "true";
+    }
+    if(this.route.snapshot.queryParamMap.has('autoLogin')){
+      this.autoLogin = this.route.snapshot.queryParamMap.get('autoLogin') == "true";
     }
     const oauthInfo = this.oauthService.intialOAuthInfo(); 
     oauthInfo.then((info) => {
@@ -39,6 +46,8 @@ export class LoginComponent implements OnInit {
         this.state = info.state;
         this.client_id = info.client_id;
         this.status = LoginStatus.Initialized;
+        if(this.autoLogin)
+          this.login();
       }
     }, (reason) => {
       this.status = LoginStatus.Failure;
@@ -49,6 +58,10 @@ export class LoginComponent implements OnInit {
 
   makeRedirectUrl(){
     return `${environment.redirect_url}?route=${this.oauthService.redirectUrl ? TextUtil.stringToBase64(this.oauthService.redirectUrl) : ''}`;
+  }
+
+  changeScope(event: MatCheckboxChange){
+    this.cookie.includingPrivate = event.checked;
   }
 
   login(){
