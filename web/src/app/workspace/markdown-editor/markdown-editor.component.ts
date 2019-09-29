@@ -68,7 +68,7 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
     });
   }
 
-  selectTab(path: string): boolean {
+  select(path: string): boolean {
     if(this.models.has(path)){
       this.current.path = path;
       this.current.content = this.models.get(path);

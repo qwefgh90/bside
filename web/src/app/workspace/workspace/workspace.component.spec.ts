@@ -42,7 +42,7 @@ class MarkdownStubEditorComponent implements Editor{
   setContent(path: string, name: string){
     return ''
   }
-  selectTab(path: string): boolean{
+  select(path: string): boolean{
     return true;
   }
   exist(path: string): boolean{
@@ -83,7 +83,7 @@ class EditorStubComponent implements Editor{
   setContent(path: string, name: string){
     return ''
   }
-  selectTab(path: string): boolean{
+  select(path: string): boolean{
     return true;
   }
   exist(path: string): boolean{
@@ -250,7 +250,7 @@ describe('WorkspaceComponent', () => {
     tick(3000);
     
     let setContentSpy = spyOn(component.editor, 'setContent');
-    let selectTabSpy = spyOn(component.editor, 'selectTab');
+    let selectSpy = spyOn(component.editor, 'select');
     let existSpy = spyOn(component.editor, 'exist');
     existSpy.and.returnValue(false);
 
@@ -260,7 +260,7 @@ describe('WorkspaceComponent', () => {
     tick(10000);
 
     expect(component.selectedNodePath).toBeDefined();
-    expect(selectTabSpy.calls.first().args[0]).toBe(tree.tree[0].path);
+    expect(selectSpy.calls.first().args[0]).toBe(tree.tree[0].path);
     
     expect(setContentSpy.calls.count()).toBe(1);
     let pathArg = setContentSpy.calls.first().args[0];
@@ -296,7 +296,7 @@ describe('WorkspaceComponent', () => {
     let removeContentSpy = spyOn(component.editor, 'removeContent');
     let setContentSpy = spyOn(component.editor, 'setContent');
     let getContentSpy = spyOn(component.editor, 'getContent');
-    let selectTabSpy = spyOn(component.editor, 'selectTab');
+    let selectSpy = spyOn(component.editor, 'select');
     let valueToReturn = 'this is the value to return';
     getContentSpy.and.returnValue(valueToReturn)
   

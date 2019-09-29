@@ -339,7 +339,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   toggleDiff(){
     if (this.editor.isDiffOn) {
-      this.editor.selectTab(this.selectedNodePath);
+      this.editor.select(this.selectedNodePath);
     } else {
       let nodes = this.root.getBlobNodes();
       const filteredNodes = nodes.filter((v) => {
@@ -361,7 +361,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   toggleMd(){
     if (this.editor.isMdOn) {
-      this.editor.selectTab(this.selectedNodePath);
+      this.editor.select(this.selectedNodePath);
     } else {
       let nodes = this.root.getBlobNodes();
       const filteredNodes = nodes.filter((v) => {
@@ -420,10 +420,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   private setContentAndFocusInEditor(path: string, content: string): void{
     if (this.editor != undefined) {
       if (this.editor.exist(path))
-        this.editor.selectTab(path);
+        this.editor.select(path);
       else{
         this.editor.setContent(path, content)
-        this.editor.selectTab(path);
+        this.editor.select(path);
       }
     }
   }
