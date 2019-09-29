@@ -10,7 +10,7 @@ export interface Editor extends WorkspaceChild{
      * select a tab and set a content linked to a tab if a tab which you want to select exists
      * @param path 
      */
-    selectTab(path: string): boolean;
+    select(path: string): boolean;
     /**
      * replace a content in the model linked to a path if a path exists, otherwise set a content and a path together
      * @param path 

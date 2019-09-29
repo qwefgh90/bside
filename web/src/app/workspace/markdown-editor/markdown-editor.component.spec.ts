@@ -26,14 +26,14 @@ describe('MarkdownEditorComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('selectTab()', () => {
+  it('select()', () => {
     expect(component.current.path).toBeUndefined();
     expect(component.current.content).toBeUndefined();
     let fName = 'hello.txt';
-    expect(component.selectTab(fName)).toBeFalsy();
+    expect(component.select(fName)).toBeFalsy();
     let content = 'content';
     component.setContent(fName, content);
-    expect(component.selectTab(fName)).toBeTruthy();
+    expect(component.select(fName)).toBeTruthy();
     expect(component.current.path).toBe(fName);
     expect(component.current.content).toBe(content);
   })

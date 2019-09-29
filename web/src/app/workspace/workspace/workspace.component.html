@@ -58,10 +58,12 @@
                 Saving...</span></span>
             <div class="spacer"></div>
             <div *ngIf="selectedNodePath != undefined && selectedFileType == FileType.Text">
-              <button mat-stroked-button title="Preview" (click)="toggleMd()" *ngIf="isDesktop">
+              <button mat-stroked-button title="Preview" (click)="toggleMd()" 
+                  *ngIf="isDesktop" [ngClass]="{'mat-button-toggle-checked':editor.isMdOn}">
                 <mat-icon>visibility</mat-icon>
               </button>
-              <button mat-stroked-button title="Compare with original" (click)="toggleDiff()" *ngIf="isDesktop">
+              <button mat-stroked-button title="Compare with original" (click)="toggleDiff()" 
+                  *ngIf="isDesktop" [ngClass]="{'mat-button-toggle-checked':editor.isDiffOn}">
                 <mat-icon>compare</mat-icon>
               </button>
               <a href="{{selectedRawPath}}" target="_blank"

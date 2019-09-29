@@ -204,7 +204,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       this.throwWhenNotInitialized();
   }
 
-  selectTab(path: string): boolean {
+  select(path: string): boolean {
     if (this.monaco != undefined) {
       this.fsm.go(EditorMode.None);
 
@@ -291,7 +291,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       let targetModel= this.getModel();
       // this.markdown = targetModel.getValue();
       this.markdownEditor.setContent('preview', targetModel.getValue());
-      this.markdownEditor.selectTab('preview');
+      this.markdownEditor.select('preview');
       if(!this.markdownEditor.isMdOn)
         setTimeout(() => this.markdownEditor.md(), 0);
       this._isMdOn = true;
