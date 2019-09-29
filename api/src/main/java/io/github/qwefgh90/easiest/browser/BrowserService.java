@@ -54,6 +54,8 @@ public class BrowserService {
         Resource resource;
         if(OS.isFamilyWindows())
             resource = resourceLoader.getResource("classpath:chromedriver.exe");
+        else if(OS.isFamilyMac())
+            resource = resourceLoader.getResource("classpath:chromedriver_mac64");
         else
             resource = resourceLoader.getResource("classpath:chromedriver");
         var copiedDriver = Files.createTempDirectory("chromedriver").resolve(resource.getFilename());
