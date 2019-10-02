@@ -228,10 +228,26 @@ export class GithubTreeNode {
       return [];
   }
 
+  getUnchangedHighestTree(){
+    let highestTree = undefined;
+    let unchanged = (this.type == 'tree' && this.state.findIndex((v) => NodeStateAction.NodesChanged == v) == -1);
+    if(unchanged){
+      highestTree = this;
+      let parentNode = highestTree.parentNode;
+      while((parentNode != undefined) 
+          && parentNode.state.findIndex((v) => NodeStateAction.NodesChanged == v) == -1){
+        highestTree = parentNode;
+        parentNode = highestTree.parentNode;
+      }
+    }
+    return highestTree;
+  }
+
   setContentModifiedFlag(flag: boolean = true) {
-    if(this.state[this.state.length-1] != NodeStateAction.ContentModified && flag)
+    if(this.state[this.state.length-1] != NodeStateAction.ContentModified && flag){
       this.state.push(NodeStateAction.ContentModified);
-    else if(!flag){
+      this.changeAllParents(this.parentNode);
+    }else if(!flag){
       let statesExcludingContentModified = this.state.filter((v) => {
         return v != NodeStateAction.ContentModified
       });
@@ -249,6 +265,7 @@ export class GithubTreeNode {
 
   setUploadedToLocal(){
     this.state.push(NodeStateAction.Uploaded);
+    this.changeAllParents(this.parentNode);
   }
 
   setSize(size: number){

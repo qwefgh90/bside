@@ -596,9 +596,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       this.database.save(this.pack);
       this.treeStatus = TreeStatusOnWorkspace.Committing;
       this.commitProgress.prepare();
-      let listToCommit = this.root.getBlobNodes();
-      let modifiedNodes = listToCommit.filter(n => (n.state.length > 0) && (!n.state.includes(NodeStateAction.Deleted)));
-      let blobsExcludingDeletion = listToCommit.filter(n => !n.state.includes(NodeStateAction.Deleted));
+      let blobNodes = this.root.getBlobNodes();
+      let modifiedNodes = blobNodes.filter(n => (n.state.length > 0) && (!n.state.includes(NodeStateAction.Deleted)));
       this.commitProgress.uploadBlobs(modifiedNodes.length);
       let responseArrPromise = modifiedNodes.map((v) => {
         let type = TextUtil.getFileType(v.name);
@@ -635,11 +634,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
       await Promise.all(responseArrPromise);
 
-      let blobs = blobsExcludingDeletion;
-      if (blobs.filter(b => b.state.length > 0).length == 0) {
-        console.debug(`${blobs.map(b => b.path).join(', ')} will be committed`);
+      let objectsForCreatingTree = blobNodes.filter(n => !n.state.includes(NodeStateAction.Deleted));
+      if (objectsForCreatingTree.filter(b => b.state.length > 0).length == 0) {
+        console.debug(`${objectsForCreatingTree.map(b => b.path).join(', ')} will be committed`);
         this.commitProgress.createTree();
-        let createdTree = await this.wrapper.createTree(this.userId, this.repositoryName, blobs);
+        let createdTree = await this.wrapper.createTree(this.userId, this.repositoryName, objectsForCreatingTree);
         this.commitProgress.commit();
         let createdCommit = await this.wrapper.createCommit(this.userId, this.repositoryName, msg, createdTree.sha, this.selectedBranch.commit.sha);
         this.commitProgress.updateBranch(this.selectedBranch.name);

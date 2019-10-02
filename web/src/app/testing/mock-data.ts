@@ -559,3 +559,183 @@ export let blob1 = {
 }
 
 export let mockWorkspacePack: WorkspacePack = WorkspacePack.of(1,'mockrepo','commitsha1111', 'tresha1111', 'gh-pages', [BlobPack.of('blobsha1111', GithubTreeNode.githubTreeNodeFactory.of(tree.tree[0]), 'aGVsbG8gd29ybGQh')], tree.tree, ['.buildinfo'], '.buildinfo');
+
+
+export let tree2 = {
+  "sha": "0d5dce70a485d69ca46b402e2c22475ffca64b8a",
+  "url": "https://api.github.com/repos/qwefgh90/test2/git/trees/0d5dce70a485d69ca46b402e2c22475ffca64b8a",
+  "tree": [
+    {
+      "path": "a.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "abcd",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5ab2f8a4323abafb10abb68657d9d39f1a775057",
+      "size": 5,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/5ab2f8a4323abafb10abb68657d9d39f1a775057"
+    },
+    {
+      "path": "b.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "c.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "markdown",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b3bdef68efaf63c44f9e33406143ea5f511c823f",
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/trees/b3bdef68efaf63c44f9e33406143ea5f511c823f"
+    },
+    {
+      "path": "markdown/md1.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "markdown/post1.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "markdown/subpage",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "fb233230e7a9c56ff71ece521984c9717f98df30",
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/trees/fb233230e7a9c56ff71ece521984c9717f98df30"
+    },
+    {
+      "path": "markdown/subpage/author.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "markdown/subpage/head.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "markdown/subpage2",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "e6b2f5030e136ddc71ad0a5baee19f09ef5c1bc2",
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/trees/e6b2f5030e136ddc71ad0a5baee19f09ef5c1bc2"
+    },
+    {
+      "path": "markdown/subpage2/author2.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "markdown/subpage2/haed2.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "source",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8aedff5a1e45216bd33f3b1fe0d7f4befacc0fa8",
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/trees/8aedff5a1e45216bd33f3b1fe0d7f4befacc0fa8"
+    },
+    {
+      "path": "source/a.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "source/b.java",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "source/meta",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "eb32af4c67ee48b2da9d807df5d70a63743debdc",
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/trees/eb32af4c67ee48b2da9d807df5d70a63743debdc"
+    },
+    {
+      "path": "source/meta/class.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "source/meta/con.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "source/meta/person",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "933f53ac045a0845fce5fab7f9d2cdcd0c602716",
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/trees/933f53ac045a0845fce5fab7f9d2cdcd0c602716"
+    },
+    {
+      "path": "source/meta/person/age.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "source/meta/person/list.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/qwefgh90/test2/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    }
+  ],
+  "truncated": false
+}
+;
