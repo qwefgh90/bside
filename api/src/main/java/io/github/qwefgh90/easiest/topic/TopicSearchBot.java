@@ -33,9 +33,16 @@ public class TopicSearchBot {
 
     private JSONObject result = new JSONObject();
     TopicSearchBot(){
+        try {
+            var p = new Properties();
+            p.put("org.quartz.threadPool.threadCount", "3");
+            schedFact = new org.quartz.impl.StdSchedulerFactory(p);
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
     }
 
-    SchedulerFactory schedFact = new org.quartz.impl.StdSchedulerFactory();
+    SchedulerFactory schedFact;
 
     @PostConstruct
     void init(){
