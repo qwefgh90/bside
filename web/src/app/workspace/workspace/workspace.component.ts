@@ -104,7 +104,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   selectedFileType: FileType;
   selectedImagePath: SafeResourceUrl;
   selectedRawPath: SafeResourceUrl;
-  placeholderForCommit: string = `It's committed at ${window.location}`
+  placeholderForCommit: string = `it's from ${window.location}`
 
   dirtyCount: number = 0;
   contentStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
@@ -112,6 +112,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   workspaceStatus: WorkspaceStatus = WorkspaceStatus.View;
   errorDescription: string;
   commitStatePack: WorkspacePack;
+  afterCommit: boolean;
 
   modificationSubject = new Subject<void>();
   subjectWithoutSaveFile = new Subject<string>();
@@ -273,12 +274,18 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
         let tree;
         let doAfterLoadingTree: () => void;
-        if (this.commitStatePack != undefined) { // load last states of workspace
-          tree = Promise.resolve({ tree: this.commitStatePack.treePacks, sha: this.commitStatePack.tree_sha });
+        if(this.afterCommit){
+          tree = this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha);
           doAfterLoadingTree = () => {
-            this.subjectWithSaveFile.next(this.commitStatePack)
-            this.commitStatePack = undefined;
-          };
+              this.subjectWithSaveFile.next(this.commitStatePack)
+              this.commitStatePack = undefined;
+            };
+          // if (this.commitStatePack != undefined) { // load last states of workspace
+          // tree = Promise.resolve({ tree: this.commitStatePack.treePacks, sha: this.commitStatePack.tree_sha });
+          // doAfterLoadingTree = () => {
+          //   this.subjectWithSaveFile.next(this.commitStatePack)
+          //   this.commitStatePack = undefined;
+          // };
         } else if (loadedPack != undefined) { // load the saved file
           tree = Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha });
           doAfterLoadingTree = () => this.subjectWithSaveFile.next(loadedPack);
@@ -599,51 +606,23 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       let blobNodes = this.root.getBlobNodes();
       let modifiedNodes = blobNodes.filter(n => (n.state.length > 0) && (!n.state.includes(NodeStateAction.Deleted)));
       this.commitProgress.uploadBlobs(modifiedNodes.length);
-      let responseArrPromise = modifiedNodes.map((v) => {
-        let type = TextUtil.getFileType(v.name);
-        let oldSha = v.sha;
-        let base64;
-        let promise: Promise<{ sha: string, url: string }>;
-        if (v.state.includes(NodeStateAction.ContentModified) ||
-            v.state.includes(NodeStateAction.Created)){
-          if(this.editor.exist(v.path)){
-            let base64OrText = this.editor.getContent(v.path);
-            if(type == FileType.Image || type == FileType.Other){
-              promise = this.wrapper.createBlob(this.userId, this.repositoryName, base64OrText);
-            }else{
-              if (this.encodingMap.has(oldSha))
-                base64 = TextUtil.stringToBase64(base64OrText, this.encodingMap.get(oldSha));
-              else
-                base64 = TextUtil.stringToBase64(base64OrText);
-              promise = this.wrapper.createBlob(this.userId, this.repositoryName, base64);  
-            }
-          }else
-            promise = new Promise((r, reject) => {
-              reject('The blob of ${v.path} was not found. It must be in monaco editor')
-            })
-        } else {
-          promise = new Promise((resolve) => {
-            resolve({ sha: v.sha, url: v.url });
-          })
-        }
-        return promise.then((response) => {
-          v.setSynced(response.sha, 'blob', '100644');
-          return { node: v, response: response }
-        });
-      });
-
+      let responseArrPromise = this.sync(modifiedNodes);
       await Promise.all(responseArrPromise);
 
       let objectsForCreatingTree = blobNodes.filter(n => !n.state.includes(NodeStateAction.Deleted));
-      if (objectsForCreatingTree.filter(b => b.state.length > 0).length == 0) {
+      let compactObjectsForCreatingTree = this.compactByCuttingUnchangedBlobs(objectsForCreatingTree, this.root);
+
+      if (compactObjectsForCreatingTree.filter(b => b.type == 'blob' && b.state.length > 0).length == 0) {
         console.debug(`${objectsForCreatingTree.map(b => b.path).join(', ')} will be committed`);
+        console.debug(`${compactObjectsForCreatingTree.map(b => b.path).join(', ')} will be committed(compact)`);
         this.commitProgress.createTree();
-        let createdTree = await this.wrapper.createTree(this.userId, this.repositoryName, objectsForCreatingTree);
+        let createdTree = await this.wrapper.createTree(this.userId, this.repositoryName, compactObjectsForCreatingTree);
         this.commitProgress.commit();
         let createdCommit = await this.wrapper.createCommit(this.userId, this.repositoryName, msg, createdTree.sha, this.selectedBranch.commit.sha);
         this.commitProgress.updateBranch(this.selectedBranch.name);
         let createdBranch = await this.wrapper.updateBranch(this.userId, this.repositoryName, this.selectedBranch.name, createdCommit.sha);
         this.commitProgress.done();
+        this.root.getAllNodes().forEach(v => v.clearStates());
         console.log(`The commit and updating ${createdBranch.ref} have succeeded which is ${createdBranch.object.sha}. Check out all in ${createdBranch.url}`);
       } else {
         console.error("Invalid state of nodes is found because blobs containing more than zero state exist");
@@ -651,10 +630,65 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     } catch(e){
       console.error(e);
     } finally {
+      this.afterCommit = true;
       this.commitStatePack = this.pack;
       this.clearCommits();
       this.refreshSubject.next();
     }
+  }
+
+  public compactByCuttingUnchangedBlobs(objectsForCreatingTree: GithubTreeNode[], root: GithubTreeNode){
+    let unchangedTree = root.getAllNodes().filter((v,i) => 
+      v.type == 'tree' && (v.state.findIndex((v) => v == NodeStateAction.NodesChanged) == -1));
+    
+    let highestUnchangedTreeSet = new Set<GithubTreeNode>();
+    unchangedTree.forEach((v) => {
+      highestUnchangedTreeSet.add(v.getUnchangedHighestTree());
+    });
+    let highestUnchangedTreeList = Array.from(highestUnchangedTreeSet);
+    
+    let compactObjectsForCreatingTree = objectsForCreatingTree.filter((v) => {
+      let decideToRemove = highestUnchangedTreeList.findIndex((tree) => {
+        return tree.path != v.path && v.path.includes(tree.path)
+      }) != -1;
+      return !decideToRemove;
+    }).concat(highestUnchangedTreeList);
+    return compactObjectsForCreatingTree;
+  }
+
+  private sync(modifiedNodes){
+    return modifiedNodes.map((v) => {
+      let type = TextUtil.getFileType(v.name);
+      let oldSha = v.sha;
+      let base64;
+      let promise: Promise<{ sha: string, url: string }>;
+      if (v.state.includes(NodeStateAction.ContentModified) ||
+          v.state.includes(NodeStateAction.Created)){
+        if(this.editor.exist(v.path)){
+          let base64OrText = this.editor.getContent(v.path);
+          if(type == FileType.Image || type == FileType.Other){
+            promise = this.wrapper.createBlob(this.userId, this.repositoryName, base64OrText);
+          }else{
+            if (this.encodingMap.has(oldSha))
+              base64 = TextUtil.stringToBase64(base64OrText, this.encodingMap.get(oldSha));
+            else
+              base64 = TextUtil.stringToBase64(base64OrText);
+            promise = this.wrapper.createBlob(this.userId, this.repositoryName, base64);  
+          }
+        }else
+          promise = new Promise((r, reject) => {
+            reject('The blob of ${v.path} was not found. It must be in monaco editor')
+          })
+      } else {
+        promise = new Promise((resolve) => {
+          resolve({ sha: v.sha, url: v.url });
+        })
+      }
+      return promise.then((response) => {
+        v.setSynced(response.sha, 'blob', '100644');
+        return { node: v, response: response }
+      });
+    });
   }
 
   private clearCommits(){

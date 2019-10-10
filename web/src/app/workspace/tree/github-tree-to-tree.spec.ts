@@ -1,6 +1,6 @@
 import { GithubTreeToTree } from './github-tree-to-tree';
 import { GithubTreeNode, GithubNode, NodeStateAction } from './github-tree-node';
-import { simpleTree, tree } from 'src/app/testing/mock-data';
+import { simpleTree, tree, tree2 } from 'src/app/testing/mock-data';
 
 describe('GithubTreeToTree', () => {
   it('should create an instance', () => {
@@ -200,4 +200,91 @@ describe('GithubTreeToTree', () => {
     expect(root.state.includes(NodeStateAction.NodesChanged)).toBeTruthy();
   })
   //does not allow parent move to the child tree
+
+  it('changes in states of nodes after rename()', () =>{
+    let transformer = new GithubTreeToTree(tree2);
+    let root = transformer.getTree();
+    let result = transformer.getTree().children;
+    expect(result.length).toBe(6);
+    const markdown = result[4];
+    const source = result[5];
+    const meta = source.children[2];
+    const person = meta.children[2];
+    
+    expect(source.children[0].getUnchangedHighestTree()).toBe(root);
+    
+    //change only a meta folder. all tree nodes below are changed recursively. 
+    meta.rename('newmeta');
+
+    //siblings should not be changed
+    expect(markdown.state.includes(NodeStateAction.NodesChanged)).toBeFalsy();
+
+    //but child trees and parents and the root have changes
+    expect(source.state.includes(NodeStateAction.NodesChanged)).toBeTruthy();
+    expect(root.state.includes(NodeStateAction.NodesChanged)).toBeTruthy();
+    expect(meta.state.includes(NodeStateAction.NodesChanged)).toBeTruthy();
+
+    //blobs have a state of NameModified
+    meta.children.forEach((v) => {
+      expect(v.state.includes(NodeStateAction.NameModified)).toBeTruthy();
+    })
+  })
+
+  it('getUnchangedHighestTree()', () =>{
+    let transformer = new GithubTreeToTree(tree2);
+    let root = transformer.getTree();
+    let result = transformer.getTree().children;
+    expect(result.length).toBe(6);
+    const markdown = result[4];
+    const subpage = markdown.children[2];
+    const subpage2 = markdown.children[3];
+    const source = result[5];
+    const meta = source.children[2];
+    const person = meta.children[2];
+  
+    //all nodes have a unchanged highest tree which is the root.
+    source.reduce((acc, node, tree) => {
+      expect(node.getUnchangedHighestTree()).toBe(root);
+      return true;
+    }, false);
+    
+    //change only a meta folder. all tree nodes below are changed recursively. 
+    meta.rename('newmeta');
+    
+    //some nodes can't have a unchanged highest tree.
+    source.reduce((acc, node, tree) => {
+      expect(node.getUnchangedHighestTree()).toBeUndefined()
+      return true;
+    }, false);
+
+    //there are all nodes below the markdown.
+    //they have the unchanged highest tree which is markdown node.
+    markdown.reduce((acc, node, tree) => {
+      expect(node.getUnchangedHighestTree()).toBe(markdown);
+      return true;
+    }, false);
+
+    //the subpage become a changed tree.
+    subpage.children[0].remove();
+
+    subpage.reduce((acc, node, tree) => {
+      expect(node.getUnchangedHighestTree()).toBeUndefined();
+      return true;
+    }, false);
+    expect(markdown.getUnchangedHighestTree()).toBeUndefined();
+
+    //there is only one unchanged tree which is the subpage2
+    subpage2.reduce((acc, node, tree) => {
+      expect(node.getUnchangedHighestTree()).toBe(subpage2);
+      return true;
+    }, false);
+    
+    //subpage2 tree become a changed tree because an child is changed.
+    subpage2.rename('newsubpage2');
+    
+    root.reduce((acc, node, tree) => {
+      expect(node.getUnchangedHighestTree()).toBeUndefined();
+      return true;
+    }, false);
+  })
 });

@@ -228,24 +228,46 @@ export class GithubTreeNode {
       return [];
   }
 
-  getUnchangedHighestTree(){
+  getAllNodes(){
+    if (this.type == 'tree') {
+      let arr = this.reduce<Array<GithubTreeNode>>((acc, node, tree) => {
+        acc.push(node);
+        return acc;
+      }, [], true);
+      return arr;
+    }else
+      return [];
+  }
+
+  clearStates(){
+    this.state.splice(0, this.state.length);
+  }
+
+  getUnchangedHighestTree(): GithubTreeNode{
     let highestTree = undefined;
-    let unchanged = (this.type == 'tree' && this.state.findIndex((v) => NodeStateAction.NodesChanged == v) == -1);
+    let unchanged = (this.state.findIndex((v) => NodeStateAction.NodesChanged == v) == -1);
     if(unchanged){
       highestTree = this;
       let parentNode = highestTree.parentNode;
       while((parentNode != undefined) 
-          && parentNode.state.findIndex((v) => NodeStateAction.NodesChanged == v) == -1){
+          && parentNode.state
+            .findIndex((v) => NodeStateAction.NodesChanged == v) == -1){
         highestTree = parentNode;
         parentNode = highestTree.parentNode;
       }
+      return highestTree.type == 'blob' ? undefined : highestTree;
+    }else{
+      return undefined;
     }
-    return highestTree;
   }
 
   setContentModifiedFlag(flag: boolean = true) {
-    if(this.state[this.state.length-1] != NodeStateAction.ContentModified && flag){
-      this.state.push(NodeStateAction.ContentModified);
+    if(flag){
+      if(
+        this.state.length == 0 ||
+        ((this.state.length > 0) && (this.state[this.state.length-1] != NodeStateAction.ContentModified))){
+          this.state.push(NodeStateAction.ContentModified);
+      }
       this.changeAllParents(this.parentNode);
     }else if(!flag){
       let statesExcludingContentModified = this.state.filter((v) => {
