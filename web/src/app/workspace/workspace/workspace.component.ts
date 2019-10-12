@@ -139,7 +139,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       console.debug(command);
       if (command instanceof WorkspaceCommand.Save && (this.treeStatus == TreeStatusOnWorkspace.Done)) {
         this.saving = true;
-        this.database.save(this.pack);
+        this.database.save(this.pack());
         setTimeout( () => this.saving = false, 1000);
       }else if(command instanceof WorkspaceCommand.UndoAll){
         this.database.delete(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
@@ -274,26 +274,20 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
         let tree;
         let doAfterLoadingTree: () => void;
-        if(this.afterCommit){
+        if(this.commitStatePack != undefined){ // invalidate the tree by fetching new tree
           tree = this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha);
           doAfterLoadingTree = () => {
               this.subjectWithSaveFile.next(this.commitStatePack)
               this.commitStatePack = undefined;
-            };
-          // if (this.commitStatePack != undefined) { // load last states of workspace
-          // tree = Promise.resolve({ tree: this.commitStatePack.treePacks, sha: this.commitStatePack.tree_sha });
-          // doAfterLoadingTree = () => {
-          //   this.subjectWithSaveFile.next(this.commitStatePack)
-          //   this.commitStatePack = undefined;
-          // };
+          };
         } else if (loadedPack != undefined) { // load the saved file
           tree = Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha });
           doAfterLoadingTree = () => this.subjectWithSaveFile.next(loadedPack);
-        } else {  // new start
+        } else {  // just load the tree 
           tree = this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha);
           doAfterLoadingTree = () => this.subjectWithoutSaveFile.next(this.selectedNodePath);
         }
-        return this.initTree(tree).then(() => doAfterLoadingTree(), () => console.error("Tree can't be loaded."));
+        return this.initTree(tree).then(() => doAfterLoadingTree(), () => console.error("A tree can't be loaded."));
       }
 
     } catch (error) {
@@ -600,7 +594,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   async onCommit(msg: string) {
     try {
-      this.database.save(this.pack);
+      this.database.save(this.pack());
       this.treeStatus = TreeStatusOnWorkspace.Committing;
       this.commitProgress.prepare();
       let blobNodes = this.root.getBlobNodes();
@@ -622,7 +616,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.commitProgress.updateBranch(this.selectedBranch.name);
         let createdBranch = await this.wrapper.updateBranch(this.userId, this.repositoryName, this.selectedBranch.name, createdCommit.sha);
         this.commitProgress.done();
-        this.root.getAllNodes().forEach(v => v.clearStates());
         console.log(`The commit and updating ${createdBranch.ref} have succeeded which is ${createdBranch.object.sha}. Check out all in ${createdBranch.url}`);
       } else {
         console.error("Invalid state of nodes is found because blobs containing more than zero state exist");
@@ -631,7 +624,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       console.error(e);
     } finally {
       this.afterCommit = true;
-      this.commitStatePack = this.pack;
+      this.commitStatePack = this.pack(false);
       this.clearCommits();
       this.refreshSubject.next();
     }
@@ -700,7 +693,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     });
   }
 
-  private get pack(): WorkspacePack{
+  private pack(containgTree: boolean = true): WorkspacePack{
       const repositoryId: number = this.repositoryDetails.id;
       const repositoryName: string = this.repositoryDetails.full_name;
       const commitSha = this.selectedBranch.commit.sha;

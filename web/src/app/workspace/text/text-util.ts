@@ -49,11 +49,11 @@ export class TextUtil {
         return this.decode(this.base64ToBytes(base64), encoding);
     }
     
-    static getFileType(name: string) {
+    static getFileType(name: string): FileType {
         const mimeName: string = mime.getType(name);
         const mimeInfo = mimeDb[mime.getType(name)]
         let compressible = (mimeInfo != undefined) && (mimeInfo.compressible != undefined) ? mimeInfo.compressible : true; // unknown is considered as compressible
-        console.debug(`${name} -> compressible: ${compressible}, mimeInfo: ${JSON.stringify(mimeInfo)}`);
+        console.debug(`${name} -> compressible: ${compressible}, mimeName: ${mimeName}, mimeInfo: ${JSON.stringify(mimeInfo)}`);
         if (mimeName != null && mimeName.toLocaleLowerCase().startsWith('image/'))
             return FileType.Image;
         else if ((mimeName != null && mimeName.toLocaleLowerCase().startsWith('text/') || compressible)) {
