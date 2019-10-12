@@ -14,16 +14,17 @@ export class WorkspacePack {
         p.treePacks = treePacks;
         p.tree_sha = tree_sha;
         p.selectedNodePath = selectedNodePath;
-        p.optimize();
+        p.optimizeTree();
         return p;
     }
 
-    private optimize(){
+    private optimizeTree(){
         //trim the url of node. it is not usuful and too long.
         this.treePacks.forEach(v => {
             v.url = '';
         })
     }
+
     selectedNodePath: string;
     repositoryId: number;
     repositoryName: string;

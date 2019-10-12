@@ -10,10 +10,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TreeModule } from 'angular-tree-component';
 import { convertToParamMap, ParamMap, Params } from '@angular/router';
 import { ReplaySubject } from 'rxjs';
-import { repositoryDetails, branches, tree, blob1 } from 'src/app/testing/mock-data';
+import { repositoryDetails, branches, tree, blob1, tree2 } from 'src/app/testing/mock-data';
 import { MonacoService } from '../editor/monaco.service';
 import { Component, Input, Output, EventEmitter, SimpleChange } from '@angular/core';
-import { GithubTreeNode } from '../tree/github-tree-node';
+import { GithubTreeNode, NodeStateAction } from '../tree/github-tree-node';
 import { FileType, TextUtil } from '../text/text-util';
 import { LocalUploadService } from '../upload/local-upload.service';
 import { UploadComponent } from '../upload/upload.component';
@@ -26,6 +26,7 @@ import { LocalDbService } from 'src/app/db/local-db.service';
 import { WorkspaceService } from '../workspace.service';
 import { DeviceDetectorModule, DeviceDetectorService } from 'ngx-device-detector';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { GithubTreeToTree } from '../tree/github-tree-to-tree';
 
 @Component({selector: 'app-stage', template: ''})
 class StageComponent {
@@ -512,6 +513,180 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     expect(nodeContentChangedSpy.calls.first().args[0]).toBe('newfile.txt');
   }))
 
+  it('compactByCuttingUnchangedBlobs() with remove() and modify()', () =>{
+    let transformer = new GithubTreeToTree(tree2);
+    let root = transformer.getTree();
+    let result = transformer.getTree().children;
+    expect(result.length).toBe(6);
+    const markdown = result[4];
+    const subpage = markdown.children[2];
+    const subpage2 = markdown.children[3];
+    const source = result[5];
+    const meta = source.children[2];
+    const person = meta.children[2];
+    
+    let blobs = root.getBlobNodes().filter(n => !n.state.includes(NodeStateAction.Deleted));
+    let compacted = component.compactByCuttingUnchangedBlobs(blobs, root);
+    expect(compacted.length).toBe(1);
+    expect(compacted[0].path).toBe('');
+        
+    //modify one file
+    result[0].setContentModifiedFlag(true);
+
+    blobs = root.getBlobNodes().filter(n => !n.state.includes(NodeStateAction.Deleted));
+    compacted = component.compactByCuttingUnchangedBlobs(blobs, root);
+
+    expect(compacted.length).toBe(6);
+    expect(compacted[0].path).toBe('a.txt');
+    expect(compacted[1].path).toBe('abcd');
+    expect(compacted[2].path).toBe('b.md');
+    expect(compacted[3].path).toBe('c.txt');
+    expect(compacted[4].path).toBe('markdown');
+    expect(compacted[5].path).toBe('source');
+
+    //remove a additinal file
+    subpage.children[0].remove();
+    blobs = root.getBlobNodes().filter(n => !n.state.includes(NodeStateAction.Deleted));
+    compacted = component.compactByCuttingUnchangedBlobs(blobs, root);
+
+    expect(compacted.length).toBe(9);
+    expect(compacted[0].path).toBe('a.txt');
+    expect(compacted[1].path).toBe('abcd');
+    expect(compacted[2].path).toBe('b.md');
+    expect(compacted[3].path).toBe('c.txt');
+    expect(compacted[4].path).toBe('markdown/md1.md');
+    expect(compacted[5].path).toBe('markdown/post1.md');
+    expect(compacted[6].path).toBe('markdown/subpage/head.txt');
+    expect(compacted[7].path).toBe('markdown/subpage2');
+    expect(compacted[8].path).toBe('source');
+
+    source.children[0].setContentModifiedFlag(true)
+    blobs = root.getBlobNodes().filter(n => !n.state.includes(NodeStateAction.Deleted));
+    compacted = component.compactByCuttingUnchangedBlobs(blobs, root);
+
+    expect(compacted.length).toBe(11);
+    expect(compacted[0].path).toBe('a.txt');
+    expect(compacted[1].path).toBe('abcd');
+    expect(compacted[2].path).toBe('b.md');
+    expect(compacted[3].path).toBe('c.txt');
+    expect(compacted[4].path).toBe('markdown/md1.md');
+    expect(compacted[5].path).toBe('markdown/post1.md');
+    expect(compacted[6].path).toBe('markdown/subpage/head.txt');
+    expect(compacted[7].path).toBe('source/a.java');
+    expect(compacted[8].path).toBe('source/b.java');
+    expect(compacted[9].path).toBe('markdown/subpage2');
+    expect(compacted[10].path).toBe('source/meta');
+  })
+
+  it('compactByCuttingUnchangedBlobs() with rename()', () =>{
+    let transformer = new GithubTreeToTree(tree2);
+    let root = transformer.getTree();
+    let result = transformer.getTree().children;
+    expect(result.length).toBe(6);
+    const markdown = result[4];
+    const subpage = markdown.children[2];
+    const subpage2 = markdown.children[3];
+    const source = result[5];
+    const meta = source.children[2];
+    const person = meta.children[2];
+    
+    let blobs = root.getBlobNodes().filter(n => !n.state.includes(NodeStateAction.Deleted));
+    let compacted = component.compactByCuttingUnchangedBlobs(blobs, root);
+    expect(compacted.length).toBe(1);
+    expect(compacted[0].path).toBe('');
+        
+    //rename one file
+    person.rename('newperson');
+
+    blobs = root.getBlobNodes().filter(n => !n.state.includes(NodeStateAction.Deleted));
+    compacted = component.compactByCuttingUnchangedBlobs(blobs, root);
+
+    expect(compacted.length).toBe(11);
+    expect(compacted[0].path).toBe('a.txt');
+    expect(compacted[1].path).toBe('abcd');
+    expect(compacted[2].path).toBe('b.md');
+    expect(compacted[3].path).toBe('c.txt');
+    expect(compacted[4].path).toBe('source/a.java');
+    expect(compacted[5].path).toBe('source/b.java');
+    expect(compacted[6].path).toBe('source/meta/class.txt');
+    expect(compacted[7].path).toBe('source/meta/con.txt');
+    expect(compacted[8].path).toBe('source/meta/newperson/age.txt');
+    expect(compacted[9].path).toBe('source/meta/newperson/list.txt');
+    expect(compacted[10].path).toBe('markdown');
+  })
+
+  it('compactByCuttingUnchangedBlobs() with move()', () =>{
+    let transformer = new GithubTreeToTree(tree2);
+    let root = transformer.getTree();
+    let result = transformer.getTree().children;
+    expect(result.length).toBe(6);
+    const markdown = result[4];
+    const subpage = markdown.children[2];
+    const subpage2 = markdown.children[3];
+    const source = result[5];
+    const meta = source.children[2];
+    const person = meta.children[2];
+    
+    let blobs = root.getBlobNodes().filter(n => !n.state.includes(NodeStateAction.Deleted));
+    let compacted = component.compactByCuttingUnchangedBlobs(blobs, root);
+    expect(compacted.length).toBe(1);
+    expect(compacted[0].path).toBe('');
+        
+    //move one file
+    result[0].move(markdown);
+
+    blobs = root.getBlobNodes().filter(n => !n.state.includes(NodeStateAction.Deleted));
+    compacted = component.compactByCuttingUnchangedBlobs(blobs, root);
+
+    expect(compacted.length).toBe(9);
+    expect(compacted[0].path).toBe('markdown/a.txt');
+    expect(compacted[1].path).toBe('abcd');
+    expect(compacted[2].path).toBe('b.md');
+    expect(compacted[3].path).toBe('c.txt');
+    expect(compacted[4].path).toBe('markdown/md1.md');
+    expect(compacted[5].path).toBe('markdown/post1.md');
+    expect(compacted[6].path).toBe('markdown/subpage');
+    expect(compacted[7].path).toBe('markdown/subpage2');
+    expect(compacted[8].path).toBe('source');
+
+  })
+
+  it('compactByCuttingUnchangedBlobs() with setUploadedToLocal()', () =>{
+    let transformer = new GithubTreeToTree(tree2);
+    let root = transformer.getTree();
+    let result = transformer.getTree().children;
+    expect(result.length).toBe(6);
+    const markdown = result[4];
+    const subpage = markdown.children[2];
+    const subpage2 = markdown.children[3];
+    const source = result[5];
+    const meta = source.children[2];
+    const person = meta.children[2];
+    
+    let blobs = root.getBlobNodes().filter(n => !n.state.includes(NodeStateAction.Deleted));
+    let compacted = component.compactByCuttingUnchangedBlobs(blobs, root);
+    expect(compacted.length).toBe(1);
+    expect(compacted[0].path).toBe('');
+        
+    //upload one file
+    subpage.children[0].setUploadedToLocal();
+
+    blobs = root.getBlobNodes().filter(n => !n.state.includes(NodeStateAction.Deleted));
+    compacted = component.compactByCuttingUnchangedBlobs(blobs, root);
+
+    expect(compacted.length).toBe(10);
+    expect(compacted[0].path).toBe('a.txt');
+    expect(compacted[1].path).toBe('abcd');
+    expect(compacted[2].path).toBe('b.md');
+    expect(compacted[3].path).toBe('c.txt');
+    expect(compacted[4].path).toBe('markdown/md1.md');
+    expect(compacted[5].path).toBe('markdown/post1.md');
+    expect(compacted[6].path).toBe('markdown/subpage/author.txt');
+    expect(compacted[7].path).toBe('markdown/subpage/head.txt');
+    expect(compacted[8].path).toBe('markdown/subpage2');
+    expect(compacted[9].path).toBe('source');
+
+  })
 });
 
 

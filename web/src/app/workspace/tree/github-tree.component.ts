@@ -257,7 +257,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   onSelectNode(node: TreeNode) {
     if(this.renamingNode != node){
       this.selectedNode = node;
-      if(!node.hasChildren)
+      if(node.data.type == 'blob')
        this.workspaceService.selectNode(this, node.data.path);
     }
   }
