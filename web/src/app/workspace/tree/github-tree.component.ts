@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, OnChanges, Output, EventEmitter, SimpleChanges, ViewChild, OnDestroy, ElementRef } from '@angular/core';
-import { MatIconRegistry } from '@angular/material';
+import { MatIconRegistry } from '@angular/material/icon';
 import { GithubTreeNode, NodeStateAction } from './github-tree-node';
 import { GithubTreeToTree } from './github-tree-to-tree';
 import { FormControl } from '@angular/forms';

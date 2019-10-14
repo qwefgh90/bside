@@ -1,7 +1,13 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ForkComponent } from './fork.component';
-import { MatStepperModule, MatSelectModule, MatFormFieldModule, MatProgressSpinnerModule, MatDialogRef, MAT_DIALOG_DATA, MatFormFieldControl, MatInputModule, MatButtonModule } from '@angular/material';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatFormFieldModule, MatFormFieldControl } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatStepperModule } from '@angular/material/stepper';
 import { FormsModule, ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { MatProgressButtonsModule } from 'mat-progress-buttons';
 import { WrapperService } from 'src/app/github/wrapper.service';

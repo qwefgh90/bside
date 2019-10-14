@@ -1,5 +1,6 @@
 import { Component, OnInit, Inject, ViewChildren, ViewChild, AfterContentInit, AfterViewInit, OnDestroy } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA, MatStepper } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatStepper } from '@angular/material/stepper';
 import { Validators, FormBuilder, FormGroup, AbstractControl, ValidationErrors } from '@angular/forms';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { MatProgressButtonOptions } from 'mat-progress-buttons';

@@ -2,7 +2,12 @@ import { TestBed, async } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/header.component';
-import { MatButtonModule, MatIconModule, MatToolbarModule, MatMenuModule, MatProgressSpinnerModule, MatSpinner, MatDividerModule } from '@angular/material';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressSpinnerModule, MatSpinner } from '@angular/material/progress-spinner';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { AuthModule } from './oauth/auth.module';
 import { FlexLayoutModule } from '@angular/flex-layout';
 

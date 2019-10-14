@@ -1,7 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CommitProgressComponent } from './commit-progress.component';
-import { MatProgressSpinnerModule } from '@angular/material';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 describe('CommitProgressComponent', () => {
   let component: CommitProgressComponent;

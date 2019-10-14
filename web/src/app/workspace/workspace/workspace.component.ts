@@ -2,7 +2,9 @@ import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, Inject } fro
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, Subject, combineLatest, from } from 'rxjs';
-import { MatDrawer, MatSelectChange, MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSelectChange } from '@angular/material/select';
+import { MatDrawer } from '@angular/material/sidenav';
 import { GithubTreeNode, NodeStateAction, GithubNode } from '../tree/github-tree-node';
 import { MonacoService } from '../editor/monaco.service';
 import { Editor } from '../editor/editor';

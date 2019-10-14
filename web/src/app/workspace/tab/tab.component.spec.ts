@@ -1,7 +1,8 @@
 import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 
 import { TabComponent } from './tab.component';
-import { MatTabsModule, MatIconModule, MatTab } from '@angular/material';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule, MatTab } from '@angular/material/tabs';
 import { WorkspaceService } from '../workspace.service';
 import { GithubTreeNode } from '../tree/github-tree-node';
 import { tree } from 'src/app/testing/mock-data';

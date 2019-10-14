@@ -4,7 +4,7 @@ import { environment } from 'src/environments/environment';
 import { TextUtil } from 'src/app/workspace/text/text-util';
 import { ActivatedRoute } from '@angular/router';
 import { CookieToken, Cookie } from 'src/app/db/cookie';
-import { MatCheckboxChange } from '@angular/material';
+import { MatCheckboxChange } from '@angular/material/checkbox';
 
 export const LOCATION_TOKEN = new InjectionToken<Location>('Window location object');
 const SCOPE_KEY = "includingPrivate"

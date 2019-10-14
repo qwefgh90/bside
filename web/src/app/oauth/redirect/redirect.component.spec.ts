@@ -3,7 +3,7 @@ import { RedirectComponent } from './redirect.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { OAuthService } from '../service/o-auth.service';
 import { defer } from 'rxjs';
-import { MatProgressSpinnerModule } from '@angular/material';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 describe('RedirectComponent', () => {
   let component: RedirectComponent;

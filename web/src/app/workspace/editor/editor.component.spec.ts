@@ -1,7 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { EditorComponent } from './editor.component';
-import { MatSidenavModule, MatProgressSpinnerModule } from '@angular/material';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { DiffEditorComponent } from '../diff-editor/diff-editor.component';
 import { DeviceDetectorModule } from 'ngx-device-detector';
 import { MarkdownEditorComponent } from '../markdown-editor/markdown-editor.component';

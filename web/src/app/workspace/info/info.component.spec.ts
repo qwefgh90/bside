@@ -1,7 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { InfoComponent } from './info.component';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 
 describe('InfoComponent', () => {
   let component: InfoComponent;

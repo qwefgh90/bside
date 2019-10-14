@@ -1,7 +1,12 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ListComponent } from './list.component';
-import { MatButtonModule, MatCardModule, MatProgressSpinnerModule, MatIconModule, MatDialogModule, MatDialog, MatFormFieldModule } from '@angular/material';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Router, ParamMap, Params, convertToParamMap, ActivatedRoute } from '@angular/router';

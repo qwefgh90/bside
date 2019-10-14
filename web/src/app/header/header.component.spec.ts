@@ -1,6 +1,10 @@
 import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HeaderComponent } from './header.component';
-import { MatButtonModule, MatIconModule, MatToolbarModule, MatMenuModule, MatProgressSpinnerModule } from '@angular/material';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { AuthModule } from '../oauth/auth.module';
 import { OAuthService } from '../oauth/service/o-auth.service';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';

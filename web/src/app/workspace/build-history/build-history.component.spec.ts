@@ -1,7 +1,9 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { BuildHistoryComponent } from './build-history.component';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule, MatTableModule, MatProgressSpinnerModule } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTableModule } from '@angular/material/table';
 import { WrapperService } from 'src/app/github/wrapper.service';
 
 describe('BuildHistoryComponent', () => {

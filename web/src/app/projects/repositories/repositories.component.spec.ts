@@ -3,7 +3,10 @@ import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core
 import { RepositoriesComponent } from './repositories.component';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { MatListModule } from '@angular/material/list';
-import { MatIconModule, MatProgressSpinnerModule, MatDividerModule, MatInputModule } from '@angular/material';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';

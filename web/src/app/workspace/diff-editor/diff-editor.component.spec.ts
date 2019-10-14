@@ -1,7 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { DiffEditorComponent } from './diff-editor.component';
-import { MatSidenavModule, MatProgressSpinnerModule } from '@angular/material';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSidenavModule } from '@angular/material/sidenav';
 
 describe('DiffEditorComponent', () => {
   let component: DiffEditorComponent;

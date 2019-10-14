@@ -1,6 +1,6 @@
 import { Component, OnInit, EventEmitter, Output, ViewChild, Input, OnChanges, SimpleChanges, AfterContentInit, OnDestroy } from '@angular/core';
 import { Tab } from './tab';
-import { MatTab, MatTabGroup } from '@angular/material';
+import { MatTab, MatTabGroup } from '@angular/material/tabs';
 import { WorkspaceService, WorkspaceCommand } from '../workspace.service';
 import { filter } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';

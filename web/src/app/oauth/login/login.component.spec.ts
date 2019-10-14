@@ -3,7 +3,12 @@ import { async, ComponentFixture, TestBed, fakeAsync, tick, flushMicrotasks } fr
 import { LoginComponent, LOCATION_TOKEN, LoginStatus } from './login.component';
 import { OAuthService } from '../service/o-auth.service';
 import { defer, ReplaySubject } from 'rxjs'
-import { MatButtonModule, MatCardModule, MatProgressSpinnerModule, MatIconModule, MatCheckboxModule, MatSlideToggleModule } from '@angular/material';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { environment } from 'src/environments/environment';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
