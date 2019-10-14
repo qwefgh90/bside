@@ -6,7 +6,8 @@ const routes: Routes = [
   {path: "", component: WelcomeComponent},
   {
     path: "repos", 
-    loadChildren: './workspace/workspace.module#WorkspaceModule'
+    loadChildren: () => import('./workspace/workspace.module').then(m => m.WorkspaceModule)
+    // loadChildren: './workspace/workspace.module#WorkspaceModule'
   }
 ];
 
