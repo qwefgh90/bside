@@ -77,13 +77,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       this.isDesktop = this.detector.isDesktop();
   }
 
-  @ViewChild("tree") tree: GithubTreeComponent;
-  @ViewChild("editor1") editor1: Editor;
-  @ViewChild("editor2") editor2: Editor;
-  @ViewChild("stage") stage: Stage;
-  @ViewChild("action") action: ActionComponent;
-  @ViewChild(CommitProgressComponent) commitProgress: CommitProgressComponent;
-  @ViewChild(TabComponent) tab: Tab;
+  @ViewChild("tree", { static: true }) tree: GithubTreeComponent;
+  @ViewChild("editor1", { static: false }) editor1: Editor;
+  @ViewChild("editor2", { static: false }) editor2: Editor;
+  @ViewChild("stage", { static: true }) stage: Stage;
+  @ViewChild("action", { static: true }) action: ActionComponent;
+  @ViewChild(CommitProgressComponent, { static: true }) commitProgress: CommitProgressComponent;
+  @ViewChild(TabComponent, { static: true }) tab: Tab;
 
   get editor(): Editor{
     return this.isDesktop ? this.editor1 : this.editor2;
@@ -122,8 +122,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   subscriptions: Array<Subscription> = []
   leftPaneOpened = false;
 
-  @ViewChild("leftDrawer") leftPane: MatDrawer;
-  @ViewChild("rightDrawer") rightPane: MatDrawer;
+  @ViewChild("leftDrawer", { static: false }) leftPane: MatDrawer;
+  @ViewChild("rightDrawer", { static: false }) rightPane: MatDrawer;
   
   saving = false;
   

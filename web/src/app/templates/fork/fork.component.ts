@@ -35,7 +35,7 @@ export class ForkComponent implements OnInit, AfterContentInit, OnDestroy {
   recommendedBranch: string;
   
 
-  @ViewChild(MatStepper)
+  @ViewChild(MatStepper, { static: true })
   stepper: MatStepper;
 
   constructor(

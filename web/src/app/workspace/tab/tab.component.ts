@@ -23,7 +23,7 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
   selectedTabindex: number;
   selectedPath: string;
 
-  @ViewChild(MatTabGroup) group: MatTabGroup;
+  @ViewChild(MatTabGroup, { static: true }) group: MatTabGroup;
 
   ngOnInit() {
     

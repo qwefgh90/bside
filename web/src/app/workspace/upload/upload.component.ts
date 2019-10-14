@@ -8,7 +8,7 @@ import { UploadFile } from './upload-file';
   styleUrls: ['./upload.component.css']
 })
 export class UploadComponent implements OnInit, Upload {
-  @ViewChild("file")
+  @ViewChild("file", { static: true })
   fileInput: ElementRef<HTMLInputElement>;
   @Output("fileToUpload")
   fileToUpload = new EventEmitter<UploadFile>()

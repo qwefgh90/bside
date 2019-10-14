@@ -31,9 +31,9 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   editor: monacoNameSpace.editor.IStandaloneCodeEditor;
   model: monacoNameSpace.editor.ITextModel
 
-  @ViewChild("editor") editorContent: ElementRef;
-  @ViewChild("diffeditor1") diffEditor: DiffEditor;
-  @ViewChild("markdowneditor") markdownEditor: MarkdownEditorComponent;
+  @ViewChild("editor", { static: true }) editorContent: ElementRef;
+  @ViewChild("diffeditor1", { static: true }) diffEditor: DiffEditor;
+  @ViewChild("markdowneditor", { static: true }) markdownEditor: MarkdownEditorComponent;
 
   diffTargetPath: string;
   subscriptions: Subscription[] = [];

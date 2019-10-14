@@ -26,7 +26,7 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
   @Input("preview")
   preview: boolean = false;
 
-  @ViewChild("md")
+  @ViewChild("md", { static: true })
   textArea: ElementRef;
 
   ngAfterContentInit(){

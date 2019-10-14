@@ -15,7 +15,7 @@ export class DiffEditorComponent implements OnInit, AfterViewInit, OnChanges, On
   editor: monacoNameSpace.editor.IStandaloneDiffEditor;
   model: monacoNameSpace.editor.ITextModel
 
-  @ViewChild("editor") editorContent: ElementRef;
+  @ViewChild("editor", { static: true }) editorContent: ElementRef;
 
   subscription: Subscription;
   monaco: any;
