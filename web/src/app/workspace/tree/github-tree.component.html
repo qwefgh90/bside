@@ -49,10 +49,10 @@
                   {{!node.isExpanded ? 'folder' : 'folder_open'}}
                 </mat-icon>
                 <span *ngIf="renamingNode != node" style="line-height: 24px; flex: 1">{{node.data.name}}</span>
-                <input #blobRenamingInput *ngIf="(renamingNode == node) && (node.data.type == 'blob')"
+                <input #blobRenamingInput *ngIf="(renamingNode == node) && (node.data.type == 'blob')" style="width:100%"
                   [formControl]="renamingFormControl" (keydown.enter)="completeRenaming()"
                   (blur)="completeRenaming()" />
-                <input #treeRenamingInput *ngIf="(renamingNode == node) && (node.data.type == 'tree')"
+                <input #treeRenamingInput *ngIf="(renamingNode == node) && (node.data.type == 'tree')" style="width:100%"
                   [formControl]="renamingFormControl" (keydown.enter)="completeRenaming()"
                   (blur)="completeRenaming()" />
               </div>

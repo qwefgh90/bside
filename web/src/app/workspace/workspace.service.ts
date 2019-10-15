@@ -3,7 +3,7 @@ import { Subject, Observable, Scheduler, ReplaySubject } from 'rxjs';
 import * as eq from 'fast-deep-equal';
 import { GithubTreeNode } from './tree/github-tree-node';
 import { GithubTree } from './tree/github-tree';
-import { observeOn, distinctUntilChanged, debounce, debounceTime, flatMap } from 'rxjs/operators';
+import { observeOn, distinctUntilChanged, debounce, debounceTime, flatMap, groupBy } from 'rxjs/operators';
 import { async } from 'rxjs/internal/scheduler/async';
 import { ReplaceSource } from 'webpack-sources';
 
@@ -23,11 +23,17 @@ export class WorkspaceService {
     WorkspaceCommand.RemoveNode.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
     WorkspaceCommand.MoveNodeInTree.internalQueue.pipe(observeOn(async)).subscribe((v) => this.emit(v));
     WorkspaceCommand.UndoAll.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
+    WorkspaceCommand.Undo.internalQueue.pipe(observeOn(async)).pipe(debounceTime(this.globalDebounceTime)).subscribe((v) => this.emit(v));
     WorkspaceCommand.Save.internalQueue.pipe(observeOn(async))
     .pipe(debounceTime(2000 + this.globalDebounceTime)).subscribe(
       (v) => this.emit(v)
     );
-    WorkspaceCommand.NotifyContentChange.internalQueue.pipe(observeOn(async)).pipe(debounceTime(1000 + this.globalDebounceTime)).subscribe((v) => this.emit(v));
+    WorkspaceCommand.NotifyContentChange.internalQueue.pipe(observeOn(async))
+    .pipe(groupBy((node) => node.path))
+    .subscribe((eachGroup) => eachGroup.pipe(debounceTime(1000 + this.globalDebounceTime)).subscribe((value) => {
+      this.emit(value)
+      console.log(`path: ${value.path}`);
+    }));
   }
 
   private emit(command: WorkspaceCommand.Command){
@@ -77,6 +83,11 @@ export class WorkspaceService {
     WorkspaceCommand.UndoAll.internalQueue.next(c);
   }
   
+  undo(source: any, path: string){
+    let c = new WorkspaceCommand.Undo(path, source);
+    WorkspaceCommand.Undo.internalQueue.next(c);
+  }
+
   get commandChannel(): Observable<WorkspaceCommand.Command>{
     return this.commandQueueObservable;
   }
@@ -130,5 +141,10 @@ export namespace WorkspaceCommand {
     constructor(public source: any) {
     }
     static internalQueue = new Subject<UndoAll>();
+  }
+  export class Undo{
+    constructor(public path: string, public source: any) {
+    }
+    static internalQueue = new Subject<Undo>();
   }
 }

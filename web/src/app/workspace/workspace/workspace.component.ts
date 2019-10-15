@@ -33,6 +33,7 @@ import {
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { InfoComponent, DisplayInfo } from '../info/info.component';
 import { BuildHistoryComponent } from '../build-history/build-history.component';
+import { async } from '@angular/core/testing';
 
 declare const monaco;
 
@@ -132,7 +133,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   ngOnInit() {
     let monacoLoaderSubject = from(this.initalizeLoader());
 
-    //It saves data when content is modified.
+    //It saves data when the content is modified.
     this.subscriptions.push(this.modificationSubject.subscribe(() => {
       this.workspaceService.save(this);
     }));
@@ -141,14 +142,26 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       console.debug(command);
       if (command instanceof WorkspaceCommand.Save && (this.treeStatus == TreeStatusOnWorkspace.Done)) {
         this.saving = true;
-        this.database.save(this.pack()).finally(() => {
-          setTimeout( () => this.saving = false, 1000);
-        });
+        (async () => {
+          this.database.save(this.pack()).finally(() => {
+            this.saving = false
+          });
+        })();
+        
       }else if(command instanceof WorkspaceCommand.UndoAll){
         this.database.delete(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
         this.editor.clear();
         this.selectedNodePath = undefined;
         this.refreshSubject.next();
+      }else if(command instanceof WorkspaceCommand.Undo){
+        const node = this.tree.get(command.path);
+        if(node != undefined){
+          const asyncText = this.getOriginalText(node.sha)
+          asyncText.then((text) => {
+            this.editor.setContent(command.path, text);
+            this.nodeContentChanged(command.path);
+          })
+        }
       }
     }));
     
@@ -529,7 +542,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   async nodeContentChanged(path: string){
-    if(path == this.selectedNodePath){
       const node = this.tree.get(path);
       if(node != undefined){
         const asyncText = this.getOriginalText(node.sha)
@@ -543,7 +555,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.modificationSubject.next();
       }else
         console.error(`The content of ${path} is changed, but it does not exist anywhere`)
-    }
   }
 
   private async getOriginalText(sha: string) {

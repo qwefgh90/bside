@@ -67,6 +67,10 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   undoAll(){
     this.workspaceService.undoAll(this);
   }
+
+  undo(node:GithubTreeNode) {
+    this.workspaceService.undo(this, node.path);
+  }
   
   isPossibleCommit: boolean = true;
   erorrDescription: string = "The current commit is not lastest. Please backup your works offline and refresh this page and paste them."
