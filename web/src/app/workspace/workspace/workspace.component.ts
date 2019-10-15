@@ -656,7 +656,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     
     let compactObjectsForCreatingTree = objectsForCreatingTree.filter((v) => {
       let decideToRemove = highestUnchangedTreeList.findIndex((tree) => {
-        return tree.path != v.path && v.path.includes(tree.path)
+        return tree.path != v.path && v.path.startsWith(tree.path)
       }) != -1;
       return !decideToRemove;
     }).concat(highestUnchangedTreeList);
@@ -684,7 +684,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           }
         }else
           promise = new Promise((r, reject) => {
-            reject('The blob of ${v.path} was not found. It must be in monaco editor')
+            reject(`The blob of ${v.path} was not found. It must be in monaco editor`)
           })
       } else {
         promise = new Promise((resolve) => {
