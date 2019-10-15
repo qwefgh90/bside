@@ -3,6 +3,7 @@ import { Database } from './database';
 import { WorkspacePack } from '../workspace/workspace/workspace-pack';
 import * as LZString from 'lz-string';
 import { Cookie } from './cookie';
+import { WebWorkerEx } from '../worker/web-worker-ex';
 
 @Injectable({
   providedIn: 'root'
@@ -40,16 +41,19 @@ export class LocalDbService implements Database, Cookie {
 
   storage = window.localStorage;
 
-  save(pack: WorkspacePack): void {
+  save(pack: WorkspacePack): Promise<void> {
     let packString = JSON.stringify(pack);
-    let compressedPackString = LZString.compressToUTF16(packString);
+    let compressedPackStringPromise = WebWorkerEx.compress(packString)
+    // let compressedPackString = LZString.compressToUTF16(packString);
     
-    try{
-      console.log(`Saving ${compressedPackString.length}(${packString.length}) of characters to ${pack.repositoryId+pack.commit_sha}`);
-      this.storage.setItem(pack.repositoryId + '-' + pack.branchName + '-' + pack.commit_sha, compressedPackString);
-    }catch(e){
-      console.error(e);
-    }
+    return compressedPackStringPromise.then((compressedPackString) => {
+      try{
+        console.log(`Saving ${compressedPackString.length}(${packString.length}) of characters to ${pack.repositoryId+pack.commit_sha}`);
+        this.storage.setItem(pack.repositoryId + '-' + pack.branchName + '-' + pack.commit_sha, compressedPackString);
+      }catch(e){
+        console.error(e);
+      }
+    })
   }
 
   get(repositoryId: number, branchName: string, commit_sha: string): Promise<WorkspacePack> {

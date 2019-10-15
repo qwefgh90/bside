@@ -3,7 +3,6 @@ import { OAuthService } from '../oauth/service/o-auth.service';
 import Github from 'github-api';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Blob } from './type/blob';
-import { ngContentDef } from '@angular/core/src/view';
 import { Content } from './type/content';
 /**
  * A returned data should be stored in each component;

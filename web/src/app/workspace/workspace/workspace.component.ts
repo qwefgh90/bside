@@ -141,8 +141,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       console.debug(command);
       if (command instanceof WorkspaceCommand.Save && (this.treeStatus == TreeStatusOnWorkspace.Done)) {
         this.saving = true;
-        this.database.save(this.pack());
-        setTimeout( () => this.saving = false, 1000);
+        this.database.save(this.pack()).finally(() => {
+          setTimeout( () => this.saving = false, 1000);
+        });
       }else if(command instanceof WorkspaceCommand.UndoAll){
         this.database.delete(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
         this.editor.clear();

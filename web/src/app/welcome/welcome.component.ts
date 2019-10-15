@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { OAuthService } from '../oauth/service/o-auth.service';
+import { WebWorkerEx } from '../worker/web-worker-ex';
 
 @Component({
   selector: 'app-welcome',
