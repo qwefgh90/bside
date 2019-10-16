@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/qwefgh90/bside.svg?token=Vrzzw2fF82tTqGZK6PrG&branch=master)](https://travis-ci.com/qwefgh90/bside)
 
-# BSide
+# BSide - A tool to help editing in everywhere
 BSide is Github CMS to make your editing more easier and faster in any device.
 The devleoper can manage contents of the repository directly on the modern browser without cloning the project and making commits.
 It also provides embedded tools and views to help the software developer to manage the blog hosted on Github Page.
