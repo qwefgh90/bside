@@ -35,7 +35,7 @@ It supports Chrome, Firefox, Safari, Edge beta.
 
 ### Angular (/web)
 
-A Web application is based on Angular 7+. So you should consider Angular CLI as the first tool when creating some files.
+A Web application is based on Angular 8+. So you should consider Angular CLI as the first tool when creating some files.
 
 #### Running in localhost
 
