@@ -58,7 +58,7 @@ public class GithubOAuthService {
             } else {
                 return Optional.empty();
             }
-        }catch(Exception e){
+        }catch(Exception e) {
             log.error("An error during process http request", e);
             return Optional.empty();
         }

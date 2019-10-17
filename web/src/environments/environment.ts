@@ -10,7 +10,8 @@ export const environment = {
   apiServer: "/api",
   get authorizeOriginUrl(){
     return "https://github.com/login/oauth/authorize";//?client_id=c602a8bd54b1e774f864&scope=repo
-  }
+  },
+  targetId: "UA-145533506-2"
 };
 
 /*

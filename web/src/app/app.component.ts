@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
-import { Route, ActivatedRoute, Router, ActivationEnd } from '@angular/router';
+import { Route, ActivatedRoute, Router, ActivationEnd, NavigationEnd } from '@angular/router';
+import { environment } from 'src/environments/environment';
+import { AnalyticsService } from './analytics/analytics.service';
 
 @Component({
   selector: 'app-root',
@@ -10,7 +12,7 @@ export class AppComponent {
   title = 'web';
   inWorkspace = false;
   cookieDisabled = false;
-  constructor(private route: ActivatedRoute, private router: Router) {
+  constructor(private route: ActivatedRoute, private router: Router, private analytics: AnalyticsService) {
     if(localStorage.getItem('cookieDisabled') == "1"){
       this.cookieDisabled = true;
     }
@@ -22,6 +24,12 @@ export class AppComponent {
             this.inWorkspace = true;
           else
             this.inWorkspace = false;
+        }
+      }
+      
+      if (e instanceof NavigationEnd) {
+        if(!this.inWorkspace){
+          this.analytics.visit(e.urlAfterRedirects);
         }
       }
     })
