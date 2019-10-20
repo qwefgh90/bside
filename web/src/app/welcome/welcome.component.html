@@ -11,8 +11,8 @@
               style="font-size: 1.1em; height: 2.5em; margin-top: 1em;">EDIT MY PROJECT</button></a>
         </div>
       </div>
-      <div class="center-spacer"></div>
-      <div class="right" [ngStyle.sm]="{'min-height.vh': 80}">
+      <div fxHide.xs="true" fxHide.sm="true" class="center-spacer"></div>
+      <div fxHide.xs="true" fxHide.sm="true" class="right" [ngStyle.sm]="{'min-height.vh': 80}">
         <div class="desc-box">
           <div>
             <mat-icon class="desc-icon">web</mat-icon>
@@ -80,7 +80,7 @@
   <div class="layout-bottom layout-bottom-templates">
     <div ngClass="outer-box-desktop" [ngClass.xs]="{'outer-box-desktop':false, 'outer-box-mobile':true}"
       [ngClass.sm]="{'outer-box-desktop':false, 'outer-box-mobile':true}" style="flex-direction: column">
-      <div style="display: flex;">
+      <div fxLayout="row wrap">
         <div class="left">
           <h1 class="text-l1">Start a blog<br> with templates</h1>
           <p>BSide make it easy to start a new blog with Github Pages.</p>
@@ -89,8 +89,8 @@
                 style="font-size: 1.1em; height: 2.5em; margin-top: 1em;">SEE TEMPLATES</button></a>
           </div>
         </div>
-        <div class="center-spacer"></div>
-        <div class="right custom-single-example" style="background-color: white">
+        <div fxHide.xs="true" fxHide.sm="true" class="center-spacer"></div>
+        <div ngStyle.sm="margin-top: 1em" ngStyle.xs="margin-top: 1em" class="right custom-single-example" style="background-color: white">
           <app-list [singleMode]="true"></app-list>
         </div>
       </div>
