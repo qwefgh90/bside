@@ -330,7 +330,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   private invalidateNodesToStage(){
     if(this.root != undefined)
-      this.nodesToStage = this.root.getBlobNodes().filter(v => (v.state.length > 0) && v.name != undefined && v.name.length != 0 
+      this.nodesToStage = this.root.getBlobNodes(true).filter(v => (v.state.length > 0) && v.name != undefined && v.name.length != 0 
         && !(v.state.includes(NodeStateAction.Created) && v.state.includes(NodeStateAction.Deleted)));
   }
 
@@ -543,7 +543,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   async nodeContentChanged(path: string){
       const node = this.tree.get(path);
-      if(node != undefined){
+      if(node != undefined && node.type == 'blob'){
         const asyncText = this.getOriginalText(node.sha)
         asyncText.then((originalText) => {
           if(this.editor.getContent(path) == originalText)
@@ -612,12 +612,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       this.treeStatus = TreeStatusOnWorkspace.Committing;
       this.commitProgress.prepare();
       let blobNodes = this.root.getBlobNodes();
-      let modifiedNodes = blobNodes.filter(n => (n.state.length > 0) && (!n.state.includes(NodeStateAction.Deleted)));
+      let modifiedNodes = blobNodes.filter(n => (n.state.length > 0));
       this.commitProgress.uploadBlobs(modifiedNodes.length);
       let responseArrPromise = this.sync(modifiedNodes);
       await Promise.all(responseArrPromise);
 
-      let objectsForCreatingTree = blobNodes.filter(n => !n.state.includes(NodeStateAction.Deleted));
+      let objectsForCreatingTree = blobNodes;
       let compactObjectsForCreatingTree = this.compactByCuttingUnchangedBlobs(objectsForCreatingTree, this.root);
 
       if (compactObjectsForCreatingTree.filter(b => b.type == 'blob' && b.state.length > 0).length == 0) {
@@ -646,7 +646,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   public compactByCuttingUnchangedBlobs(objectsForCreatingTree: GithubTreeNode[], root: GithubTreeNode){
     let unchangedTree = root.getAllNodes().filter((v,i) => 
-      v.type == 'tree' && (v.state.findIndex((v) => v == NodeStateAction.NodesChanged) == -1));
+      v.type == 'tree' && (v.state.find((v) => v == NodeStateAction.NodesChanged) == undefined));
     
     let highestUnchangedTreeSet = new Set<GithubTreeNode>();
     unchangedTree.forEach((v) => {
@@ -655,10 +655,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let highestUnchangedTreeList = Array.from(highestUnchangedTreeSet);
     
     let compactObjectsForCreatingTree = objectsForCreatingTree.filter((v) => {
-      let decideToRemove = highestUnchangedTreeList.findIndex((tree) => {
+      let willBeUploadedAsBlob = highestUnchangedTreeList.find((tree) => {
         return tree.path != v.path && v.path.startsWith(tree.path)
-      }) != -1;
-      return !decideToRemove;
+      }) == undefined;
+      return willBeUploadedAsBlob;
     }).concat(highestUnchangedTreeList);
     return compactObjectsForCreatingTree;
   }
