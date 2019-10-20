@@ -1,6 +1,6 @@
-<div style="display:flex; flex-direction: column; width: 100%; justify-content:center; height: 100%">
-  <div style="flex: 0.5"></div>
-  <div style="text-align: center;flex: 8.5">
+<div style="display:flex; flex-direction: column; width: 100%; justify-content:center; flex: 1;">
+  <div style="flex: 1; min-height: 0px"></div>
+  <div style="text-align: center; flex: 9">
     <mat-spinner [strokeWidth]="10" style="display: inline-block"></mat-spinner>
     <div>Authenticating...<br>"{{oauth.redirectUrl ? oauth.redirectUrl : '/'}}"</div>
   </div>
