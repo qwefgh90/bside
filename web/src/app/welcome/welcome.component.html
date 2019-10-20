@@ -1,47 +1,97 @@
 <div class="layout-box">
   <div class="spacer"></div>
   <div class="layout-bottom">
-    <div class="outer-box" [ngStyle.xs]="{'max-width': 'unset'}" [ngStyle.sm]="{'max-width': 'unset'}">
-      <div class="left" >
-        <h1>Edit and coordinate the contents in the repository on an advanced workspace</h1>
+    <div ngClass="outer-box-desktop" [ngClass.xs]="{'outer-box-desktop':false, 'outer-box-mobile':true}"
+      [ngClass.sm]="{'outer-box-desktop':false, 'outer-box-mobile':true}">
+      <div class="left">
+        <h1 class="text-l1">Edit your projects<br>Anywhere</h1>
         <p>BSide is Github CMS and allows you to change and contribute the contents anywhere.</p>
-        <div style="text-align: center">
+        <div>
           <a routerLink="/login"><button class="signin" mat-raised-button *ngIf="!oauth.isLogin" color="primary"
-              style="width: 5em;font-size: 1.5em; height: 2.5em; margin-top: 1em;">Sign in</button></a>
+              style="font-size: 1.1em; height: 2.5em; margin-top: 1em;">EDIT MY PROJECT</button></a>
         </div>
       </div>
       <div class="center-spacer"></div>
-      <div class="right"  [ngStyle.sm]="{'min-height.vh': 80}">
-        <div>
-          <h3>Experience the integrated workspace</h3>
-          <p>
-            The workspace provide tree explorer, editors, tabs and also tools to help editing.
-          </p>
+      <div class="right" [ngStyle.sm]="{'min-height.vh': 80}">
+        <div class="desc-box">
+          <div>
+            <mat-icon class="desc-icon">web</mat-icon>
+          </div>
+          <div>
+            <h3>Experience the integrated workspace</h3>
+            <p>
+              The workspace provide tree explorer, editors, tabs and also tools to help editing.
+            </p>
+          </div>
         </div>
-        <div>
-          <h3>Coordinate the tree structure easily</h3>
-          <p>
-            The tree explorer on left side shows a hiarachy of tree and provides various actions like moving nodes to other tree with drag and drop.
-            It makes your coordinating files more easier.
-          </p>
+        <div class="desc-box">
+          <div>
+            <mat-icon class="desc-icon">account_tree</mat-icon>
+          </div>
+          <div>
+            <h3>Coordinate the tree structure easily</h3>
+            <p>
+              The tree explorer on left side shows a hiarachy of tree and provides various actions like moving nodes to
+              other tree with drag and drop.
+              It makes your coordinating files more easier.
+            </p>
+          </div>
         </div>
-        <div>
-          <h3>Edit your static pages</h3>
-          <p>
-            You can edit and upload new files and rename it. Because it is based on the Monaco Editor, It also supports <a href="https://github.com/Microsoft/monaco-languages" target="_blank">syntax highlighting</a>.
-          </p>
+        <div class="desc-box">
+          <div>
+            <mat-icon class="desc-icon">web_asset</mat-icon>
+          </div>
+          <div>
+            <h3>Edit your static pages</h3>
+            <p>
+              You can edit and upload new files and rename it. Because it is based on the Monaco Editor, It also
+              supports
+              <a href="https://github.com/Microsoft/monaco-languages" target="_blank">syntax highlighting</a>.
+            </p>
+          </div>
         </div>
-        <div>
-          <h3>Save your works without any commit</h3>
-          <p>
-            The workspace provides to save works you have done on browser storage.
-          </p>
+        <div class="desc-box">
+          <div>
+            <mat-icon class="desc-icon">save</mat-icon>
+          </div>
+          <div>
+            <h3>Save your works without any commit</h3>
+            <p>
+              The workspace provides to save works you have done on browser storage.
+            </p>
+          </div>
         </div>
-        <div>
-          <h3>Work on mobile browsers</h3>
-          <p>
-            BSide supports mobile and desktop. So you can do something with Github whenever you think of an idea.
-          </p>
+        <div class="desc-box">
+          <div>
+            <mat-icon class="desc-icon">mobile_friendly</mat-icon>
+          </div>
+          <div>
+            <h3>Work on mobile browsers</h3>
+            <p>
+              BSide supports mobile and desktop. So you can do something with Github whenever you think of an idea.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="layout-bottom layout-bottom-templates">
+    <div ngClass="outer-box-desktop" [ngClass.xs]="{'outer-box-desktop':false, 'outer-box-mobile':true}"
+      [ngClass.sm]="{'outer-box-desktop':false, 'outer-box-mobile':true}" style="flex-direction: column">
+      <div style="display: flex;">
+        <div class="left">
+          <h1 class="text-l1">Start a blog<br> with templates</h1>
+          <p>BSide make it easy to start a new blog with Github Pages.</p>
+          <div>
+            <a routerLink="/templates"><button class="signin" mat-raised-button
+                style="font-size: 1.1em; height: 2.5em; margin-top: 1em;">SEE TEMPLATES</button></a>
+          </div>
+        </div>
+        <div class="center-spacer"></div>
+        <div class="right custom-single-example" style="background-color: white">
+          <app-list [singleMode]="true"></app-list>
         </div>
       </div>
     </div>

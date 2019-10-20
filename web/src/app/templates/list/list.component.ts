@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { TemplateService } from '../service/template.service';
 import { environment } from 'src/environments/environment';
 import { MatDialog } from '@angular/material/dialog';
@@ -17,11 +17,14 @@ enum UIStatus{
 @Component({
   selector: 'app-list',
   templateUrl: './list.component.html',
-  styleUrls: ['./list.component.css']
+  styleUrls: ['./list.component.scss']
 })
-export class ListComponent implements OnInit {
+export class ListComponent implements OnInit, OnChanges {
   UIStatus = UIStatus;
   constructor(private templateService: TemplateService, public dialog: MatDialog, private router: Router, private route: ActivatedRoute, private guard: LoginGuard) { }
+
+  @Input("singleMode")
+  singleMode: boolean = false;
 
   partialTemplates: Array<any> = [];
   chunkSize = 18;
@@ -29,6 +32,14 @@ export class ListComponent implements OnInit {
   totalCount: number = undefined;
 
   fsm = new TypeState.FiniteStateMachine<UIStatus>(UIStatus.None);
+
+  ngOnChanges(changes: SimpleChanges){
+    if(changes.singleMode.currentValue == true){
+      if(changes.singleMode.currentValue){
+        this.chunkSize = 1;
+      }
+    }
+  }
 
   ngOnInit() {
     this.fsm.fromAny(UIStatus).toAny(UIStatus);
