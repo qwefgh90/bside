@@ -8,9 +8,15 @@ import { OAuthService } from '../oauth/service/o-auth.service';
 })
 export class WelcomeComponent implements OnInit {
 
+  showFeature = true;
+  
   constructor(public oauth: OAuthService) { }
 
   ngOnInit() {
+  }
+
+  toggle(){
+    this.showFeature = !this.showFeature;
   }
 
 }
