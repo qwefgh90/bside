@@ -8,7 +8,7 @@
           <h1 class="text-l1" [ngStyle.sm]="{'text-align': 'center'}" [ngStyle.xs]="{'text-align': 'center'}">Edit your
             projects<br>Anywhere</h1>
           <p>BSide is Github CMS and allows you to change and contribute the contents anywhere.</p>
-          <div>
+          <div [ngStyle.xs]="{'text-align':'center'}" [ngStyle.sm]="{'text-align':'center'}">
             <a routerLink="/repos"><button class="signin" mat-raised-button *ngIf="!oauth.isLogin" color="primary"
                 style="font-size: 1.1em; height: 2.5em; margin-top: 1em;">EDIT MY PROJECT</button></a>
           </div>
@@ -92,7 +92,7 @@
           <h1 class="text-l1" [ngStyle.sm]="{'text-align': 'center'}" [ngStyle.xs]="{'text-align': 'center'}">Start a
             blog<br> with templates</h1>
           <p>BSide make it easy to start a new blog with Github Pages.</p>
-          <div>
+          <div [ngStyle.xs]="{'text-align':'center'}" [ngStyle.sm]="{'text-align':'center'}">
             <a routerLink="/templates"><button class="signin" mat-raised-button
                 style="font-size: 1.1em; height: 2.5em; margin-top: 1em;">SEE ALL TEMPLATES</button></a>
           </div>
