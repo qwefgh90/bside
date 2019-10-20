@@ -1,5 +1,5 @@
 <!--The content below is only a placeholder and can be replaced.-->
-<div class="frame">
+<div [ngClass]="{'workspace': inWorkspace, 'frame': !inWorkspace}">
     <app-header style="display: flex;"></app-header>
     <router-outlet></router-outlet>
     <div class="cookie-outer" *ngIf="!cookieDisabled">
@@ -14,20 +14,20 @@
         </div>
     </div>
     <mat-divider *ngIf="!inWorkspace"></mat-divider>
-    <div *ngIf="!inWorkspace" style="background: #673ab7;height: 40px; display: flex; color: white; align-items: center; height: 1.8em;"
+    <div *ngIf="!inWorkspace" class="tail" style="height: 40px; display: flex; align-items: center; height: 1.8em;"
         >
         <div>
-            <a href="https://github.com/qwefgh90/bside" target="_blank" style="color: white; margin-left: 1em; font-size: 0.9em;">Contribution</a>
+            <a href="https://github.com/qwefgh90/bside" target="_blank" style="margin-left: 1em; font-size: 0.9em;">Contribution</a>
         </div>
         <div>
-            <a href="https://github.com/qwefgh90/bside/issues" target="_blank" style="color: white; margin-left: 1em; font-size: 0.9em;">Issues</a>
+            <a href="https://github.com/qwefgh90/bside/issues" target="_blank" style="margin-left: 1em; font-size: 0.9em;">Issues</a>
         </div>
         <div style="flex: 1"></div>
         <div>
-            <a href="https://github.com/qwefgh90/bside/blob/master/web/TERMS-OF-SERVICE.md" target="_blank" style="color: white; margin-left: 1em; font-size: 0.9em;">Terms</a>
+            <a href="https://github.com/qwefgh90/bside/blob/master/web/TERMS-OF-SERVICE.md" target="_blank" style="margin-left: 1em; font-size: 0.9em;">Terms</a>
         </div>
         <div>
-            <a href="https://github.com/qwefgh90/bside/blob/master/web/PRIVACY-POLICY.md" target="_blank" style="color: white; margin-left: 1em; margin-right: 1em; font-size: 0.9em;">Privacy</a>
+            <a href="https://github.com/qwefgh90/bside/blob/master/web/PRIVACY-POLICY.md" target="_blank" style="margin-left: 1em; margin-right: 1em; font-size: 0.9em;">Privacy</a>
         </div>
         <div>
         </div>

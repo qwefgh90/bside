@@ -18,6 +18,7 @@ import { MatProgressButtonsModule } from 'mat-progress-buttons';
 
 @NgModule({
   declarations: [ListComponent, ForkComponent],
+  exports: [ListComponent],
   imports: [
     CommonModule,
     TemplatesRoutingModule,

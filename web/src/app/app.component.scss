@@ -1,0 +1,63 @@
+@import '~@angular/material/theming';
+
+@import '../theme.scss';
+// Define a custom mixin that takes in the current theme
+@mixin custom-style($theme) {
+  // Parse the theme and create variables for each color in the pallete
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+  $warn: map-get($theme, warn);
+  $foreground: map-get($theme, foreground);
+  $background: map-get($theme, background);
+  // Create theme specfic styles
+  .tail{
+    color: mat-color($primary, '50-contrast');
+  }
+  .tail a{
+    color: mat-color($primary, '50-contrast');
+  }
+}
+
+@include custom-style($my-theme);
+
+.frame {
+    flex-direction: column;
+    min-height: 100vh;
+    display: flex;
+}
+
+.workspace {
+    flex-direction: column;
+    height: 100vh;
+    display: flex;
+}
+
+router-outlet + ::ng-deep * {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    min-height: 0px;
+    flex-direction: column;
+    /* height: 1000px; */
+}
+
+.cookie-outer {
+    position: absolute; 
+    bottom: 40px; 
+    left: 0px; 
+    width: 100%; 
+    opacity: 0.6; 
+    filter: alpha(opacity=60);
+}
+
+.cookie-box{
+    padding-right: 1em;
+    padding-left: 1em;
+    text-align: center; 
+    color: white; 
+    background-color: #000000;
+    position: relative;
+    margin-left: auto; 
+    width: fit-content; 
+    margin-right: auto;
+}

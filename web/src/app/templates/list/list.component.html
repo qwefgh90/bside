@@ -2,7 +2,7 @@
   <div #parent fxLayout="row wrap">
     <!-- loop over the cardList and show the cards -->
     <ng-container *ngFor="let repo of partialTemplates; let i = index">
-      <div fxFlex="25" fxFlex.md="33" fxFlex.sm="50" fxFlex.xs="100" fxLayout="column" style="padding: 5px;"
+      <div [ngClass]="{'single-mode': singleMode}" fxFlex="25" fxFlex.md="33" fxFlex.sm="50" fxFlex.xs="100" fxLayout="column" style="padding: 5px;"
         *ngIf="repo.homepage != undefined && repo.homepage != ''" class="box" id="{{getId(repo.id)}}">
         <div [class.mat-elevation-z2]="true" class="card-item">
           <div class="card-title">
@@ -28,7 +28,7 @@
       </div>
     </ng-container>
     
-    <div fxFlex="25" fxFlex.md="33" fxFlex.sm="50" fxFlex.xs="100" fxLayout="column" style="padding: 5px;"
+    <div *ngIf="singleMode != true" fxFlex="25" fxFlex.md="33" fxFlex.sm="50" fxFlex.xs="100" fxLayout="column" style="padding: 5px;"
       class="box loadmore">
       <button mat-stroked-button class="loadmore-button" color="primary" (click)="onLoadMore()">
         <div style="display: flex; align-items: center;">
