@@ -31,8 +31,7 @@ export class WorkspaceService {
     WorkspaceCommand.NotifyContentChange.internalQueue.pipe(observeOn(async))
     .pipe(groupBy((node) => node.path))
     .subscribe((eachGroup) => eachGroup.pipe(debounceTime(1000 + this.globalDebounceTime)).subscribe((value) => {
-      this.emit(value)
-      console.log(`path: ${value.path}`);
+      this.emit(value);
     }));
   }
 

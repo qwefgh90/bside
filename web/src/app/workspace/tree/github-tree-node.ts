@@ -215,25 +215,25 @@ export class GithubTreeNode {
   /**
    * return all blob nodes 
    */
-  getBlobNodes(){
+  getBlobNodes(removeIncluded = false){
     if (this.type == 'tree') {
       let arr = this.reduce<Array<GithubTreeNode>>((acc, node, tree) => {
         if (!node.isRoot && (node.type == 'blob')) {
           acc.push(node);
         }
         return acc;
-      }, [], true);
+      }, [], removeIncluded);
       return arr;
     }else
       return [];
   }
 
-  getAllNodes(){
+  getAllNodes(removeIncluded = false){
     if (this.type == 'tree') {
       let arr = this.reduce<Array<GithubTreeNode>>((acc, node, tree) => {
         acc.push(node);
         return acc;
-      }, [], true);
+      }, [], removeIncluded);
       return arr;
     }else
       return [];
