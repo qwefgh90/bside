@@ -8,7 +8,7 @@ import { OAuthService } from 'src/app/oauth/service/o-auth.service';
 @Component({
   selector: 'app-repositories',
   templateUrl: './repositories.component.html',
-  styleUrls: ['./repositories.component.css']
+  styleUrls: ['./repositories.component.scss']
 })
 export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
 

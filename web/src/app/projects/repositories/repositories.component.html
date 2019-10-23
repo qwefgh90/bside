@@ -1,22 +1,23 @@
 <div class="repos-outer">
-  <div class="repos">
-    <mat-nav-list>
-      <div mat-subheader style="display:flex">
-        <h3>Repositories</h3>
+  <div class="repos" [ngStyle.xs]="{'width': 'unset'}" [ngStyle.sm]="{'width': 'unset'}">
+    <mat-nav-list color="primary">
+      <div class="custom-sub-header">
+        <h2>Projects<span *ngIf="repositories != undefined">({{repositories.length}})</span></h2>
         <div class="spacer"></div>
         <div class="filter">
-          <mat-form-field><input matInput placeholder="" [formControl]="searchInputFormControl" />
+          <mat-form-field color="primary"><input matInput placeholder="" [formControl]="searchInputFormControl" />
             <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
 
         </div>
       </div>
-      <mat-divider></mat-divider>
+      <mat-divider color=""></mat-divider>
       <div class="items" *ngIf="repositories">
-        <a mat-list-item routerLink="/repos/{{repo.full_name}}" (click)="startLoading(repo.name)" *ngFor="let repo of getRepositories()">
+        <a mat-list-item routerLink="/repos/{{repo.full_name}}" (click)="startLoading(repo.name)"
+          *ngFor="let repo of getRepositories()">
           <mat-icon mat-list-icon>folder</mat-icon>
           <div mat-line style="display: flex;">
-            <h4 style="margin: 0px;font-weight: unset;">{{repo.name}}</h4>
+            <h3 style="margin: 0px;font-weight: unset;">{{repo.name}}</h3>
             <div *ngIf="repo?.private"><span
                 style="font-size: 0.7em;margin: 0px; vertical-align: middle; margin-left: 0.4em; font-weight: bold;">private</span>
             </div>
