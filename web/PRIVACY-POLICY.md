@@ -11,13 +11,18 @@ When you visit our site and sign in BSide, we receive your information, such as 
 
 #### Works and Github Information
 While you are in BSide, your works and related information such as your profile, repositories, blobs provided from Github API
-can be saved in your local browser storage not in the servers. BSide don't save them in any server except a moment when you sign in.
+are not saved in anywhere excpet for your local browser storage. 
+
+#### Access Token
+BSide don't save a aceess token persistently in any database.
+But while your server session is alive, Your access token can be saved in the memory.
 
 #### Activity
 While you are in BSide, we collect urls of pages which you visit and how long you stay in a page. It will be sent to Google Analytics.
+But your activities related to private works are not sent to Google Analytics.
 
 #### Environment
-While you are in BSide, we collect all your environment information. In environment information, there are the country, the device and the type of the browser. It will be sent to Google Analytics.
+While you are in BSide, we collect all your environment information. In environment information, there are the country, the type of the browser and device. It will be sent to Google Analytics.
 
 ### How We Use the Information
 
@@ -29,9 +34,10 @@ We may use the information.
 - to make usuful statistics such as the user activity statistics
 
 ### Information Sharing and Disclosure
-We don't share and sell and rent your information with third parties in any official or unoffical way except Google Analytics.
+We don't share and sell and rent your information with third parties in any official or unoffical way except for Google Analytics.
 
 ### How BSide Secure the Information
-We only save your works to a isolated namespace which is based on the technology of the local storage. And we clear out old works when you go to the new commit in the workspace. This means that BSide depends on the security of your browser and if you keeping latest version, your data will be fine. The communication between the client and server is over SSL connection. It means that all information to be encrypted.
+We only save your works to a isolated namespace which is based on the technology of the local storage. And we clear out old works when you go to the new commit in the workspace. This means that BSide depends on the security of your browser and if you keeping latest version, your data will be fine. 
+The communication between the client and server is over SSL connection. It means that all information to be encrypted.
 
 Although we take appropriate measures to safeguard against unauthorized disclosures of information, we cannot assure you that information will never be disclosed, altered or destroyed in a manner that is inconsistent with this Privacy Policy.
