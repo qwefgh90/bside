@@ -5,6 +5,8 @@ BSide is Github CMS to make your editing more easier and faster in any device.
 The devleoper can manage contents of the repository directly on the modern browser without cloning the project and making commits.
 It also provides embedded tools and views to help the software developer to manage the blog hosted on Github Page.
 
+<img src="src/docs/screenshot.png">
+
 ## Key features
 
 BSide try to provide new features which other services doesn't provide.
