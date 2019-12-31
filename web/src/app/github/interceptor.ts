@@ -38,7 +38,6 @@ export class Interceptor implements HttpInterceptor {
                         let etag = response.headers.get('ETag');
                         this.etagMap.set(this.getKey(req), etag);   //update ETag 
                         this.cacheMap.set(this.getKey(req), response); //update the response
-                        console.debug(`add etag(${etag}) to ${req.url}`);
                     }
                 }
                 return event;
@@ -47,7 +46,6 @@ export class Interceptor implements HttpInterceptor {
             if (event instanceof HttpErrorResponse) {
                 const response = (event as HttpErrorResponse);
                 if (response.headers.has('ETag') && (wrapperReq.method.toLowerCase() == "get") && response.status == 304 && (this.cacheMap.has(this.getKey(req)))) {
-                    console.debug(`response the cache of ${req.url}`);
                     const cachedRes = this.cacheMap.get(this.getKey(req)); //user the cached response
                     event = cachedRes;
                 }

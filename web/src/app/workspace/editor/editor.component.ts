@@ -10,6 +10,7 @@ import { TextUtil, FileType } from '../text/text-util';
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { WorkspaceService } from '../workspace.service';
 import { MarkdownEditorComponent } from '../markdown-editor/markdown-editor.component';
+import { NotifyContentChangeAction } from '../core/action/user/notify-content-change-action';
 
 const prefix: string = 'X'.repeat(100);
 enum EditorMode{
@@ -197,7 +198,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       }else {
         this.model = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(path));
         this.model.onDidChangeContent((e) => {
-          this.workspacecService.notifyContentChange(this, path);
+          new NotifyContentChangeAction(path, this).start();
         })
       }
     }else

@@ -6,6 +6,7 @@ import { TreeNode } from 'angular-tree-component';
 import { FormControl } from '@angular/forms';
 import { WorkspaceService } from '../workspace.service';
 import { labelTable, getLabel } from '../info/info.component';
+import { SelectAction } from '../core/action/user/select-action';
 
 @Component({
   selector: 'app-stage',
@@ -61,7 +62,8 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   
   selectNode(node: TreeNode){
     if((node.data.state as NodeStateAction[]).findIndex(v => v == NodeStateAction.Deleted) == -1)
-      this.workspaceService.selectNode(this, node.data.path);
+      // this.workspaceService.selectNode(this, node.data.path);
+      new SelectAction(node.data.path, this).start();
   }
 
   undoAll(){

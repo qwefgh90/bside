@@ -1,8 +1,5 @@
 package io.github.qwefgh90.easiest.browser;
 
-import io.github.qwefgh90.easiest.topic.TopicSearchBot;
-import javassist.ClassPath;
-import jdk.jshell.spi.ExecutionControl;
 import org.apache.commons.exec.OS;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;

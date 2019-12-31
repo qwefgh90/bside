@@ -41,6 +41,9 @@ import { WorkspaceService } from '../workspace.service';
 import { DeviceDetectorModule, DeviceDetectorService } from 'ngx-device-detector';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { GithubTreeToTree } from '../tree/github-tree-to-tree';
+import { SelectAction } from '../core/action/user/select-action';
+import { FileRenameAction } from '../core/action/user/file-rename-action';
+import { RemoveNode } from '../core/action/user/remove-node';
 
 @Component({selector: 'app-stage', template: ''})
 class StageComponent {
@@ -450,7 +453,9 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     let existSpy = spyOn(component.editor, 'exist');
     existSpy.and.returnValue(false);
 
-    workspaceService.selectNode(undefined, '.buildinfo')
+    // workspaceService.selectNode(undefined, '.buildinfo')
+    new SelectAction('.buildinfo',undefined).start();
+
     fixture.detectChanges();
     tick(10000);
 
@@ -468,7 +473,9 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     // let testNode = Object.assign({}, tree.tree[0]);
     // testNode.path = '.buildinfo';
 
-    workspaceService.removeNode(undefined, '.buildinfo');
+    // workspaceService.removeNode(undefined, '.buildinfo');
+    new RemoveNode( '.buildinfo', undefined).start();
+    
     fixture.detectChanges();
     tick(10000);
 
@@ -504,7 +511,8 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     let testNode = Object.assign({}, tree.tree[0]);
     testNode.path = 'newfile.txt';
 
-    workspaceService.moveNodeInTree(undefined, 'oldfile.txt', GithubTreeNode.githubTreeNodeFactory.of(testNode))
+    // workspaceService.moveNodeInTree(undefined, 'oldfile.txt', GithubTreeNode.githubTreeNodeFactory.of(testNode))
+    new FileRenameAction('','oldfile.txt','newfile.txt','newfile.txt',undefined).start();
     fixture.detectChanges();
     tick(10000);
 

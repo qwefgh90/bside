@@ -8,6 +8,9 @@ import { GithubTreeNode } from '../tree/github-tree-node';
 import { tree } from 'src/app/testing/mock-data';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { WorkspacePack } from '../workspace/workspace-pack';
+import { SelectAction } from '../core/action/user/select-action';
+import { FileRenameAction } from '../core/action/user/file-rename-action';
+import { RemoveNode } from '../core/action/user/remove-node';
 
 describe('TabComponent', () => {
   let component: TabComponent;
@@ -105,7 +108,8 @@ describe('TabComponent', () => {
     let addTabSpy = spyOn(component, 'addTab');
     let changeTabSpy = spyOn(component, 'changeTab');
 
-    workspaceService.selectNode(undefined, 'test.txt');
+    // workspaceService.selectNode(undefined, 'test.txt');
+    new SelectAction('test.txt', this).start();
     fixture.detectChanges();
     tick(3000);
 
@@ -124,7 +128,9 @@ describe('TabComponent', () => {
     component.addTab(fileName);
     let removeTabSpy = spyOn(component, 'removeTab');
 
-    workspaceService.removeNode(undefined, 'test.txt');
+    // workspaceService.removeNode(undefined, 'test.txt');
+    new RemoveNode( 'test.txt', undefined).start();
+
     fixture.detectChanges();
     tick(3000);
 
@@ -142,7 +148,8 @@ describe('TabComponent', () => {
     newNode.path = 'newname.txt';
     component.addTab(fileName);
 
-    workspaceService.moveNodeInTree(undefined, fileName, GithubTreeNode.githubTreeNodeFactory.of(newNode));
+    // workspaceService.moveNodeInTree(undefined, fileName, GithubTreeNode.githubTreeNodeFactory.of(newNode));
+    new FileRenameAction('', fileName, newNode.path, newNode.path, undefined).start();
     fixture.detectChanges();
     tick(3000);
 

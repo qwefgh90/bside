@@ -5,6 +5,14 @@ import { WorkspaceService, WorkspaceCommand } from '../workspace.service';
 import { filter } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { WorkspacePack } from '../workspace/workspace-pack';
+import { MicroActionComponentMap, SupportedComponents } from '../core/action/micro/micro-action-component-map';
+import { MicroAction } from '../core/action/micro/micro-action';
+import { FileRenameAction } from '../core/action/user/file-rename-action';
+import { TabRenameMicroAction } from '../core/action/micro/tab-rename-micro-action';
+import { TabSelectAction } from '../core/action/micro/tab-select-action';
+import { TabCloseMicroAction } from '../core/action/micro/tab-close-micro-action';
+import { SelectAction } from '../core/action/user/select-action';
+import { TabSnapshotMicroAction } from '../core/action/micro/tab-snapshot-micro-action';
 
 @Component({
   selector: 'app-tab',
@@ -26,35 +34,45 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
   @ViewChild(MatTabGroup, { static: true }) group: MatTabGroup;
 
   ngOnInit() {
-    
-    let s = this.workspaceService.commandChannel.pipe(filter((v, idx) => v.source != this))
-      .subscribe((command) => {
-        console.debug(command);
-        if (command instanceof WorkspaceCommand.SelectNode) {
-          if (command.path != undefined) {
-            if (!this.exists(command.path)) {
-              this.addTab(command.path);
-            }
-            this.changeTab(command.path);
+    let actionSubject = MicroActionComponentMap.getSubjectByComponent(SupportedComponents.TabComponent);
+    let s = actionSubject.subscribe((micro: MicroAction<any>) => {
+      if (micro instanceof TabRenameMicroAction) {
+        try {
+          this.renameTab(micro.oldPath, micro.newPath);
+          micro.succeed(() => { this.renameTab(micro.newPath, micro.oldPath) });
+        } catch{
+          micro.fail();
+        }
+      } else if (micro instanceof TabSelectAction) {
+        try {
+          if ((this.selectedPath != micro.selectedPath)) {//&& !(micro.parent instanceof SelectAction && micro.parent.origin == this)
+            let path = micro.selectedPath;
+            this.select(path);
           }
+          micro.succeed(() => { });
+        } catch{
+          micro.fail();
         }
-        else if (command instanceof WorkspaceCommand.RemoveNode) {
-          this.removeTab(command.path);
+      } else if (micro instanceof TabCloseMicroAction) {
+        try {
+          let path = micro.removedPath;
+          this.removeTab(path);
+          micro.succeed(() => { this.select(path) });
+        } catch{
+          micro.fail();
         }
-        else if (command instanceof WorkspaceCommand.CloseTab) {
-        } else if (command instanceof WorkspaceCommand.MoveNodeInTree) {
-          if (this.exists(command.fromPath)) {
-            this.renameTab(command.fromPath, command.to.path);
-          }
-        }
-      });
-      this.subscriptions.push(s);
+      } else if (micro instanceof TabSnapshotMicroAction) {
+        const tabs = Array.from(this.tabs);
+        micro.succeed(() => { }, tabs);
+      }
+    })
+    this.subscriptions.push(s);
   }
 
-  ngOnDestroy(){
+  ngOnDestroy() {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
-  
+
   ngOnChanges(changes: SimpleChanges) {
   }
 
@@ -62,19 +80,20 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
    * It must be called after parent's ngAfterContentInit
    * @param pack
    */
-  load(loadedPack: WorkspacePack){
+  load(loadedPack: WorkspacePack) {
     console.debug("the pack is loaded");
     this.clear();
     loadedPack.tabs.forEach(v => {
       this.addTab(v);
     });
     this.changeTab(loadedPack.selectedNodePath);
-    this.workspaceService.selectNode(this,loadedPack.selectedNodePath);
-    // this.actionAfterTabInitialized = () => this.changeTab(loadedPack.selectedNodePath);
+    this.executeSelectAction(loadedPack.selectedNodePath);
   }
 
-  ngAfterContentInit(){
+  ngAfterContentInit() {
   }
+
+  indexFromChangeTab;;
 
   changeTab(path: string) {
     if (typeof path == 'string') {
@@ -82,20 +101,36 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
         if (this.exists(path)) {
           this.selectedPath = path;
           let selectedTabIndex = this.findTabIndex(path);
-          if(selectedTabIndex != -1)
+          if (selectedTabIndex != -1){
             this.selectedTabindex = selectedTabIndex;
+            this.indexFromChangeTab = this.selectedTabindex;
+          }
         }
       }
     }
   }
 
+  private select(path: string) {
+    if (path != undefined) {
+      if (!this.exists(path)) {
+        this.addTab(path);
+      }
+      this.changeTab(path);
+    }
+  }
+
   tabSelected(tab: MatTab) {
-    if(this.actionAfterTabInitialized != undefined){
+    if (this.actionAfterTabInitialized != undefined) {
       this.actionAfterTabInitialized();
       this.actionAfterTabInitialized = undefined;
     }
-    if (tab != undefined)
-      this.workspaceService.selectNode(this, tab.textLabel);
+    if (tab != undefined){
+      if(this.indexFromChangeTab != this.selectedTabindex){
+        this.changeTab(tab.textLabel);
+        this.executeSelectAction(tab.textLabel);
+      }
+    }
+    this.indexFromChangeTab = undefined;
   }
 
   addTab(path: string) {
@@ -120,13 +155,17 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
       }
       if ((this._tabs.length) > 0) {
         if (beforeSelectedIndex < this._tabs.length)
-          this.workspaceService.selectNode(this, this._tabs[beforeSelectedIndex]);
+          this.executeSelectAction(this._tabs[beforeSelectedIndex]);
         else if (beforeSelectedIndex == this._tabs.length)
-          this.workspaceService.selectNode(this, this._tabs[beforeSelectedIndex - 1]);
+          this.executeSelectAction(this._tabs[beforeSelectedIndex - 1]);
       } else {
-        this.workspaceService.selectNode(this, undefined);
+        this.executeSelectAction(undefined);
       }
     }
+  }
+
+  private executeSelectAction(path: string) {
+    new SelectAction(path, this).start()
   }
 
   /**
