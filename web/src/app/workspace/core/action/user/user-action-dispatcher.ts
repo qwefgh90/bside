@@ -1,5 +1,4 @@
 import { UserAction } from './user-action'
-import { Subject } from 'rxjs';
 
 export class UserActionDispatcher {
     private queue: UserAction<any>[] = []

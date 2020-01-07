@@ -36,13 +36,15 @@ import { BuildHistoryComponent } from '../build-history/build-history.component'
 import { async } from '@angular/core/testing';
 import { MicroActionComponentMap, SupportedComponents } from '../core/action/micro/micro-action-component-map';
 import { WorkspaceRenameMicroAction } from '../core/action/micro/workspace-rename-micro-action';
-import { WorkspaceSelectAction } from '../core/action/micro/workspace-select-action';
+import { WorkspaceSelectMicroAction } from '../core/action/micro/workspace-select-micro-action';
 import { SelectAction } from '../core/action/user/select-action';
 import { WorkspaceRemoveNodeMicroAction } from '../core/action/micro/workspace-remove-node-micro-action';
 import { WorkspaceCreateMicroAction } from '../core/action/micro/workspace-create-micro-action';
 import { WorkspaceContentChangeMicroAction } from '../core/action/micro/workspace-content-change-micro-action';
 import { WorkspaceSnapshotMicroAction, WorkspaceSnapshot } from '../core/action/micro/workspace-snapshot-micro-action';
 import { SaveAction } from '../core/action/user/save-action';
+import { WorkspaceClearMicroAction } from '../core/action/micro/workspace-clear-micro-action';
+import { WorkspaceUndoMicroAction as WorkspaceUndoMicroAction } from '../core/action/micro/workspace-undo-micro-action';
 
 declare const monaco;
 
@@ -147,35 +149,16 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       new SaveAction(this).start();
     }));
 
-    this.subscriptions.push(this.workspaceService.commandChannel.subscribe((command) => {
-      console.debug(command);
-      if (command instanceof WorkspaceCommand.UndoAll) {
-        this.database.delete(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
-        this.editor.clear();
-        this.selectedNodePath = undefined;
-        this.refreshSubject.next();
-      } else if (command instanceof WorkspaceCommand.Undo) {
-        const node = this.tree.get(command.path);
-        if (node != undefined) {
-          const asyncText = this.getOriginalText(node.sha)
-          asyncText.then((text) => {
-            this.editor.setContent(command.path, text);
-            this.nodeContentChanged(command.path);
-          })
-        }
-      }
-    }));
-
     this.subscriptions.push(MicroActionComponentMap.getSubjectByComponent(SupportedComponents.WorkspaceComponent).subscribe((micro) => {
       if (micro instanceof WorkspaceRenameMicroAction) {
         try {
           this.nodeMoved(micro.oldPath, this.tree.get(micro.newPath));
           new SaveAction(this).start();
           micro.succeed(() => { });
-        } catch{
-          micro.fail();
+        } catch(ex){
+          micro.fail(ex);
         }
-      } else if (micro instanceof WorkspaceSelectAction) {
+      } else if (micro instanceof WorkspaceSelectMicroAction) {
         try {
           let path = micro.selectedPath;
           if(path != this.selectedNodePath){
@@ -184,8 +167,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
             this.editor.shrinkExpand();
           }
           micro.succeed(() => { });
-        } catch{
-          micro.fail();
+        } catch(ex){
+          micro.fail(ex);
         }
       } else if (micro instanceof WorkspaceRemoveNodeMicroAction) {
         try {
@@ -193,8 +176,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           this.nodeRemoved(path);
           new SaveAction(this).start();
           micro.succeed(() => { });
-        } catch{
-          micro.fail();
+        } catch(ex){
+          micro.fail(ex);
         }
       } else if (micro instanceof WorkspaceCreateMicroAction) {
         try {
@@ -203,15 +186,15 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
             new SaveAction(this).start();
           }
           micro.succeed(() => { });
-        } catch{
-          micro.fail();
+        } catch(ex){
+          micro.fail(ex);
         }
       } else if (micro instanceof WorkspaceContentChangeMicroAction) {
         try {
           this.nodeContentChanged(micro.path);
           micro.succeed(() => { });
-        } catch{
-          micro.fail();
+        } catch(ex){
+          micro.fail(ex);
         }
       } else if (micro instanceof WorkspaceSnapshotMicroAction) {
         if (this.treeStatus == TreeStatusOnWorkspace.Done) {
@@ -223,7 +206,33 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         } else {
           micro.fail(new Error('the workspace component is not ready'));
         }
+      }else if (micro instanceof WorkspaceClearMicroAction) {
+        try {
+          this.database.delete(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
+          this.editor.clear();
+          this.selectedNodePath = undefined;
+          this.refreshSubject.next();
+          micro.succeed(() => { });
+        } catch(ex) {
+          micro.fail(ex);
+        }
+      }else if (micro instanceof WorkspaceUndoMicroAction) {
+        try {
+          const node = this.tree.get(micro.path);
+          if (node != undefined) {
+            const asyncText = this.getOriginalText(node.sha)
+            asyncText.then((text) => {
+              this.editor.setContent(micro.path, text);
+              this.nodeContentChanged(micro.path);
+            })
+          }
+          micro.succeed(() => { });
+        } catch(ex) {
+          micro.fail(ex);
+        }
       }
+
+
       this.invalidateDirtyCount();
     }));
 

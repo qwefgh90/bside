@@ -20,7 +20,7 @@ import { TextUtil } from '../text/text-util';
 import { FileRenameAction } from '../core/action/user/file-rename-action';
 import { SelectAction } from '../core/action/user/select-action';
 import { MicroActionComponentMap, SupportedComponents } from '../core/action/micro/micro-action-component-map';
-import { WorkspaceSelectAction } from '../core/action/micro/workspace-select-action';
+import { WorkspaceSelectMicroAction } from '../core/action/micro/workspace-select-micro-action';
 import { GithubTreeSelectMicroAction } from '../core/action/micro/github-tree-select-micro-action';
 import { RemoveNode } from '../core/action/user/remove-node';
 import { CreateAction } from '../core/action/user/create-action';

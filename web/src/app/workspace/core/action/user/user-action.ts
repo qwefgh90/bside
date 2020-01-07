@@ -41,10 +41,10 @@ export abstract class UserAction<T> {
         console.debug(`\t[${this.currentActionIndex}/${this.max}]${microAction.constructor.name}`, `-> ${microAction.toString()}`);
         let current = this.microActions[this.currentActionIndex];
         if(current != microAction){
-            console.error(`a current micro action and a complete micro action doesn't match`);
+            console.error(`A current micro action and a complete micro action doesn't match.`);
         }else{
             if(current.hasError()){
-                console.info(`An error occurs in ${microAction.constructor.name}`);
+                console.error(`An error occurs in ${microAction.constructor.name}`, microAction.error);
                 this.recover();
                 this.fail();
             }else{

@@ -7,6 +7,8 @@ import { FormControl } from '@angular/forms';
 import { WorkspaceService } from '../workspace.service';
 import { labelTable, getLabel } from '../info/info.component';
 import { SelectAction } from '../core/action/user/select-action';
+import { UndoAction } from '../core/action/user/undo-action';
+import { ClearAction } from '../core/action/user/clear-action';
 
 @Component({
   selector: 'app-stage',
@@ -67,11 +69,13 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   }
 
   undoAll(){
-    this.workspaceService.undoAll(this);
+    // this.workspaceService.undoAll(this);
+    new ClearAction(this).start();
   }
 
   undo(node:GithubTreeNode) {
-    this.workspaceService.undo(this, node.path);
+    // this.workspaceService.undo(this, node.path);
+    new UndoAction(node.path, this).start();
   }
   
   isPossibleCommit: boolean = true;

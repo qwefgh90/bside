@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 import { MicroAction } from './micro-action';
 import { Type } from '@angular/core';
 import { WorkspaceRenameMicroAction } from './workspace-rename-micro-action';
-import { WorkspaceSelectAction } from './workspace-select-action';
+import { WorkspaceSelectMicroAction } from './workspace-select-micro-action';
 import { TabSelectAction } from './tab-select-action';
 import { TabCloseMicroAction } from './tab-close-micro-action';
 import { WorkspaceRemoveNodeMicroAction } from './workspace-remove-node-micro-action';
@@ -14,6 +14,8 @@ import { WorkspaceContentChangeMicroAction } from './workspace-content-change-mi
 import { GithubTreeSnapshotMicroAction } from './github-tree-snapshot-micro-action';
 import { TabSnapshotMicroAction } from './tab-snapshot-micro-action';
 import { WorkspaceSnapshotMicroAction } from './workspace-snapshot-micro-action';
+import { WorkspaceUndoMicroAction } from './workspace-undo-micro-action';
+import { WorkspaceClearMicroAction } from './workspace-clear-micro-action';
 
 export class MicroActionComponentMap {
     private static init = false;
@@ -29,11 +31,13 @@ export class MicroActionComponentMap {
             this.setKeyValuePair(TabCloseMicroAction, SupportedComponents.TabComponent);
             this.setKeyValuePair(TabSnapshotMicroAction, SupportedComponents.TabComponent);
             this.setKeyValuePair(WorkspaceRenameMicroAction, SupportedComponents.WorkspaceComponent);
-            this.setKeyValuePair(WorkspaceSelectAction, SupportedComponents.WorkspaceComponent);
+            this.setKeyValuePair(WorkspaceSelectMicroAction, SupportedComponents.WorkspaceComponent);
             this.setKeyValuePair(WorkspaceRemoveNodeMicroAction, SupportedComponents.WorkspaceComponent);
             this.setKeyValuePair(WorkspaceContentChangeMicroAction, SupportedComponents.WorkspaceComponent);
             this.setKeyValuePair(WorkspaceCreateMicroAction, SupportedComponents.WorkspaceComponent);
             this.setKeyValuePair(WorkspaceSnapshotMicroAction, SupportedComponents.WorkspaceComponent);
+            this.setKeyValuePair(WorkspaceClearMicroAction, SupportedComponents.WorkspaceComponent);
+            this.setKeyValuePair(WorkspaceUndoMicroAction, SupportedComponents.WorkspaceComponent);
             this.initMicroComponentSubjectMap();
             this.init = true;
         }
@@ -46,6 +50,7 @@ export class MicroActionComponentMap {
         this.microComponentSubjectMap.set(SupportedComponents.TabComponent, new Subject());
         this.microComponentSubjectMap.set(SupportedComponents.WorkspaceComponent, new Subject());
         this.microComponentSubjectMap.set(SupportedComponents.GithubTreeComponent, new Subject());
+        this.microComponentSubjectMap.set(SupportedComponents.EditorComponent, new Subject());
     }
     static getSubjectByComponent(component: SupportedComponents): Subject<MicroAction<any>> | undefined{
         return this.microComponentSubjectMap.get(component);
@@ -54,6 +59,7 @@ export class MicroActionComponentMap {
 export enum SupportedComponents{
     TabComponent,
     WorkspaceComponent,
-    GithubTreeComponent
+    GithubTreeComponent,
+    EditorComponent
 }
 MicroActionComponentMap.initializeMicroActionMap();
