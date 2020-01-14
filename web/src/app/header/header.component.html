@@ -30,21 +30,12 @@
     </mat-spinner>
     <!-- </button>  -->
     <mat-menu #menu="matMenu">
-      <button mat-menu-item>
-        <span>{{user?.login}}</span>
-      </button>
+      <a mat-menu-item target="_blank" href="{{user?.html_url}}"><span>{{user?.login}}</span>
+      </a>
       <button mat-menu-item (click)="logout()">
         <mat-icon>exit_to_app</mat-icon>
         <span>Logout</span>
       </button>
-      <!-- <button mat-menu-item disabled>
-      <mat-icon>voicemail</mat-icon>
-      <span>Check voicemail</span>
-    </button>
-    <button mat-menu-item>
-      <mat-icon>notifications_off</mat-icon>
-      <span>Disable alerts</span>
-    </button> -->
     </mat-menu>
   </div>
 </mat-toolbar>

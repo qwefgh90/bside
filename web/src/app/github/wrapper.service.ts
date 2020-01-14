@@ -1923,6 +1923,109 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
       }
     ]
    */
+  /*
+    commit.url
+                                        Dload  Upload   Total   Spent    Left  Speed
+    100   155    0   155    0     0    187      0 --:--:-- --:--:-- --:--:--   187{
+      "sha": "ceb341b21a418709d1819560c23fc7dea9e6155e",
+      "node_id": "MDY6Q29tbWl0MjMwODc4OTAwOmNlYjM0MWIyMWE0MTg3MDlkMTgxOTU2MGMyM2ZjN2RlYTllNjE1NWU=",
+      "commit": {
+        "author": {
+          "name": "Changwon Choe",
+          "email": "qwefgh90@naver.com",
+          "date": "2019-12-30T09:16:47Z"
+        },
+        "committer": {
+          "name": "Changwon Choe",
+          "email": "qwefgh90@naver.com",
+          "date": "2019-12-30T09:16:47Z"
+        },
+        "message": "it's from http://localhost:4200/repos/qwefgh90/test333",
+        "tree": {
+          "sha": "94ae8aac77519e5139b1a07f0a6535c044bb68fb",
+          "url": "https://api.github.com/repos/qwefgh90/test333/git/trees/94ae8aac77519e5139b1a07f0a6535c044bb68fb"
+        },
+        "url": "https://api.github.com/repos/qwefgh90/test333/git/commits/ceb341b21a418709d1819560c23fc7dea9e6155e",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null
+        }
+      },
+      "url": "https://api.github.com/repos/qwefgh90/test333/commits/ceb341b21a418709d1819560c23fc7dea9e6155e",
+      "html_url": "https://github.com/qwefgh90/test333/commit/ceb341b21a418709d1819560c23fc7dea9e6155e",
+      "comments_url": "https://api.github.com/repos/qwefgh90/test333/commits/ceb341b21a418709d1819560c23fc7dea9e6155e/comments",
+      "author": {
+        "login": "qwefgh90",
+        "id": 7572251,
+        "node_id": "MDQ6VXNlcjc1NzIyNTE=",
+        "avatar_url": "https://avatars2.githubusercontent.com/u/7572251?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/qwefgh90",
+        "html_url": "https://github.com/qwefgh90",
+        "followers_url": "https://api.github.com/users/qwefgh90/followers",
+        "following_url": "https://api.github.com/users/qwefgh90/following{/other_user}",
+        "gists_url": "https://api.github.com/users/qwefgh90/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/qwefgh90/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/qwefgh90/subscriptions",
+        "organizations_url": "https://api.github.com/users/qwefgh90/orgs",
+        "repos_url": "https://api.github.com/users/qwefgh90/repos",
+        "events_url": "https://api.github.com/users/qwefgh90/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/qwefgh90/received_events",
+        "type": "User",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "qwefgh90",
+        "id": 7572251,
+        "node_id": "MDQ6VXNlcjc1NzIyNTE=",
+        "avatar_url": "https://avatars2.githubusercontent.com/u/7572251?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/qwefgh90",
+        "html_url": "https://github.com/qwefgh90",
+        "followers_url": "https://api.github.com/users/qwefgh90/followers",
+        "following_url": "https://api.github.com/users/qwefgh90/following{/other_user}",
+        "gists_url": "https://api.github.com/users/qwefgh90/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/qwefgh90/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/qwefgh90/subscriptions",
+        "organizations_url": "https://api.github.com/users/qwefgh90/orgs",
+        "repos_url": "https://api.github.com/users/qwefgh90/repos",
+        "events_url": "https://api.github.com/users/qwefgh90/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/qwefgh90/received_events",
+        "type": "User",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "1f63cb03f64b653abecb0c6ce3e9c48521626de3",
+          "url": "https://api.github.com/repos/qwefgh90/test333/commits/1f63cb03f64b653abecb0c6ce3e9c48521626de3",
+          "html_url": "https://github.com/qwefgh90/test333/commit/1f63cb03f64b653abecb0c6ce3e9c48521626de3"
+        }
+      ],
+      "stats": {
+        "total": 1,
+        "additions": 1,
+        "deletions": 0
+      },
+      "files": [
+        {
+          "sha": "387abba5ef3968c0bc40259cceba853696d9cf06",
+          "filename": "wow",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0,
+          "changes": 1,
+          "blob_url": "https://github.com/qwefgh90/test333/blob/ceb341b21a418709d1819560c23fc7dea9e6155e/wow",
+    100  1080    0  1080    0     0   1304      0 --:--:-- --:--:-- --:--:--  13041a418709d1819560c23fc7dea9e6155e/wow",
+          "contents_url": "https://api.github.com/repos/qwefgh90/test333/contents/wow?ref=ceb341b21a418709d1819560c23fc7dea9e6155e",
+          "patch": "@@ -0,0 +1 @@\n+awef\n\\ No newline at end of file"
+        }
+      ]
+    }
+
+  */
   async branches(login: string, repositoryName: string): Promise<any[]> {
     if (this.hasToken()) {
       // const repo = new Github({
