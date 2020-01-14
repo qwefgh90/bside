@@ -3,7 +3,7 @@ import { UserActionDispatcher } from './user-action-dispatcher';
 import { WorkspaceContentChangeMicroAction } from '../micro/workspace-content-change-micro-action';
 
 export class NotifyContentChangeAction extends UserAction<string>{
-    constructor(readonly path: string, origin?: any, dispatcher?: UserActionDispatcher) {
+    constructor(readonly path: string, origin: any, dispatcher: UserActionDispatcher) {
         super(origin, dispatcher);
     }
     protected defineMicroActionList() {

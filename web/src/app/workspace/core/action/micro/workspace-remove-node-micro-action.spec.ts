@@ -2,6 +2,6 @@ import { WorkspaceRemoveNodeMicroAction } from './workspace-remove-node-micro-ac
 
 describe('WorkspaceRemoveNodeMicroAction', () => {
   it('should create an instance', () => {
-    expect(new WorkspaceRemoveNodeMicroAction()).toBeTruthy();
+    expect(new WorkspaceRemoveNodeMicroAction('')).toBeTruthy();
   });
 });

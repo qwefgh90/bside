@@ -1,18 +1,17 @@
 import { Component, OnInit, EventEmitter, Output, ViewChild, Input, OnChanges, SimpleChanges, AfterContentInit, OnDestroy } from '@angular/core';
 import { Tab } from './tab';
 import { MatTab, MatTabGroup } from '@angular/material/tabs';
-import { WorkspaceService, WorkspaceCommand } from '../workspace.service';
 import { filter } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { WorkspacePack } from '../workspace/workspace-pack';
 import { MicroActionComponentMap, SupportedComponents } from '../core/action/micro/micro-action-component-map';
 import { MicroAction } from '../core/action/micro/micro-action';
-import { FileRenameAction } from '../core/action/user/file-rename-action';
 import { TabRenameMicroAction } from '../core/action/micro/tab-rename-micro-action';
 import { TabSelectAction } from '../core/action/micro/tab-select-action';
 import { TabCloseMicroAction } from '../core/action/micro/tab-close-micro-action';
 import { SelectAction } from '../core/action/user/select-action';
 import { TabSnapshotMicroAction } from '../core/action/micro/tab-snapshot-micro-action';
+import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 
 @Component({
   selector: 'app-tab',
@@ -21,7 +20,7 @@ import { TabSnapshotMicroAction } from '../core/action/micro/tab-snapshot-micro-
 })
 export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, OnDestroy {
 
-  constructor(private workspaceService: WorkspaceService) { }
+  constructor(private userActionDispatcher: UserActionDispatcher) { }
 
   actionAfterTabInitialized: () => void;
   _tabs: string[] = [];
@@ -45,12 +44,12 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
         }
       } else if (micro instanceof TabSelectAction) {
         try {
-          if ((this.selectedPath != micro.selectedPath)) {//&& !(micro.parent instanceof SelectAction && micro.parent.origin == this)
+          if ((this.selectedPath != micro.selectedPath)) {
             let path = micro.selectedPath;
             this.select(path);
           }
           micro.succeed(() => { });
-        } catch{
+        } catch {
           micro.fail();
         }
       } else if (micro instanceof TabCloseMicroAction) {
@@ -78,7 +77,6 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
 
   /**
    * It must be called after parent's ngAfterContentInit
-   * @param pack
    */
   load(loadedPack: WorkspacePack) {
     console.debug("the pack is loaded");
@@ -93,16 +91,16 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
   ngAfterContentInit() {
   }
 
-  indexFromChangeTab;;
+  indexFromChangeTab;
 
   changeTab(path: string) {
     if (typeof path == 'string') {
       if (this.selectedPath != path) {
         if (this.exists(path)) {
-          this.selectedPath = path;
           let selectedTabIndex = this.findTabIndex(path);
           if (selectedTabIndex != -1){
             this.selectedTabindex = selectedTabIndex;
+            this.selectedPath = path;
             this.indexFromChangeTab = this.selectedTabindex;
           }
         }
@@ -165,7 +163,7 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
   }
 
   private executeSelectAction(path: string) {
-    new SelectAction(path, this).start()
+    new SelectAction(path, this, this.userActionDispatcher).start()
   }
 
   /**

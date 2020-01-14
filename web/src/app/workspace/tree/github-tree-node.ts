@@ -299,6 +299,10 @@ export class GithubTreeNode {
     return path.match(new RegExp('[^/]*$'))[0];
   }
 
+  static getNameFromPath(path?: string) {
+    return path.match(new RegExp('[^/]*$'))[0];
+  }
+
   private changeAllParents(parent: GithubTreeNode){
     let p = parent;
     while(p != undefined){

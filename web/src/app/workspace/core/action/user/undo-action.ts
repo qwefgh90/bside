@@ -3,7 +3,7 @@ import { UserActionDispatcher } from './user-action-dispatcher';
 import { WorkspaceUndoMicroAction } from '../micro/workspace-undo-micro-action';
 
 export class UndoAction extends UserAction<string>{
-    constructor(readonly path: string, origin?: any, dispatcher?: UserActionDispatcher) {
+    constructor(readonly path: string, origin: any, dispatcher: UserActionDispatcher) {
         super(origin, dispatcher);
     }
     protected defineMicroActionList() {

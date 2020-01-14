@@ -21,7 +21,6 @@ import { Tab } from '../tab/tab';
 import { BlobPack } from './pack';
 import { WorkspacePack } from './workspace-pack';
 import { Database, DatabaseToken } from 'src/app/db/database';
-import { WorkspaceService, WorkspaceCommand } from '../workspace.service';
 import {
   trigger,
   state,
@@ -45,6 +44,7 @@ import { WorkspaceSnapshotMicroAction, WorkspaceSnapshot } from '../core/action/
 import { SaveAction } from '../core/action/user/save-action';
 import { WorkspaceClearMicroAction } from '../core/action/micro/workspace-clear-micro-action';
 import { WorkspaceUndoMicroAction as WorkspaceUndoMicroAction } from '../core/action/micro/workspace-undo-micro-action';
+import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 
 declare const monaco;
 
@@ -64,7 +64,7 @@ export enum WorkspaceStatus {
   selector: 'app-workspace',
   templateUrl: './workspace.component.html',
   styleUrls: ['./workspace.component.css'],
-  providers: [WorkspaceService],
+  providers: [],
   animations: [
     trigger('savingChanged', [
       state('in', style({
@@ -85,7 +85,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   WorkspaceStatus = WorkspaceStatus;
   constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute
     , private router: Router, private sanitizer: DomSanitizer, @Inject(DatabaseToken) private database: Database
-    , private workspaceService: WorkspaceService
+    , private userActionDispatcher: UserActionDispatcher
     , public detector: DeviceDetectorService
     , public dialog: MatDialog) {
     this.isDesktop = this.detector.isDesktop();
@@ -146,14 +146,14 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
     //It saves data when the content is modified.
     this.subscriptions.push(this.modificationSubject.subscribe(() => {
-      new SaveAction(this).start();
+      new SaveAction(this, this.userActionDispatcher).start();
     }));
 
     this.subscriptions.push(MicroActionComponentMap.getSubjectByComponent(SupportedComponents.WorkspaceComponent).subscribe((micro) => {
       if (micro instanceof WorkspaceRenameMicroAction) {
         try {
           this.nodeMoved(micro.oldPath, this.tree.get(micro.newPath));
-          new SaveAction(this).start();
+          new SaveAction(this, this.userActionDispatcher).start();
           micro.succeed(() => { });
         } catch(ex){
           micro.fail(ex);
@@ -163,7 +163,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           let path = micro.selectedPath;
           if(path != this.selectedNodePath){
             this.nodeSelected(path);
-            new SaveAction(this).start();
+            new SaveAction(this, this.userActionDispatcher).start();
             this.editor.shrinkExpand();
           }
           micro.succeed(() => { });
@@ -174,7 +174,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         try {
           let path = micro.removedPath;
           this.nodeRemoved(path);
-          new SaveAction(this).start();
+          new SaveAction(this, this.userActionDispatcher).start();
           micro.succeed(() => { });
         } catch(ex){
           micro.fail(ex);
@@ -183,7 +183,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         try {
           if (this.selectedNodePath != micro.path) {
             this.nodeCreated(micro.path);
-            new SaveAction(this).start();
+            new SaveAction(this, this.userActionDispatcher).start();
           }
           micro.succeed(() => { });
         } catch(ex){
@@ -254,8 +254,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.subscriptions.push(combineLatest(this.subjectWithoutSaveFile, monacoLoaderSubject).subscribe((arr) => {
       let path = arr[0];
       this.nodeSelected(path);
-      // this.workspaceService.selectNode(this, path);
-      new SelectAction(path, this).start();
+      new SelectAction(path, this, this.userActionDispatcher).start();
       console.log('workspace have been reloaded.');
     }))
 
@@ -582,7 +581,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     } else {
       this.editor.setContent(event.node.path, event.base64);
     }
-    new SaveAction(this).start();
+    new SaveAction(this, this.userActionDispatcher).start();
   }
 
   async nodeContentChanged(path: string) {

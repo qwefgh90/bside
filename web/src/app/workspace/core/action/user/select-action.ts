@@ -5,7 +5,7 @@ import { WorkspaceSelectMicroAction } from '../micro/workspace-select-micro-acti
 import { GithubTreeSelectMicroAction } from '../micro/github-tree-select-micro-action';
 
 export class SelectAction  extends UserAction<string>{
-    constructor(readonly selectedPath: string, origin?: any, dispatcher?: UserActionDispatcher) {
+    constructor(readonly selectedPath: string, origin: any, dispatcher: UserActionDispatcher) {
         super(origin, dispatcher);
     }
     protected defineMicroActionList() {

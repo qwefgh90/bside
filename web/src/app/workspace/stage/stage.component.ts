@@ -4,11 +4,11 @@ import { Stage } from './stage';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { TreeNode } from 'angular-tree-component';
 import { FormControl } from '@angular/forms';
-import { WorkspaceService } from '../workspace.service';
 import { labelTable, getLabel } from '../info/info.component';
 import { SelectAction } from '../core/action/user/select-action';
 import { UndoAction } from '../core/action/user/undo-action';
 import { ClearAction } from '../core/action/user/clear-action';
+import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 
 @Component({
   selector: 'app-stage',
@@ -27,7 +27,7 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   options = {
   };
 
-  constructor(private workspaceService: WorkspaceService, private wrapper: WrapperService) { }
+  constructor(private dispatcher: UserActionDispatcher, private wrapper: WrapperService) { }
 
   ngOnInit() {
   }
@@ -64,18 +64,15 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   
   selectNode(node: TreeNode){
     if((node.data.state as NodeStateAction[]).findIndex(v => v == NodeStateAction.Deleted) == -1)
-      // this.workspaceService.selectNode(this, node.data.path);
-      new SelectAction(node.data.path, this).start();
+      new SelectAction(node.data.path, this, this.dispatcher).start();
   }
 
   undoAll(){
-    // this.workspaceService.undoAll(this);
-    new ClearAction(this).start();
+    new ClearAction(this, this.dispatcher).start();
   }
 
   undo(node:GithubTreeNode) {
-    // this.workspaceService.undo(this, node.path);
-    new UndoAction(node.path, this).start();
+    new UndoAction(node.path, this, this.dispatcher).start();
   }
   
   isPossibleCommit: boolean = true;

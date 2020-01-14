@@ -1,7 +1,6 @@
 import { Component, OnInit, Input, OnChanges, Output, EventEmitter, SimpleChanges, ViewChild, OnDestroy, ElementRef } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { GithubTreeNode, NodeStateAction, GithubNode } from './github-tree-node';
-import { GithubTreeToTree } from './github-tree-to-tree';
 import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { ITreeOptions, TreeNode, TreeComponent, KEYS } from 'angular-tree-component';
@@ -14,15 +13,12 @@ import { UploadFile } from '../upload/upload-file';
 import { LocalUploadService } from '../upload/local-upload.service';
 import { GithubTree } from './github-tree';
 import { BlobPack } from '../workspace/pack';
-import { WorkspaceService, WorkspaceCommand } from '../workspace.service';
-import { filter } from 'rxjs/operators';
 import { TextUtil } from '../text/text-util';
 import { FileRenameAction } from '../core/action/user/file-rename-action';
 import { SelectAction } from '../core/action/user/select-action';
 import { MicroActionComponentMap, SupportedComponents } from '../core/action/micro/micro-action-component-map';
-import { WorkspaceSelectMicroAction } from '../core/action/micro/workspace-select-micro-action';
 import { GithubTreeSelectMicroAction } from '../core/action/micro/github-tree-select-micro-action';
-import { RemoveNode } from '../core/action/user/remove-node';
+import { RemoveNodeAction } from '../core/action/user/remove-node-action';
 import { CreateAction } from '../core/action/user/create-action';
 import { GithubTreeSnapshotMicroAction } from '../core/action/micro/github-tree-snapshot-micro-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
@@ -52,7 +48,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
 
   subscriptions: Array<Subscription> = [];
 
-  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private localUpload: LocalUploadService, private workspaceService: WorkspaceService) {
+  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private localUpload: LocalUploadService, private dispatcher: UserActionDispatcher) {
     iconRegistry.addSvgIcon(
       'outline-note',
       sanitizer.bypassSecurityTrustResourceUrl('assets/outline-note-24px.svg'));
@@ -71,7 +67,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
           const oldPath = githubNode.path;
           (rest.from.data as GithubTreeNode).move(newParent.parent == null ? this.root : newParent.data,
               (node, parent, pre, newPath) => {              
-                new FileRenameAction(oldPath, oldName, node.path, node.name, this).start();
+                new FileRenameAction(oldPath, oldName, node.path, node.name, this, this.dispatcher).start();
               });
           TREE_ACTIONS.MOVE_NODE(m, n, event, rest);
         }else{
@@ -275,8 +271,12 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     if(this.renamingNode != node){
       this.selectedNode = node;
       if(node.data.type == 'blob'){
-        if(!UserActionDispatcher.default.isRunning)
-          new SelectAction(node.data.path, this).start();
+        console.log('ons1');
+        if(!this.dispatcher.isRunning){
+          console.log('ons2');
+
+          new SelectAction(node.data.path, this, this.dispatcher).start();
+        }
       }
     }
   }
@@ -299,10 +299,9 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
         githubNode.rename(this.renamingFormControl.value, (node, parent, pre, newPath) => {
           let stateArr = (githubNode as GithubTreeNode).state;
           if (stateArr.length == 2 && stateArr[0] == NodeStateAction.Created)
-            // this.workspaceService.createNode(this, node);
-            new CreateAction(node.path, this).start();
+            new CreateAction(node.path, this, this.dispatcher).start();
           else{
-            let action = new FileRenameAction(oldPath, oldName, node.path, node.name, this)
+            let action = new FileRenameAction(oldPath, oldName, node.path, node.name, this, this.dispatcher)
             action.start();
           }
         });
@@ -373,7 +372,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   remove(node: TreeNode){
     node.data.remove((node: GithubTreeNode) => {
       console.debug(`${node.path} is removed`);
-      new RemoveNode(node.path, this).start();
+      new RemoveNodeAction(node.path, this, this.dispatcher).start();
     });
     this.refreshTree();
   }

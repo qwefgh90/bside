@@ -7,7 +7,7 @@ import { UserActionDispatcher } from './user-action-dispatcher';
 import { WorkspaceRenameMicroAction } from '../micro/workspace-rename-micro-action';
 
 export class FileRenameAction extends UserAction<string>{
-    constructor(readonly oldPath: string, readonly oldName: string, readonly newPath: string, readonly newName: string, origin?: any, dispatcher?: UserActionDispatcher) {
+    constructor(readonly oldPath: string, readonly oldName: string, readonly newPath: string, readonly newName: string, origin: any, dispatcher: UserActionDispatcher) {
         super(origin, dispatcher);
     }
     protected defineMicroActionList() {

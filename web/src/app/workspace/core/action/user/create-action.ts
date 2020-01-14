@@ -3,7 +3,7 @@ import { WorkspaceCreateMicroAction } from '../micro/workspace-create-micro-acti
 import { UserActionDispatcher } from './user-action-dispatcher';
 
 export class CreateAction extends UserAction<string>{
-    constructor(readonly path: string, origin?: any, dispatcher?: UserActionDispatcher) {
+    constructor(readonly path: string, origin: any, dispatcher: UserActionDispatcher) {
         super(origin, dispatcher);
     }
     protected defineMicroActionList() {

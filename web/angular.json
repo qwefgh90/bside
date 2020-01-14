@@ -97,7 +97,8 @@
               "src/assets",
               "src/.htaccess",
               "src/assets/GitHub-Mark-32px.png"
-            ]
+            ],
+            "webWorkerTsConfig": "tsconfig.worker.json"
           }
         },
         "lint": {

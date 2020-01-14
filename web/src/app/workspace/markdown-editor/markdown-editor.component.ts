@@ -4,7 +4,8 @@ import { WorkspacePack } from '../workspace/workspace-pack';
 import * as EasyMDE from 'easymde';
 import { togglePreview } from 'easymde';
 import { TextUtil, FileType } from '../text/text-util';
-import { WorkspaceService } from '../workspace.service';
+import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
+import { NotifyContentChangeAction } from '../core/action/user/notify-content-change-action';
 
 
 @Component({
@@ -20,7 +21,7 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
     content: undefined
   };
   mde: EasyMDE;
-  constructor(private workspaceService: WorkspaceService) {
+  constructor(private dispatcher: UserActionDispatcher) {
   }
 
   @Input("preview")
@@ -46,7 +47,7 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
     if (!this.preview) {
       this.mde.codemirror.on("change", () => {
         this.models.set(this.current.path, this.mde.value());
-        this.workspaceService.notifyContentChange(this, this.current.path);
+        new NotifyContentChangeAction(this.current.path, this, this.dispatcher);
       });
     }
   }

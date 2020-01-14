@@ -6,7 +6,7 @@ import { WorkspaceSnapshotMicroAction } from '../micro/workspace-snapshot-micro-
 import { WorkspacePack } from 'src/app/workspace/workspace/workspace-pack';
 
 export class SaveAction extends UserAction<string>{
-    constructor(origin?: any, dispatcher?: UserActionDispatcher) {
+    constructor(origin: any, dispatcher: UserActionDispatcher) {
         super(origin, dispatcher);
         this.promise().then(() => {
             try {

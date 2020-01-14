@@ -37,13 +37,15 @@ import { CommitProgressComponent } from './commit-progress/commit-progress.compo
 import { TabComponent } from '../tab/tab.component';
 import { DatabaseToken } from 'src/app/db/database';
 import { LocalDbService } from 'src/app/db/local-db.service';
-import { WorkspaceService } from '../workspace.service';
 import { DeviceDetectorModule, DeviceDetectorService } from 'ngx-device-detector';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { GithubTreeToTree } from '../tree/github-tree-to-tree';
 import { SelectAction } from '../core/action/user/select-action';
 import { FileRenameAction } from '../core/action/user/file-rename-action';
-import { RemoveNode } from '../core/action/user/remove-node';
+import { RemoveNodeAction } from '../core/action/user/remove-node-action';
+import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
+import { CreateAction } from '../core/action/user/create-action';
+import { NotifyContentChangeAction } from '../core/action/user/notify-content-change-action';
 
 @Component({selector: 'app-stage', template: ''})
 class StageComponent {
@@ -167,8 +169,8 @@ describe('WorkspaceComponent', () => {
   let treeSpy;
   let getBlobSpy;
   let getPageBranchSpy;
-  let workspaceService: WorkspaceService;
   let matDialogSpy;
+  let dispatcher;
 
   function mockWrapperServiceSpy(){
     repositoryDetailsSpy.and.returnValue(Promise.resolve(repositoryDetails));
@@ -179,6 +181,7 @@ describe('WorkspaceComponent', () => {
   }
 
   beforeEach(async(() => {
+    dispatcher = new UserActionDispatcher();
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     routeStub = new ActivatedRouteStub({});
     routeStub.setParamMap({userId: 'id', repositoryName: 'repo'});
@@ -198,7 +201,9 @@ describe('WorkspaceComponent', () => {
         {provide: Router, useValue: routerSpy},
         {provide: MatDialog, useValue: matDialogSpy},
         {provide: MonacoService}, {provide: LocalUploadService},
-        {provide: DatabaseToken, useClass: LocalDbService}, WorkspaceService],
+        {provide: DatabaseToken, useClass: LocalDbService},
+        {provide: UserActionDispatcher, useValue: dispatcher}
+      ],
       imports: [MatSidenavModule,
         BrowserAnimationsModule,
         MatDividerModule,
@@ -225,7 +230,6 @@ describe('WorkspaceComponent', () => {
 
   beforeEach(() => {
     fixture = TestBed.createComponent(WorkspaceComponent);
-    workspaceService = TestBed.get(WorkspaceService);
     component = fixture.componentInstance;
   });
 
@@ -362,7 +366,7 @@ describe('WorkspaceComponent', () => {
   }))
 });
 
-describe('WorkspaceComponent with WorkspaceService', () => {
+describe('WorkspaceComponent with Action', () => {
   let component: WorkspaceComponent;
   let fixture: ComponentFixture<WorkspaceComponent>;
   let routerSpy;
@@ -374,7 +378,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
   let getBlobSpy;
   let getPageBranchSpy;
   let matDialogSpy;
-  let workspaceService: WorkspaceService;
+  let dispatcher;
 
   function mockWrapperServiceSpy(){
     repositoryDetailsSpy.and.returnValue(Promise.resolve(repositoryDetails));
@@ -385,6 +389,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
   }
 
   beforeEach(async(() => {
+    dispatcher = new UserActionDispatcher();
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     routeStub = new ActivatedRouteStub({});
     routeStub.setParamMap({userId: 'id', repositoryName: 'repo'});
@@ -404,7 +409,9 @@ describe('WorkspaceComponent with WorkspaceService', () => {
         {provide: Router, useValue: routerSpy},
         {provide: MatDialog, useValue: matDialogSpy},
       {provide: MonacoService}, {provide: LocalUploadService},
-      {provide: DatabaseToken, useClass: LocalDbService}, WorkspaceService],
+      {provide: DatabaseToken, useClass: LocalDbService},
+      {provide: UserActionDispatcher, useValue: dispatcher}
+    ],
       imports: [MatSidenavModule,
         BrowserAnimationsModule,
         MatDividerModule,
@@ -431,7 +438,6 @@ describe('WorkspaceComponent with WorkspaceService', () => {
 
   beforeEach(() => {
     fixture = TestBed.createComponent(WorkspaceComponent);
-    workspaceService = TestBed.get(WorkspaceService);
     component = fixture.componentInstance;
   });
 
@@ -453,8 +459,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     let existSpy = spyOn(component.editor, 'exist');
     existSpy.and.returnValue(false);
 
-    // workspaceService.selectNode(undefined, '.buildinfo')
-    new SelectAction('.buildinfo',undefined).start();
+    new SelectAction('.buildinfo', undefined, dispatcher).start();
 
     fixture.detectChanges();
     tick(10000);
@@ -470,11 +475,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     
     let nodeRemovedSpy = spyOn(component, 'nodeRemoved');
 
-    // let testNode = Object.assign({}, tree.tree[0]);
-    // testNode.path = '.buildinfo';
-
-    // workspaceService.removeNode(undefined, '.buildinfo');
-    new RemoveNode( '.buildinfo', undefined).start();
+    new RemoveNodeAction( '.buildinfo', undefined, dispatcher).start();
     
     fixture.detectChanges();
     tick(10000);
@@ -493,7 +494,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     let testNode = Object.assign({}, tree.tree[0]);
     testNode.path = '.buildinfo';
 
-    workspaceService.createNode(undefined, GithubTreeNode.githubTreeNodeFactory.of(testNode));
+    new CreateAction(testNode.path, this, dispatcher).start();
     fixture.detectChanges();
     tick(10000);
 
@@ -511,8 +512,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
     let testNode = Object.assign({}, tree.tree[0]);
     testNode.path = 'newfile.txt';
 
-    // workspaceService.moveNodeInTree(undefined, 'oldfile.txt', GithubTreeNode.githubTreeNodeFactory.of(testNode))
-    new FileRenameAction('','oldfile.txt','newfile.txt','newfile.txt',undefined).start();
+    new FileRenameAction('oldfile.txt','oldfile.txt','newfile.txt','newfile.txt', undefined, dispatcher).start();
     fixture.detectChanges();
     tick(10000);
 
@@ -527,7 +527,7 @@ describe('WorkspaceComponent with WorkspaceService', () => {
 
     let nodeContentChangedSpy = spyOn(component, 'nodeContentChanged');
 
-    workspaceService.notifyContentChange(undefined, 'newfile.txt')
+    new NotifyContentChangeAction('newfile.txt', this, dispatcher).start();
     fixture.detectChanges();
     tick(10000);
 

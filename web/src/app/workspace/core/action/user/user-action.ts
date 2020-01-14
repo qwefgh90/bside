@@ -5,7 +5,9 @@ import { MicroActionComponentMap } from '../micro/micro-action-component-map';
 
 export abstract class UserAction<T> {
     constructor(readonly origin: any, protected dispatcher: UserActionDispatcher){
-        this.dispatcher = dispatcher ? dispatcher : UserActionDispatcher.default;
+        if(!dispatcher){
+            throw new Error("UserActionDispatcher is not provided.");
+        }
     }
     private emitter = new Subject<T>();
     protected succeed(any?: T){
@@ -38,7 +40,7 @@ export abstract class UserAction<T> {
      * when a micro action is completed, it's invoked.
      */
     onMicroActionComplete(microAction: MicroAction<any>){
-        console.debug(`\t[${this.currentActionIndex}/${this.max}]${microAction.constructor.name}`, `-> ${microAction.toString()}`);
+        console.debug(`\t[${this.currentActionIndex+1}/${this.max}]${microAction.constructor.name}`, `-> ${microAction.toString()}`);
         let current = this.microActions[this.currentActionIndex];
         if(current != microAction){
             console.error(`A current micro action and a complete micro action doesn't match.`);
@@ -58,15 +60,12 @@ export abstract class UserAction<T> {
             }
         }
     }
-    // startWhenNotOnAction(type?: any): Promise<T>{
-    //     if(!this.dispatcher.isRunning)
-    //         return this.start();
-    // }
+    
     start(): Promise<T>{
         this.microActions = this.defineMicroActionList();
         this.max = this.microActions.length;
         if(this.microActions.length == 0){
-            throw new Error("There is no defined micro action.");
+            throw new Error("There is no defined micro action. ");
         }
         let isSuccessful = this.dispatcher.execute(this);
         if(!isSuccessful)
@@ -74,7 +73,8 @@ export abstract class UserAction<T> {
         return this.promise();
     }
     _runFirstAction(){
-        console.group(`[${this.constructor.name}]`, `${this.origin != undefined ? this.origin.constructor.name : 'unknown'} run a user action`)
+        console.group(`[${this.constructor.name}]`, `${this.origin != undefined ? this.origin.constructor.name : 'unknown'} run the user action`)
+        console.debug(`[${this.constructor.name}]`, `${this.origin != undefined ? this.origin.constructor.name : 'unknown'} run the user action`)
         let microAction = this.microActions[this.currentActionIndex];
         this.doMicroAction(microAction);
     }

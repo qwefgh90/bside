@@ -1,5 +1,9 @@
 import { UserAction } from './user-action'
+import { Injectable } from '@angular/core';
 
+@Injectable({
+    providedIn: 'root'
+  })
 export class UserActionDispatcher {
     private queue: UserAction<any>[] = []
     private _current: UserAction<any>;
@@ -34,5 +38,4 @@ export class UserActionDispatcher {
         userAction._runFirstAction();
         return true;
     }
-    static readonly default = new UserActionDispatcher();
 }
