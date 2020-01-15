@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, Inject } from '@angular/core';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription, Subject, combineLatest, from } from 'rxjs';
+import { Subscription, Subject, combineLatest, from, ReplaySubject } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSelectChange } from '@angular/material/select';
 import { MatDrawer } from '@angular/material/sidenav';
@@ -132,6 +132,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   errorDescription: string;
   commitStatePack: WorkspacePack;
   afterCommit: boolean;
+  afterViewInit: Subject<void> = new ReplaySubject(1);;
 
   modificationSubject = new Subject<void>();
   subjectWithoutSaveFile = new Subject<string>();
@@ -247,14 +248,18 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }));
 
     /**
-     * After loading saved data and all children are loaded, 
-     * pass the packs to others components.
+     * After loading saved data and all children are loaded, send the packs to others components.
+     * Eventually, get() of the tree component is called, but it's impossible to catch when tree is loaded in GithubTreeComponent.
+     * So setTimeout() is needed
     */
-    this.subscriptions.push(combineLatest(this.subjectWithSaveFile, monacoLoaderSubject).subscribe((arr) => {
+    this.subscriptions.push(combineLatest(this.subjectWithSaveFile, this.afterViewInit, monacoLoaderSubject).subscribe((arr) => {
       let pack = arr[0];
       this.autoSaveRef.checked = pack.autoSave;
-      this.editor.load(pack);
-      this.tab.load(pack);
+      // sometimes 
+      setTimeout(() => {
+        this.editor.load(pack);
+        this.tab.load(pack);
+      }, 300);
       console.log('workspace have been initialized with saved data.');
     }))
 
@@ -262,7 +267,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
      * After reloading component and all children are loaded, 
      * pass the packs to others components.
     */
-    this.subscriptions.push(combineLatest(this.subjectWithoutSaveFile, monacoLoaderSubject).subscribe((arr) => {
+    this.subscriptions.push(combineLatest(this.subjectWithoutSaveFile, this.afterViewInit, monacoLoaderSubject).subscribe((arr) => {
       let path = arr[0];
       this.nodeSelected(path);
       new SelectAction(path, this, this.userActionDispatcher).start();
@@ -359,7 +364,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         }
         return this.initTree(tree).then(() => doAfterLoadingTree(), () => console.error("A tree can't be loaded."));
       }
-
     } catch (error) {
       return Promise.reject(error);
     }
@@ -469,8 +473,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let ripples = this.autoSaveRef._elementRef.nativeElement.getElementsByClassName('mat-ripple')
     if(ripples.length > 0)
       ripples[0].remove();
-    this.autoSaveRef.checked = true;
+    this.autoSaveRef.checked = false;
     this.toggle();
+    this.afterViewInit.next();
+    this.afterViewInit.complete();
   }
 
   ngOnDestroy() {
