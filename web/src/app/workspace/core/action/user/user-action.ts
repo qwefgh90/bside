@@ -23,7 +23,8 @@ export abstract class UserAction<T> {
         let index = this.currentActionIndex-1;
         for(; index>=0; index--){
             let action = this.microActions[index];
-            action.undo();
+            if(!action.undo)
+                action.undo();
         }
     }
     protected doMicroAction(microAction: MicroAction<any>){
@@ -46,9 +47,9 @@ export abstract class UserAction<T> {
             console.error(`A current micro action and a complete micro action doesn't match.`);
         }else{
             if(current.hasError()){
-                console.error(`An error occurs in ${microAction.constructor.name}`, microAction.error);
+                console.warn(`An error occurs in ${microAction.constructor.name}`, microAction.error);
                 this.recover();
-                this.fail();
+                this.fail(microAction.error);
             }else{
                 this.currentActionIndex += 1;
                 if(this.currentActionIndex < this.max){

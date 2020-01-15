@@ -45,6 +45,8 @@ import { SaveAction } from '../core/action/user/save-action';
 import { WorkspaceClearMicroAction } from '../core/action/micro/workspace-clear-micro-action';
 import { WorkspaceUndoMicroAction as WorkspaceUndoMicroAction } from '../core/action/micro/workspace-undo-micro-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
+import { MatCheckbox } from '@angular/material';
+import { bufferCount } from 'rxjs/operators';
 
 declare const monaco;
 
@@ -98,6 +100,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   @ViewChild("action", { static: true }) action: ActionComponent;
   @ViewChild(CommitProgressComponent, { static: true }) commitProgress: CommitProgressComponent;
   @ViewChild(TabComponent, { static: true }) tab: Tab;
+  @ViewChild("autoSaveRef", { static: true}) autoSaveRef: MatCheckbox;
 
   get editor(): Editor {
     return this.isDesktop ? this.editor1 : this.editor2;
@@ -109,8 +112,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   repositoryDetails;
   branches: Array<any>;
   selectedBranch;
+  selectedCommit;
   root: GithubTreeNode;
   nodesToStage: GithubTreeNode[];
+  saveActionSubject: Subject<any> = new Subject();
 
   selectedNodePath: string;
   encoding = 'utf-8'
@@ -146,6 +151,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
     //It saves data when the content is modified.
     this.subscriptions.push(this.modificationSubject.subscribe(() => {
+      this.dispatchSaveAction(this.autoSaveRef.checked);
+    }));
+    this.subscriptions.push(this.saveActionSubject.pipe(bufferCount(10)).subscribe(() => {
       new SaveAction(this, this.userActionDispatcher).start();
     }));
 
@@ -153,7 +161,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       if (micro instanceof WorkspaceRenameMicroAction) {
         try {
           this.nodeMoved(micro.oldPath, this.tree.get(micro.newPath));
-          new SaveAction(this, this.userActionDispatcher).start();
+          this.dispatchSaveAction(this.autoSaveRef.checked);
           micro.succeed(() => { });
         } catch(ex){
           micro.fail(ex);
@@ -163,7 +171,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           let path = micro.selectedPath;
           if(path != this.selectedNodePath){
             this.nodeSelected(path);
-            new SaveAction(this, this.userActionDispatcher).start();
+            this.dispatchSaveAction(this.autoSaveRef.checked);
             this.editor.shrinkExpand();
           }
           micro.succeed(() => { });
@@ -174,7 +182,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         try {
           let path = micro.removedPath;
           this.nodeRemoved(path);
-          new SaveAction(this, this.userActionDispatcher).start();
+          this.dispatchSaveAction(this.autoSaveRef.checked);
           micro.succeed(() => { });
         } catch(ex){
           micro.fail(ex);
@@ -183,7 +191,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         try {
           if (this.selectedNodePath != micro.path) {
             this.nodeCreated(micro.path);
-            new SaveAction(this, this.userActionDispatcher).start();
+            this.dispatchSaveAction(this.autoSaveRef.checked);
           }
           micro.succeed(() => { });
         } catch(ex){
@@ -200,7 +208,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         if (this.treeStatus == TreeStatusOnWorkspace.Done) {
           this.saving = true;
           micro.parent.promise().finally(() => {
-            this.saving = false;
+            setTimeout(() => {
+              this.saving = false;
+            }, 300);
           })
           micro.succeed(() => { }, this.getSnapshot());
         } else {
@@ -242,6 +252,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     */
     this.subscriptions.push(combineLatest(this.subjectWithSaveFile, monacoLoaderSubject).subscribe((arr) => {
       let pack = arr[0];
+      this.autoSaveRef.checked = pack.autoSave;
       this.editor.load(pack);
       this.tab.load(pack);
       console.log('workspace have been initialized with saved data.');
@@ -363,6 +374,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }, () => this.root = undefined);
   }
 
+  async get(url: string){
+    return this.wrapper.getResponse(url).then((v) => v.body);
+  }
+
   private invalidateDirtyCount() {
     this.invalidateNodesToStage();
     if (this.nodesToStage == undefined)
@@ -451,6 +466,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   ngAfterContentInit() {
+    let ripples = this.autoSaveRef._elementRef.nativeElement.getElementsByClassName('mat-ripple')
+    if(ripples.length > 0)
+      ripples[0].remove();
+    this.autoSaveRef.checked = true;
     this.toggle();
   }
 
@@ -494,8 +513,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         return true;
       } return false;
     });
-
+    
     this.selectedBranch = branch;
+    this.get(branch.commit.url).then(v => {
+      this.selectedCommit = v;
+    })
     return branch != undefined ? true : false;
   }
 
@@ -581,7 +603,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     } else {
       this.editor.setContent(event.node.path, event.base64);
     }
-    new SaveAction(this, this.userActionDispatcher).start();
+    this.dispatchSaveAction(this.autoSaveRef.checked);
   }
 
   async nodeContentChanged(path: string) {
@@ -751,6 +773,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   private getSnapshot(containgTree: boolean = true): WorkspaceSnapshot {
+    const autoSave = this.autoSaveRef.checked;
     const repositoryId: number = this.repositoryDetails.id;
     const repositoryName: string = this.repositoryDetails.full_name;
     const commitSha = this.selectedBranch.commit.sha;
@@ -772,11 +795,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       });
     return {
       repositoryId: repositoryId, repositoryName: repositoryName, commitSha: commitSha,
-      treeSha: treeSha, name: name, packs: packs, selectedNodePath: this.selectedNodePath, database: this.database
+      treeSha: treeSha, name: name, packs: packs, selectedNodePath: this.selectedNodePath, database: this.database,
+      autoSave: autoSave
     };
   }
 
   private pack(containgTree: boolean = true): WorkspacePack {
+    const autoSave = this.autoSaveRef.checked;
     const repositoryId: number = this.repositoryDetails.id;
     const repositoryName: string = this.repositoryDetails.full_name;
     const commitSha = this.selectedBranch.commit.sha;
@@ -802,7 +827,18 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         acc.push(node.toGithubNode());
       return acc;
     }, [] as Array<GithubNode>, false);
-    return WorkspacePack.of(repositoryId, repositoryName, commitSha, treeSha, name, packs, treeArr, tabs, this.selectedNodePath);
+    return WorkspacePack.of(repositoryId, repositoryName, commitSha, treeSha, name, packs, treeArr, tabs, this.selectedNodePath, autoSave);
+  }
+
+  private htmlBlobUrl(path: string){
+    return `https://github.com/${this.userId}/${this.repositoryName}/blob/${this.selectedBranch.name}/${path}`
+  }
+
+  private dispatchSaveAction(eagerly: boolean){
+    if(eagerly)
+      new SaveAction(this, this.userActionDispatcher).start();
+    else
+      this.saveActionSubject.next();
   }
 
   showInfo(path: string) {
@@ -814,7 +850,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }
     const dialogRef = this.dialog.open(InfoComponent, {
       width: '350px',
-      data: <DisplayInfo>{ name: node.name, path: node.path, size: size, mime: (mime == null ? '' : mime), rawUrl: this.selectedRawPath, states: node.state }
+      data: <DisplayInfo>{ name: node.name, path: node.path, size: size, mime: (mime == null ? '' : mime), rawUrl: this.selectedRawPath, states: node.state, htmlUrl: this.htmlBlobUrl(node.path)}
     });
   }
 

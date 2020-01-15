@@ -13,7 +13,7 @@ export class SaveAction extends UserAction<string>{
                 let workspaceSnapshotData = (this.microActions[0] as WorkspaceSnapshotMicroAction).data;
                 let githubTreeSnapshotData = (this.microActions[1] as GithubTreeSnapshotMicroAction).data;
                 let tabSnapshotData = (this.microActions[2] as TabSnapshotMicroAction).data;
-                let pack = WorkspacePack.of(workspaceSnapshotData.repositoryId, workspaceSnapshotData.repositoryName, workspaceSnapshotData.commitSha, workspaceSnapshotData.treeSha, workspaceSnapshotData.name, workspaceSnapshotData.packs, githubTreeSnapshotData, tabSnapshotData, workspaceSnapshotData.selectedNodePath);
+                let pack = WorkspacePack.of(workspaceSnapshotData.repositoryId, workspaceSnapshotData.repositoryName, workspaceSnapshotData.commitSha, workspaceSnapshotData.treeSha, workspaceSnapshotData.name, workspaceSnapshotData.packs, githubTreeSnapshotData, tabSnapshotData, workspaceSnapshotData.selectedNodePath, workspaceSnapshotData.autoSave);
                 workspaceSnapshotData.database.save(pack);
             } catch (error) {
                 console.error('Saving failed', error);

@@ -35,6 +35,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.component';
 import { InfoComponent } from './info/info.component';
 import { BuildHistoryComponent } from './build-history/build-history.component';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 
 @NgModule({
   declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent, UploadComponent, DiffEditorComponent, CommitProgressComponent, TabComponent, MarkdownEditorComponent, InfoComponent, BuildHistoryComponent],
@@ -60,7 +61,8 @@ import { BuildHistoryComponent } from './build-history/build-history.component';
     DeviceDetectorModule.forRoot(),
     FlexLayoutModule,
     MatDialogModule,
-    MatTableModule
+    MatTableModule,
+    MatCheckboxModule
   ],
   providers: [{provide: DatabaseToken, useClass: LocalDbService}],
   entryComponents: [

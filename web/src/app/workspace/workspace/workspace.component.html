@@ -35,7 +35,6 @@
                 </mat-option>
               </mat-select>
             </mat-form-field>
-            <span style="font-size: 0.5em">sha: {{selectedBranch.commit.sha}}</span>
           </div>
         </div>
       </div>
@@ -44,14 +43,17 @@
         <mat-icon *ngIf="!leftPaneOpened">chevron_right</mat-icon>
       </div>
     </div>
-    <div class="right-pane-group" [ngStyle.xs]="{'min-height.vh': 100, 'max-height.vh': 100, 'margin-left.em': '1', 'margin-right.em': '0.2'}" [ngStyle.sm]="{'min-height.vh': 100, 'max-height.vh': 100, 'margin-left.em': '1', 'margin-right.em': '0.2'}">
+    <div class="right-pane-group"
+      [ngStyle.xs]="{'min-height.vh': 100, 'max-height.vh': 100, 'margin-left.em': '1', 'margin-right.em': '0.2'}"
+      [ngStyle.sm]="{'min-height.vh': 100, 'max-height.vh': 100, 'margin-left.em': '1', 'margin-right.em': '0.2'}">
       <div class="content-pane">
         <div style="display: flex; flex-direction: column; flex:1; height: 100%; width: 100%;">
           <div class="toolbar" *ngIf="selectedNodePath != undefined" [class.none]="treeStatus != TreeStatus.Done"
             [class.flex]="treeStatus == TreeStatus.Done">
             <div style="margin-left: 1em;">
-              <button mat-icon-button title="info" class="button-with-toggle-style" (click)="showInfo(selectedNodePath)">
-                  <mat-icon aria-label="info">info</mat-icon>
+              <button mat-icon-button title="info" class="button-with-toggle-style"
+                (click)="showInfo(selectedNodePath)">
+                <mat-icon aria-label="info">info</mat-icon>
               </button>
             </div>
             <span class="fileName">{{selectedNodePath != undefined ? selectedNodePath : ''}}<span
@@ -59,17 +61,17 @@
                 Saving...</span></span>
             <div class="spacer"></div>
             <div *ngIf="selectedNodePath != undefined && selectedFileType == FileType.Text">
-              <button mat-stroked-button title="Preview" (click)="toggleMd()" 
-                  *ngIf="isDesktop" [ngClass]="{'mat-button-toggle-checked':editor.isMdOn}">
+              <button mat-stroked-button title="Preview" (click)="toggleMd()" *ngIf="isDesktop"
+                [ngClass]="{'mat-button-toggle-checked':editor.isMdOn}">
                 <mat-icon>visibility</mat-icon>
               </button>
-              <button mat-stroked-button title="Compare with original" (click)="toggleDiff()" 
-                  *ngIf="isDesktop" [ngClass]="{'mat-button-toggle-checked':editor.isDiffOn}">
+              <button mat-stroked-button title="Compare with original" (click)="toggleDiff()" *ngIf="isDesktop"
+                [ngClass]="{'mat-button-toggle-checked':editor.isDiffOn}">
                 <mat-icon>compare</mat-icon>
               </button>
-              <a href="{{selectedRawPath}}" target="_blank"
+              <a href="https://github.com/{{userId}}/{{repositoryName}}/blob/{{selectedBranch?.name}}/{{selectedNodePath}}" target="_blank"
                 style="text-decoration: none;color: unset;margin-right: 1em"><button mat-stroked-button
-                  title="Open raw content">
+                  title="Open the content">
                   <mat-icon>open_in_new</mat-icon>
                 </button></a>
               <!-- <a href="{{getRawUrl(repositoryDetails.full_name, selectedBranch.commit.sha, selectedNode.syncedNode.path)}}" style="text-decoration: none;color: unset" download><button mat-stroked-button style="margin-right: 1em"><mat-icon>cloud_download</mat-icon></button></a> -->
@@ -95,10 +97,12 @@
           </div>
           <app-editor #editor1 style="flex:1; min-height: 0px;"
             [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
-            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)" *ngIf="isDesktop"></app-editor>
+            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"
+            *ngIf="isDesktop"></app-editor>
           <app-markdown-editor #editor2 style="margin-bottom: 2em; flex:1; min-height: 0px;"
             [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
-            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)" *ngIf="!isDesktop"></app-markdown-editor>
+            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"
+            *ngIf="!isDesktop"></app-markdown-editor>
           <div style="flex:1; display: block; height: 100px "
             *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">
             <div style="overflow-y: scroll; height: 100%;"><img [src]="selectedImagePath" /></div>
@@ -127,11 +131,22 @@
       </div>
 
       <div class="right-pane">
-        <app-action #action (stage)="onStage()" (edit)="onEdit()" [dirtyCount]="dirtyCount" (buildHistory)="onBuildHistory()"
-          [repository]="repositoryDetails">
+        <app-action #action (stage)="onStage()" (edit)="onEdit()" [dirtyCount]="dirtyCount"
+          (buildHistory)="onBuildHistory()" [repository]="repositoryDetails">
         </app-action>
       </div>
     </div>
   </div>
-  <div class="bottom-status"></div>
+  <div class="bottom-status">
+    <div>
+      &nbsp;<mat-checkbox #autoSaveRef class="toggle" [disableRipple]="true">save (eagerly)</mat-checkbox>
+    </div>
+    <div style="flex:1 "></div>
+    <div>
+      <span *ngIf="selectedCommit != undefined"><a href="{{selectedCommit?.html_url}}"
+          target="_blank">{{selectedCommit?.sha.substring(0,6)}}</a>
+        <span title="{{selectedCommit?.commit.message}}">
+          {{selectedCommit?.commit.message.substring(0,14)}}{{selectedCommit?.commit.message.length >= 14 ? "..." : ""}}&nbsp;</span></span>
+    </div>
+  </div>
 </div>

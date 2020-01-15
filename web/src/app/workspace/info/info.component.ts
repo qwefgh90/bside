@@ -29,6 +29,7 @@ export interface DisplayInfo{
   mime: string;
   rawUrl: string;
   states: NodeStateAction[];
+  htmlUrl: string;
 }
 
 export let labelTable = {

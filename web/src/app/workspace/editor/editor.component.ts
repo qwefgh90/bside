@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input, OnChanges, OnDestroy, Output, EventEmitter, SimpleChanges } from '@angular/core';
 import * as monacoNameSpace from 'monaco-editor';
 import { MonacoService } from './monaco.service';
-import { Subscription, Observable } from 'rxjs';
+import { Subscription, Observable, Subject } from 'rxjs';
 import { Editor } from './editor';
 import { DiffEditor } from '../diff-editor/diff-editor';
 import { TypeState } from 'typestate';
@@ -11,6 +11,7 @@ import { DeviceDetectorService } from 'ngx-device-detector';
 import { MarkdownEditorComponent } from '../markdown-editor/markdown-editor.component';
 import { NotifyContentChangeAction } from '../core/action/user/notify-content-change-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
+import { debounceTime } from 'rxjs/operators';
 
 const prefix: string = 'X'.repeat(100);
 enum EditorMode{
@@ -26,11 +27,9 @@ enum EditorMode{
 })
 export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor {
 
-  // @Output("modelChanged") modelChanged: EventEmitter<string> = new EventEmitter<string>();
-  // @Input("loadedPack") loadedPack: WorkspacePack;
-
   editor: monacoNameSpace.editor.IStandaloneCodeEditor;
   model: monacoNameSpace.editor.ITextModel
+  notifyContentChangeSubject: Subject<string> = new Subject();
 
   @ViewChild("editor", { static: true }) editorContent: ElementRef;
   @ViewChild("diffeditor1", { static: true }) diffEditor: DiffEditor;
@@ -113,6 +112,11 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       console.log("monacoService loaded");
       this.monaco = monaco;
       this.createMonacoEditor(monaco);
+    }));
+    this.subscriptions.push(this.notifyContentChangeSubject.pipe(
+      debounceTime(2000)
+    ).subscribe((path) => {
+      new NotifyContentChangeAction(path, this, this.dispatcher).start();
     }));
   }
 
@@ -198,7 +202,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       }else {
         this.model = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(path));
         this.model.onDidChangeContent((e) => {
-          new NotifyContentChangeAction(path, this, this.dispatcher).start();
+          this.notifyContentChangeSubject.next(path);
         })
       }
     }else

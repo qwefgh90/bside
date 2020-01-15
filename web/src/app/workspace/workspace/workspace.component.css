@@ -1,3 +1,11 @@
+.bottom-status{
+    min-height: 0px;
+    border-top: #c2c2c2 solid 1px;
+    text-align: right;
+    display:flex;
+    flex-direction: row;
+    font-size: 0.8em
+}
 .content-pane{
     min-width: 0px;
     flex: 1;
@@ -104,9 +112,9 @@
 .toolbar{
     display: flex;
     flex-direction: row; 
-    align-items: baseline;
     width: 100%;
     padding-top: 0.5em;
+    align-items: center;
 }
 .fileName{
     font-size: 1.4em;

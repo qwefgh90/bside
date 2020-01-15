@@ -3,7 +3,7 @@ import { GithubNode } from '../tree/github-tree-node';
 
 export class WorkspacePack {
     public static of(repositoryId: number, repositoryName: string, commit_sha: string, tree_sha: string, branchName: string, editorPacks: BlobPack[], treePacks: GithubNode[]
-        , tabs: string[], selectedNodePath: string){
+        , tabs: string[], selectedNodePath: string, autoSave: boolean){
         const p = new WorkspacePack();
         p.repositoryId = repositoryId;
         p.repositoryName = repositoryName;
@@ -14,6 +14,7 @@ export class WorkspacePack {
         p.treePacks = treePacks;
         p.tree_sha = tree_sha;
         p.selectedNodePath = selectedNodePath;
+        p.autoSave = autoSave;
         p.optimizeTree();
         return p;
     }
@@ -34,4 +35,5 @@ export class WorkspacePack {
     treePacks: GithubNode[];
     tabs: string[];
     tree_sha: string;
+    autoSave: boolean;
 }

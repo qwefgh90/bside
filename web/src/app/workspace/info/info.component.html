@@ -1,4 +1,8 @@
-<h2 mat-dialog-title>{{data.name}}</h2>
+<h2 mat-dialog-title><div style="display: flex; flex-direction: row;">
+  {{data.name}}
+  <div style="flex: 1;"></div>
+  <a href="{{data.htmlUrl}}" style="color: black;" target="_blank">
+    <img src="assets/GitHub-Mark-32px.png" style="height: 1em;"/></a></div></h2>
 <mat-dialog-content>
   <div class="list">
     <div class="label-box">
@@ -6,7 +10,8 @@
       <div><label>size:&nbsp;</label><span>{{data.size}}bytes</span></div>
       <div *ngIf="data.states?.length > 0" ><label>states:&nbsp;</label><span *ngFor="let s of data.states" title="{{getLabel(s).name}}">{{getLabel(s).short}}&nbsp;</span></div>
       <div *ngIf="data.mime != ''"><label>mime:&nbsp;</label><span>{{data.mime}}</span></div>
-      <div *ngIf="data.rawUrl != undefined"><label>raw url:&nbsp;</label><a href="{{data.rawUrl}}" target="_blank">{{data.rawUrl}}</a></div>
+      <div *ngIf="data.rawUrl != undefined"><label>raw:&nbsp;</label><a href="{{data.rawUrl}}" target="_blank">{{data.rawUrl}}</a></div>
+      <!-- <div ><label>html:&nbsp;</label><a href="{{data.htmlUrl}}" target="_blank">{{data.htmlUrl}}</a></div> -->
     </div>
   </div>
 </mat-dialog-content>

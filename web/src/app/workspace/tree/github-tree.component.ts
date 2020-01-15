@@ -271,10 +271,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     if(this.renamingNode != node){
       this.selectedNode = node;
       if(node.data.type == 'blob'){
-        console.log('ons1');
         if(!this.dispatcher.isRunning){
-          console.log('ons2');
-
           new SelectAction(node.data.path, this, this.dispatcher).start();
         }
       }
