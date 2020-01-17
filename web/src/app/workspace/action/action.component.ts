@@ -14,9 +14,11 @@ export class ActionComponent implements OnInit, OnChanges {
   ActionState = ActionState;
   @Input("repository") repository: any
   @Input("dirtyCount") dirtyCount: number
+  @Input("isBeingChanged") isBeingChanged: boolean
   @Output("buildHistory") buildHistory = new EventEmitter<void>();
   @Output("stage") stage = new EventEmitter<void>();
   @Output("edit") edit = new EventEmitter<void>();
+  @Output("save") _save = new EventEmitter<void>();
 
   selectedBtn: ActionState = ActionState.Edit;
   htmlUrl: string;
@@ -50,6 +52,10 @@ export class ActionComponent implements OnInit, OnChanges {
       else if (v == ActionState.Save)
         this.onSave();
     }
+  }
+
+  save(){
+    this._save.emit();
   }
 
   onSave() {

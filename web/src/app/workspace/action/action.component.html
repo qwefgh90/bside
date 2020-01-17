@@ -2,11 +2,14 @@
   <!-- <button mat-icon-button class="button-with-toggle-style">
     <mat-icon aria-label="view_agenda">view_agenda</mat-icon>
   </button> -->
-  <a mat-icon-button title="Static page" class="button-with-toggle-style" href="{{htmlUrl}}" target="_blank" [disabled]="htmlUrl == undefined">
+  <a mat-icon-button title="static page" class="button-with-toggle-style" href="{{htmlUrl}}" target="_blank" [disabled]="htmlUrl == undefined">
       <mat-icon aria-label="web">pageview</mat-icon>
   </a>
   <button mat-icon-button title="build history" class="button-with-toggle-style" (click)="showBuildHistory()" [disabled]="htmlUrl == undefined">
       <mat-icon aria-label="history">history</mat-icon>
+  </button>
+  <button mat-icon-button title="save" class="button-with-toggle-style" (click)="save()" [disabled]="!isBeingChanged">
+      <mat-icon aria-label="save">save</mat-icon>
   </button>
   <div style="flex: 1"></div>
   <mat-button-toggle-group #group="matButtonToggleGroup" [vertical]="true" [(ngModel)]="selectedBtn" style="margin-bottom: 1em">
