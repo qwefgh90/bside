@@ -302,6 +302,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   initialize(userId, repositoryName, branchName): Promise<void> {
     this.treeStatus = TreeStatusOnWorkspace.Loading;
+    this.contentStatus = ContentStatusOnWorkspace.NotInitialized
     this.resetTab();
     this.resetEditor();
     this.resetWorkspace();
@@ -350,13 +351,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
         let tree;
         let doAfterLoadingTree: () => void;
-        if (this.commitStatePack != undefined) { // invalidate the tree by fetching new tree
-          tree = this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha);
-          doAfterLoadingTree = () => {
-            this.subjectWithSaveFile.next(this.commitStatePack)
-            this.commitStatePack = undefined;
-          };
-        } else if (loadedPack != undefined) { // load the saved file
+        if (loadedPack) { // load the saved file
           tree = Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha });
           doAfterLoadingTree = () => this.subjectWithSaveFile.next(loadedPack);
         } else {  // just load the tree 
@@ -453,12 +448,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   resetTab() {
-    if (this.tab != undefined)
+    if (this.tab)
       this.tab.clear();
 
   }
   resetEditor() {
-    this.contentStatus = ContentStatusOnWorkspace.NotInitialized
+    if(this.editor)
+    this.editor.clear();
   }
 
   resetWorkspace() {
@@ -530,7 +526,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   nodeSelected(path: string | GithubTreeNode) {
     if (path == undefined) {
       this.selectedNodePath = undefined;
-      this.resetEditor();
+      this.contentStatus = ContentStatusOnWorkspace.NotInitialized
     } else {
       const node = (typeof path == 'string') ? this.tree.get(path) : path;
       if (node.type == 'blob') {
@@ -716,7 +712,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       console.error(e);
     } finally {
       this.afterCommit = true;
-      this.commitStatePack = this.pack(false);
       this.clearCommits();
       this.refreshSubject.next();
     }
