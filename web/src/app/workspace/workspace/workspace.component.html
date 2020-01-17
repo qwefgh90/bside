@@ -56,7 +56,10 @@
                 <mat-icon aria-label="info">info</mat-icon>
               </button>
             </div>
-            <span class="fileName">{{selectedNodePath != undefined ? selectedNodePath : ''}}<span
+            <span class="fileName">{{selectedNodePath != undefined ? selectedNodePath : ''}}
+              <span style="color: slategrey;" *ngIf="editor?.isMdOn">(preview)</span>
+              <span style="color: slategrey;" *ngIf="editor?.isDiffOn">(diff)</span>
+              <span
                 [@savingChanged]="saving ? 'in' : 'out'" style="color: #673ab7; font-size: 0.7em">
                 Saving...</span></span>
             <div class="spacer"></div>
