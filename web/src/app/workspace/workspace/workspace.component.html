@@ -142,11 +142,13 @@
       &nbsp;<mat-checkbox #autoSaveRef class="toggle" [disableRipple]="true">save (eagerly)</mat-checkbox>
     </div>
     <div style="flex:1 "></div>
-    <div>
-      <span *ngIf="selectedCommit != undefined"><a href="{{selectedCommit?.html_url}}"
-          target="_blank">{{selectedCommit?.sha.substring(0,6)}}</a>
-        <span title="{{selectedCommit?.commit.message}}">
-          {{selectedCommit?.commit.message.substring(0,14)}}{{selectedCommit?.commit.message.length >= 14 ? "..." : ""}}&nbsp;</span></span>
+    <div *ngIf="selectedCommit != undefined">
+      <span><a href="{{selectedCommit?.html_url}}" target="_blank">{{selectedCommit?.sha.substring(0,6)}}</a>&nbsp;
+      </span>
+      <span matTooltip="{{selectedCommit?.commit.message}}">
+        {{selectedCommit?.commit.message.substring(0,14)}}{{selectedCommit?.commit.message.length >= 14 ? "..." : ""}}&nbsp;</span>
+      <span style="color: slategrey;">
+        {{selectedCommit?.commit.committer.date | date:'yyyy-MM-dd, h:mm a'}}&nbsp;</span>
     </div>
-  </div>
+    </div>
 </div>

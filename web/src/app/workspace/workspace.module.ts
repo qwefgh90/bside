@@ -36,6 +36,7 @@ import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.compo
 import { InfoComponent } from './info/info.component';
 import { BuildHistoryComponent } from './build-history/build-history.component';
 import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatTooltipModule} from '@angular/material/tooltip';
 
 @NgModule({
   declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent, UploadComponent, DiffEditorComponent, CommitProgressComponent, TabComponent, MarkdownEditorComponent, InfoComponent, BuildHistoryComponent],
@@ -62,7 +63,8 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
     FlexLayoutModule,
     MatDialogModule,
     MatTableModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatTooltipModule
   ],
   providers: [{provide: DatabaseToken, useClass: LocalDbService}],
   entryComponents: [

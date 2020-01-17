@@ -46,7 +46,7 @@ import { RemoveNodeAction } from '../core/action/user/remove-node-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { CreateAction } from '../core/action/user/create-action';
 import { NotifyContentChangeAction } from '../core/action/user/notify-content-change-action';
-import { MatCheckboxModule } from '@angular/material';
+import { MatCheckboxModule, MatTooltipModule } from '@angular/material';
 
 @Component({selector: 'app-stage', template: ''})
 class StageComponent {
@@ -228,7 +228,8 @@ describe('WorkspaceComponent', () => {
         MatTabsModule,
         DeviceDetectorModule.forRoot(),
         FlexLayoutModule,
-        MatCheckboxModule
+        MatCheckboxModule,
+        MatTooltipModule
       ],
     }).compileComponents();
   }));
@@ -618,7 +619,8 @@ describe('WorkspaceComponent with UserAction', () => {
         MatTabsModule,
         DeviceDetectorModule.forRoot(),
         FlexLayoutModule,
-        MatCheckboxModule
+        MatCheckboxModule,
+        MatTooltipModule
       ],
     }).compileComponents();
   }));
