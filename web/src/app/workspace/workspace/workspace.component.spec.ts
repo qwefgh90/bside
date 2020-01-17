@@ -246,7 +246,7 @@ describe('WorkspaceComponent', () => {
     fixture.detectChanges();
   })
 
-  it('define child components', fakeAsync(() => {
+  it('define components', fakeAsync(() => {
     fixture.detectChanges();
     tick(3000);
     fixture.detectChanges();
@@ -371,188 +371,8 @@ describe('WorkspaceComponent', () => {
     expect(setContentSpy.calls.first().args[1]).toBe('aGVsbG8gd29ybGQh');
     tick(16000);
   }))
-});
 
-describe('WorkspaceComponent with Action', () => {
-  let component: WorkspaceComponent;
-  let fixture: ComponentFixture<WorkspaceComponent>;
-  let routerSpy;
-  let routeStub;
-  let wrapperServiceSpy;
-  let repositoryDetailsSpy;
-  let branchesSpy;
-  let treeSpy;
-  let getBlobSpy;
-  let getPageBranchSpy;
-  let getResponseSpy;
-  let matDialogSpy;
-  let dispatcher;
-
-  function mockWrapperServiceSpy(){
-    repositoryDetailsSpy.and.returnValue(Promise.resolve(repositoryDetails));
-    branchesSpy.and.returnValue(Promise.resolve(branches));
-    treeSpy.and.returnValue(Promise.resolve(tree));
-    getBlobSpy.and.returnValue(Promise.resolve(blob1));
-    getPageBranchSpy.and.returnValue(Promise.resolve());
-    getResponseSpy.and.returnValue(Promise.resolve({body: commit1}));
-  }
-
-  beforeEach(async(() => {
-    dispatcher = new UserActionDispatcher();
-    routerSpy = jasmine.createSpyObj('Router', ['navigate']);
-    routeStub = new ActivatedRouteStub({});
-    routeStub.setParamMap({userId: 'id', repositoryName: 'repo'});
-    routeStub.setQueryParamMap( {branch:'master'});    
-    wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['repositoryDetails', 'branches', 'tree', 'getBlob', 'getPageBranch', 'getResponse']);
-    repositoryDetailsSpy = wrapperServiceSpy.repositoryDetails;
-    branchesSpy = wrapperServiceSpy.branches;
-    treeSpy = wrapperServiceSpy.tree;
-    getBlobSpy = wrapperServiceSpy.getBlob;
-    getPageBranchSpy = wrapperServiceSpy.getPageBranch;
-    getResponseSpy = wrapperServiceSpy.getResponse;
-    matDialogSpy = jasmine.createSpyObj('MatDialog', ['closeAll']);
-    mockWrapperServiceSpy();
-    TestBed.configureTestingModule({
-      declarations: [MarkdownStubEditorComponent, WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent, CommitProgressComponent, TabComponent],
-      providers: [{provide: ActivatedRoute, useValue: routeStub}, 
-        {provide: WrapperService, useValue: wrapperServiceSpy}, 
-        {provide: Router, useValue: routerSpy},
-        {provide: MatDialog, useValue: matDialogSpy},
-      {provide: MonacoService}, {provide: LocalUploadService},
-      {provide: DatabaseToken, useClass: LocalDbService},
-      {provide: UserActionDispatcher, useValue: dispatcher}
-    ],
-      imports: [MatSidenavModule,
-        BrowserAnimationsModule,
-        MatDividerModule,
-        MatTreeModule,
-        MatButtonModule,
-        MatDividerModule,
-        MatSelectModule,
-        MatIconModule,
-        FormsModule,
-        ReactiveFormsModule,
-        MatMenuModule,
-        TreeModule.forRoot(),
-        MatProgressSpinnerModule,
-        MatButtonToggleModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatBadgeModule,
-        MatTabsModule,
-        DeviceDetectorModule.forRoot(),
-        FlexLayoutModule,
-        MatCheckboxModule
-      ],
-    }).compileComponents();
-  }));
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(WorkspaceComponent);
-    component = fixture.componentInstance;
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-  
-  it('ngOnInit()', () => {
-    fixture.detectChanges();
-  })
-  
-  it('SelectNode() from service', fakeAsync(() => {
-    fixture.detectChanges();
-    tick(3000);
-    fixture.detectChanges();
-    tick(3000);
-
-    let nodeSelectedSpy = spyOn(component, 'nodeSelected');
-    let existSpy = spyOn(component.editor, 'exist');
-    existSpy.and.returnValue(false);
-
-    new SelectAction('.buildinfo', undefined, dispatcher).start();
-
-    fixture.detectChanges();
-    tick(10000);
-
-    expect(nodeSelectedSpy.calls.count()).toBe(1);
-    tick(15000);
-  }))
-  
-  it('RemoveNode() from service', fakeAsync(() => {
-    fixture.detectChanges();
-    tick(3000);
-    fixture.detectChanges();
-    tick(3000);
-    
-    let nodeRemovedSpy = spyOn(component, 'nodeRemoved');
-
-    new RemoveNodeAction( '.buildinfo', undefined, dispatcher).start();
-    
-    fixture.detectChanges();
-    tick(10000);
-
-    expect(nodeRemovedSpy.calls.count()).toBe(1);
-    
-    tick(15000);
-  }))
-
-  it('CreateNode() from service', fakeAsync(() => {
-    fixture.detectChanges();
-    tick(3000);
-    fixture.detectChanges();
-    tick(3000);
-    
-    let nodeCreatedSpy = spyOn(component, 'nodeCreated');
-
-    let testNode = Object.assign({}, tree.tree[0]);
-    testNode.path = '.buildinfo';
-
-    new CreateAction(testNode.path, this, dispatcher).start();
-    fixture.detectChanges();
-    tick(10000);
-
-    expect(nodeCreatedSpy.calls.count()).toBe(1);
-    
-    tick(15000);
-  }))
-  
-  it('MoveNodeInTree() from service', fakeAsync(() => {
-    fixture.detectChanges();
-    tick(3000);
-    fixture.detectChanges();
-    tick(3000);
-
-    let nodeMovedSpy = spyOn(component, 'nodeMoved');
-
-    let testNode = Object.assign({}, tree.tree[0]);
-    testNode.path = 'newfile.txt';
-
-    new FileRenameAction('oldfile.txt','oldfile.txt','newfile.txt','newfile.txt', undefined, dispatcher).start();
-    fixture.detectChanges();
-    tick(10000);
-
-    expect(nodeMovedSpy.calls.count()).toBe(1);
-    tick(15000);
-  }))
-  
-  it('NotifyContentChange() from service', fakeAsync(() => {
-    fixture.detectChanges();
-    tick(3000);
-    fixture.detectChanges();
-    tick(3000);
-
-    let nodeContentChangedSpy = spyOn(component, 'nodeContentChanged');
-
-    new NotifyContentChangeAction('newfile.txt', this, dispatcher).start();
-    fixture.detectChanges();
-    tick(10000);
-
-    expect(nodeContentChangedSpy.calls.count()).toBe(1);
-    expect(nodeContentChangedSpy.calls.first().args[0]).toBe('newfile.txt');
-  }))
-
-  it('compactByCuttingUnchangedBlobs() with remove() and modify()', () =>{
+  it('compactByCuttingUnchangedBlobs() after remove() and modify()', () =>{
     let transformer = new GithubTreeToTree(tree2);
     let root = transformer.getTree();
     let result = transformer.getTree().children;
@@ -617,7 +437,7 @@ describe('WorkspaceComponent with Action', () => {
     expect(compacted[10].path).toBe('source/meta');
   })
 
-  it('compactByCuttingUnchangedBlobs() with rename()', () =>{
+  it('compactByCuttingUnchangedBlobs() after rename()', () =>{
     let transformer = new GithubTreeToTree(tree2);
     let root = transformer.getTree();
     let result = transformer.getTree().children;
@@ -654,7 +474,7 @@ describe('WorkspaceComponent with Action', () => {
     expect(compacted[10].path).toBe('markdown');
   })
 
-  it('compactByCuttingUnchangedBlobs() with move()', () =>{
+  it('compactByCuttingUnchangedBlobs() after move()', () =>{
     let transformer = new GithubTreeToTree(tree2);
     let root = transformer.getTree();
     let result = transformer.getTree().children;
@@ -690,7 +510,7 @@ describe('WorkspaceComponent with Action', () => {
 
   })
 
-  it('compactByCuttingUnchangedBlobs() with setUploadedToLocal()', () =>{
+  it('compactByCuttingUnchangedBlobs() after setUploadedToLocal()', () =>{
     let transformer = new GithubTreeToTree(tree2);
     let root = transformer.getTree();
     let result = transformer.getTree().children;
@@ -726,6 +546,212 @@ describe('WorkspaceComponent with Action', () => {
     expect(compacted[9].path).toBe('source');
 
   })
+});
+
+describe('WorkspaceComponent with UserAction', () => {
+  let component: WorkspaceComponent;
+  let fixture: ComponentFixture<WorkspaceComponent>;
+  let routerSpy;
+  let routeStub;
+  let wrapperServiceSpy;
+  let repositoryDetailsSpy;
+  let branchesSpy;
+  let treeSpy;
+  let getBlobSpy;
+  let getPageBranchSpy;
+  let getResponseSpy;
+  let matDialogSpy;
+  let dispatcher;
+  let database;
+
+  function mockWrapperServiceSpy(){
+    repositoryDetailsSpy.and.returnValue(Promise.resolve(repositoryDetails));
+    branchesSpy.and.returnValue(Promise.resolve(branches));
+    treeSpy.and.returnValue(Promise.resolve(tree));
+    getBlobSpy.and.returnValue(Promise.resolve(blob1));
+    getPageBranchSpy.and.returnValue(Promise.resolve());
+    getResponseSpy.and.returnValue(Promise.resolve({body: commit1}));
+  }
+
+  beforeEach(async(() => {
+    dispatcher = new UserActionDispatcher();
+    routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    routeStub = new ActivatedRouteStub({});
+    routeStub.setParamMap({userId: 'id', repositoryName: 'repo'});
+    routeStub.setQueryParamMap( {branch:'master'});    
+    wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['repositoryDetails', 'branches', 'tree', 'getBlob', 'getPageBranch', 'getResponse']);
+    repositoryDetailsSpy = wrapperServiceSpy.repositoryDetails;
+    branchesSpy = wrapperServiceSpy.branches;
+    treeSpy = wrapperServiceSpy.tree;
+    getBlobSpy = wrapperServiceSpy.getBlob;
+    getPageBranchSpy = wrapperServiceSpy.getPageBranch;
+    getResponseSpy = wrapperServiceSpy.getResponse;
+    matDialogSpy = jasmine.createSpyObj('MatDialog', ['closeAll']);
+    mockWrapperServiceSpy();
+    TestBed.configureTestingModule({
+      declarations: [MarkdownStubEditorComponent, WorkspaceComponent, GithubTreeComponent, UploadComponent, EditorStubComponent, ActionComponent, StageComponent, CommitProgressComponent, TabComponent],
+      providers: [{provide: ActivatedRoute, useValue: routeStub}, 
+        {provide: WrapperService, useValue: wrapperServiceSpy}, 
+        {provide: Router, useValue: routerSpy},
+        {provide: MatDialog, useValue: matDialogSpy},
+      {provide: MonacoService}, {provide: LocalUploadService},
+      {provide: DatabaseToken, useClass: LocalDbService},
+      {provide: UserActionDispatcher, useValue: dispatcher}
+    ],
+      imports: [MatSidenavModule,
+        BrowserAnimationsModule,
+        MatDividerModule,
+        MatTreeModule,
+        MatButtonModule,
+        MatDividerModule,
+        MatSelectModule,
+        MatIconModule,
+        FormsModule,
+        ReactiveFormsModule,
+        MatMenuModule,
+        TreeModule.forRoot(),
+        MatProgressSpinnerModule,
+        MatButtonToggleModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatBadgeModule,
+        MatTabsModule,
+        DeviceDetectorModule.forRoot(),
+        FlexLayoutModule,
+        MatCheckboxModule
+      ],
+    }).compileComponents();
+  }));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(WorkspaceComponent);
+    database = TestBed.get(DatabaseToken);
+    component = fixture.componentInstance;
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+  
+  it('ngOnInit()', () => {
+    fixture.detectChanges();
+  })
+
+  it('autosave enabled', fakeAsync(() => {
+    let saveSpy = spyOn(database, 'save');
+    fixture.detectChanges();
+    tick(3000);
+    fixture.detectChanges();
+    tick(3000);
+
+    component.autoSaveRef.checked = true;
+    new SelectAction('.buildinfo', undefined, dispatcher).start();
+
+    fixture.detectChanges();
+    tick(10000);
+    expect(saveSpy.calls.count()).toBe(1);
+    tick(15000);
+  }))
+
+  it('autosave disabled', fakeAsync(() => {
+    let saveSpy = spyOn(database, 'save');
+    fixture.detectChanges();
+    tick(3000);
+    fixture.detectChanges();
+    tick(3000);
+
+    component.autoSaveRef.checked = false;
+    new SelectAction('.buildinfo', undefined, dispatcher).start();
+
+    fixture.detectChanges();
+    tick(10000);
+    expect(saveSpy.calls.count()).toBe(0);
+    tick(18000);
+    expect(saveSpy.calls.count()).toBe(1);
+  }))
+
+  it('SelectAction', fakeAsync(() => {
+    fixture.detectChanges();
+    tick(3000);
+    fixture.detectChanges();
+    tick(3000);
+
+    let nodeSelectedSpy = spyOn(component, 'nodeSelected');
+    let existSpy = spyOn(component.editor, 'exist');
+    existSpy.and.returnValue(false);
+    new SelectAction('.buildinfo', undefined, dispatcher).start();
+
+    fixture.detectChanges();
+    tick(10000);
+    expect(nodeSelectedSpy.calls.count()).toBe(1);
+    tick(15000);
+  }))
+  
+  it('RemoveNodeAction', fakeAsync(() => {
+    fixture.detectChanges();
+    tick(3000);
+    fixture.detectChanges();
+    tick(3000);
+    
+    let nodeRemovedSpy = spyOn(component, 'nodeRemoved');
+    new RemoveNodeAction( '.buildinfo', undefined, dispatcher).start();
+    
+    fixture.detectChanges();
+    tick(10000);
+    expect(nodeRemovedSpy.calls.count()).toBe(1);
+    tick(15000);
+  }))
+
+  it('CreateAction', fakeAsync(() => {
+    fixture.detectChanges();
+    tick(3000);
+    fixture.detectChanges();
+    tick(3000);
+
+    let nodeCreatedSpy = spyOn(component, 'nodeCreated');
+    let testNode = Object.assign({}, tree.tree[0]);
+    testNode.path = '.buildinfo';
+    new CreateAction(testNode.path, this, dispatcher).start();
+
+    fixture.detectChanges();
+    tick(10000);
+    expect(nodeCreatedSpy.calls.count()).toBe(1);
+    tick(15000);
+  }))
+  
+  it('FileRenameAction', fakeAsync(() => {
+    fixture.detectChanges();
+    tick(3000);
+    fixture.detectChanges();
+    tick(3000);
+
+    let nodeMovedSpy = spyOn(component, 'nodeMoved');
+    let testNode = Object.assign({}, tree.tree[0]);
+    testNode.path = 'newfile.txt';
+
+    new FileRenameAction('oldfile.txt','oldfile.txt','newfile.txt','newfile.txt', undefined, dispatcher).start();
+    fixture.detectChanges();
+    tick(10000);
+    expect(nodeMovedSpy.calls.count()).toBe(1);
+    tick(15000);
+  }))
+  
+  it('NotifyContentChangeAction', fakeAsync(() => {
+    fixture.detectChanges();
+    tick(3000);
+    fixture.detectChanges();
+    tick(3000);
+
+    let nodeContentChangedSpy = spyOn(component, 'nodeContentChanged');
+
+    new NotifyContentChangeAction('newfile.txt', this, dispatcher).start();
+    fixture.detectChanges();
+    tick(10000);
+
+    expect(nodeContentChangedSpy.calls.count()).toBe(1);
+    expect(nodeContentChangedSpy.calls.first().args[0]).toBe('newfile.txt');
+    tick(15000);
+  }))
 });
 
 

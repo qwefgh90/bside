@@ -134,7 +134,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   afterCommit: boolean;
   afterViewInit: Subject<void> = new ReplaySubject(1);;
 
-  modificationSubject = new Subject<void>();
   subjectWithoutSaveFile = new Subject<string>();
 
   subjectWithSaveFile = new Subject<WorkspacePack>();
@@ -142,26 +141,26 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   subscriptions: Array<Subscription> = []
   leftPaneOpened = false;
 
+  saveBufferPeriod = 10;
+  saveTimePeriod = 15000;
+
   @ViewChild("leftDrawer", { static: false }) leftPane: MatDrawer;
   @ViewChild("rightDrawer", { static: false }) rightPane: MatDrawer;
 
   saving = false;
 
   ngOnInit() {
-    let monacoLoaderSubject = from(this.initalizeLoader());
+    let monacoLoaderSubject = from(this.initalizeVSLoader());
 
     //It saves data when the content is modified.
-    this.subscriptions.push(this.modificationSubject.subscribe(() => {
-      this.dispatchSaveAction(this.autoSaveRef.checked);
-    }));
     this.subscriptions.push(this.saveActionSubject.pipe(bufferCount(10)).subscribe(() => {
       new SaveAction(this, this.userActionDispatcher).start();
     }));
     this.subscriptions.push(this.saveActionSubject.pipe(debounceTime(15000)).subscribe(() => {
       new SaveAction(this, this.userActionDispatcher).start();
     }));
-
-    this.subscriptions.push(MicroActionComponentMap.getSubjectByComponent(SupportedComponents.WorkspaceComponent).subscribe((micro) => {
+    
+    this.subscriptions.push(MicroActionComponentMap.getSubjectByComponent(SupportedComponents.WorkspaceComponent).subscribe(async (micro) => {
       if (micro instanceof WorkspaceRenameMicroAction) {
         try {
           this.nodeMoved(micro.oldPath, this.tree.get(micro.newPath));
@@ -203,7 +202,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         }
       } else if (micro instanceof WorkspaceContentChangeMicroAction) {
         try {
-          this.nodeContentChanged(micro.path);
+          await this.nodeContentChanged(micro.path);
+          this.dispatchSaveAction(this.autoSaveRef.checked);
           micro.succeed(() => { });
         } catch(ex){
           micro.fail(ex);
@@ -235,9 +235,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           const node = this.tree.get(micro.path);
           if (node != undefined) {
             const asyncText = this.getOriginalText(node.sha)
-            asyncText.then((text) => {
+            await asyncText.then(async (text) => {
               this.editor.setContent(micro.path, text);
-              this.nodeContentChanged(micro.path);
+              await this.nodeContentChanged(micro.path);
+              this.dispatchSaveAction(this.autoSaveRef.checked);
             })
           }
           micro.succeed(() => { });
@@ -245,8 +246,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           micro.fail(ex);
         }
       }
-
-
       this.invalidateDirtyCount();
     }));
 
@@ -258,7 +257,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.subscriptions.push(combineLatest(this.subjectWithSaveFile, this.afterViewInit, monacoLoaderSubject).subscribe((arr) => {
       let pack = arr[0];
       this.autoSaveRef.checked = pack.autoSave;
-      // sometimes 
       setTimeout(() => {
         this.editor.load(pack);
         this.tab.load(pack);
@@ -278,7 +276,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }))
 
     /**
-     * When parameters of url have some changes, initialize workspace again. 
+     * When parameters of url have some changes, initialize the workspace again. 
      */
     this.subscriptions.push(combineLatest(this.route.paramMap, this.route.queryParamMap, this.refreshSubject).subscribe(([p, q]) => {
       let promise: Promise<void>;
@@ -339,7 +337,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         else
           this.setBranchByName(defaultBranchName);
 
-        // if it have already loaded packs, do nothing.
+        // if it has already loaded packs, do nothing.
         let loadedPack = await this.database.get(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha)
           .then(v => {
             console.log(`${v.commit_sha} have been loaded completely.`)
@@ -399,8 +397,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         && !(v.state.includes(NodeStateAction.Created) && v.state.includes(NodeStateAction.Deleted)));
   }
 
-  private initalizeLoader(): Promise<void> {
-    let p = new Promise<void>((resolve, reject) => {
+  private initalizeVSLoader(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
       if (!(window as any).require && this.isDesktop) {
         const loaderScript = document.createElement("script");
         loaderScript.type = "text/javascript";
@@ -416,7 +414,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         resolve();
       }
     });
-    return p;
   }
 
   toggleDiff() {
@@ -612,21 +609,19 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     } else {
       this.editor.setContent(event.node.path, event.base64);
     }
-    this.dispatchSaveAction(this.autoSaveRef.checked);
   }
 
   async nodeContentChanged(path: string) {
     const node = this.tree.get(path);
     if (node != undefined && node.type == 'blob') {
       const asyncText = this.getOriginalText(node.sha)
-      asyncText.then((originalText) => {
+      await asyncText.then((originalText) => {
         if (this.editor.getContent(path) == originalText)
           node.setContentModifiedFlag(false);
         else
           node.setContentModifiedFlag(true);
         this.invalidateDirtyCount();
       }, (reason) => console.error(reason));
-      this.modificationSubject.next();
     } else
       console.error(`The content of ${path} is changed, but it does not exist anywhere`)
   }
@@ -647,10 +642,17 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   onBranchChange(event: MatSelectChange) {
-    const branch = event.value;
-    this.selectedNodePath = undefined;
-    this.treeStatus = this.TreeStatus.BranchChanging;
-    this.router.navigate([], { queryParams: { branch: branch.name } })
+    let action = new SaveAction(this, this.userActionDispatcher);
+    try {
+      action.start().then(async () => {
+        const branch = event.value;
+        this.selectedNodePath = undefined;
+        this.treeStatus = this.TreeStatus.BranchChanging;
+        this.router.navigate([], { queryParams: { branch: branch.name } })
+      });
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   onStage() {
@@ -681,33 +683,35 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   async onCommit(msg: string) {
+    let action = new SaveAction(this, this.userActionDispatcher);
     try {
-      // this.database.save(this.pack());
-      this.treeStatus = TreeStatusOnWorkspace.Committing;
-      this.commitProgress.prepare();
-      let blobNodes = this.root.getBlobNodes();
-      let modifiedNodes = blobNodes.filter(n => (n.state.length > 0));
-      this.commitProgress.uploadBlobs(modifiedNodes.length);
-      let responseArrPromise = this.sync(modifiedNodes);
-      await Promise.all(responseArrPromise);
+      await action.start().then(async () => {
+        this.treeStatus = TreeStatusOnWorkspace.Committing;
+        this.commitProgress.prepare();
+        let blobNodes = this.root.getBlobNodes();
+        let modifiedNodes = blobNodes.filter(n => (n.state.length > 0));
+        this.commitProgress.uploadBlobs(modifiedNodes.length);
+        let responseArrPromise = this.sync(modifiedNodes);
+        await Promise.all(responseArrPromise);
 
-      let objectsForCreatingTree = blobNodes;
-      let compactObjectsForCreatingTree = this.compactByCuttingUnchangedBlobs(objectsForCreatingTree, this.root);
+        let objectsForCreatingTree = blobNodes;
+        let compactObjectsForCreatingTree = this.compactByCuttingUnchangedBlobs(objectsForCreatingTree, this.root);
 
-      if (compactObjectsForCreatingTree.filter(b => b.type == 'blob' && b.state.length > 0).length == 0) {
-        console.debug(`${objectsForCreatingTree.map(b => b.path).join(', ')} will be committed`);
-        console.debug(`${compactObjectsForCreatingTree.map(b => b.path).join(', ')} will be committed(compact)`);
-        this.commitProgress.createTree();
-        let createdTree = await this.wrapper.createTree(this.userId, this.repositoryName, compactObjectsForCreatingTree);
-        this.commitProgress.commit();
-        let createdCommit = await this.wrapper.createCommit(this.userId, this.repositoryName, msg, createdTree.sha, this.selectedBranch.commit.sha);
-        this.commitProgress.updateBranch(this.selectedBranch.name);
-        let createdBranch = await this.wrapper.updateBranch(this.userId, this.repositoryName, this.selectedBranch.name, createdCommit.sha);
-        this.commitProgress.done();
-        console.log(`The commit and updating ${createdBranch.ref} have succeeded which is ${createdBranch.object.sha}. Check out all in ${createdBranch.url}`);
-      } else {
-        console.error("Invalid state of nodes is found because blobs containing more than zero state exist");
-      }
+        if (compactObjectsForCreatingTree.filter(b => b.type == 'blob' && b.state.length > 0).length == 0) {
+          console.debug(`${objectsForCreatingTree.map(b => b.path).join(', ')} will be committed`);
+          console.debug(`${compactObjectsForCreatingTree.map(b => b.path).join(', ')} will be committed(compact)`);
+          this.commitProgress.createTree();
+          let createdTree = await this.wrapper.createTree(this.userId, this.repositoryName, compactObjectsForCreatingTree);
+          this.commitProgress.commit();
+          let createdCommit = await this.wrapper.createCommit(this.userId, this.repositoryName, msg, createdTree.sha, this.selectedBranch.commit.sha);
+          this.commitProgress.updateBranch(this.selectedBranch.name);
+          let createdBranch = await this.wrapper.updateBranch(this.userId, this.repositoryName, this.selectedBranch.name, createdCommit.sha);
+          this.commitProgress.done();
+          console.log(`The commit and updating ${createdBranch.ref} have succeeded which is ${createdBranch.object.sha}. Check out all in ${createdBranch.url}`);
+        } else {
+          console.error("Invalid state of nodes is found because blobs containing more than zero state exist");
+        }
+      });
     } catch (e) {
       console.error(e);
     } finally {

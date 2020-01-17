@@ -63,8 +63,7 @@ export class BuildHistoryComponent implements OnInit {
       finally {
         this.loading = false;
       }
-
-    });
+    }, () => {});
     this.wrapper.buildStatus(this.owner, this.repositoryName).then((arr) => {
       this.dataSource = this.convertToDS(arr);
     });

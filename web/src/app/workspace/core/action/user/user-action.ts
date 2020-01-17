@@ -66,7 +66,7 @@ export abstract class UserAction<T> {
         this.microActions = this.defineMicroActionList();
         this.max = this.microActions.length;
         if(this.microActions.length == 0){
-            throw new Error("There is no defined micro action. ");
+            throw new Error("There is no defined micro action.");
         }
         let isSuccessful = this.dispatcher.execute(this);
         if(!isSuccessful)

@@ -30,7 +30,7 @@ export class Interceptor implements HttpInterceptor {
         } else {
             wrapperReq = req;
         }
-        return next.handle(wrapperReq).pipe(map(
+        return next.handle(wrapperReq).pipe(tap(
             event => {
                 if (event instanceof HttpResponse) {
                     const response = (event as HttpResponse<any>);
@@ -40,9 +40,8 @@ export class Interceptor implements HttpInterceptor {
                         this.cacheMap.set(this.getKey(req), response); //update the response
                     }
                 }
-                return event;
             }
-        ), catchError((event, c) => {
+        ), catchError((event) => {
             if (event instanceof HttpErrorResponse) {
                 const response = (event as HttpErrorResponse);
                 if (response.headers.has('ETag') && (wrapperReq.method.toLowerCase() == "get") && response.status == 304 && (this.cacheMap.has(this.getKey(req)))) {
