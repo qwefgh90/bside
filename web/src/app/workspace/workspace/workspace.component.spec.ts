@@ -188,7 +188,7 @@ describe('WorkspaceComponent', () => {
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     routeStub = new ActivatedRouteStub({});
     routeStub.setParamMap({userId: 'id', repositoryName: 'repo'});
-    routeStub.setQueryParamMap( {branch:'master'});    
+    routeStub.setQueryParamMap( {branch:'master'});  
     wrapperServiceSpy = jasmine.createSpyObj('WrapperService', ['repositoryDetails', 'branches', 'tree', 'getBlob', 'getPageBranch', 'getResponse']);
     repositoryDetailsSpy = wrapperServiceSpy.repositoryDetails;
     branchesSpy = wrapperServiceSpy.branches;
@@ -282,12 +282,9 @@ describe('WorkspaceComponent', () => {
     let existSpy = spyOn(component.editor, 'exist');
     existSpy.and.returnValue(false);
 
-    let treeNodes = fixture.nativeElement.querySelectorAll('tree-node .node-title');
-    treeNodes[0].click();
-    fixture.detectChanges();
+    component.nodeSelected(component.tree.root.children[0].path);
     tick(10000);
 
-    expect(component.selectedNodePath).toBeDefined();
     expect(selectSpy.calls.first().args[0]).toBe(tree.tree[0].path);
     
     expect(setContentSpy.calls.count()).toBe(1);
@@ -647,7 +644,7 @@ describe('WorkspaceComponent with UserAction', () => {
     tick(3000);
 
     component.autoSaveRef.checked = true;
-    new SelectAction('.buildinfo', undefined, dispatcher).start();
+    new FileRenameAction('.buildinfo', '.buildinfo', '.buildinfo2', '.buildinfo2', undefined, dispatcher).start();
 
     fixture.detectChanges();
     tick(10000);
@@ -663,7 +660,7 @@ describe('WorkspaceComponent with UserAction', () => {
     tick(3000);
 
     component.autoSaveRef.checked = false;
-    new SelectAction('.buildinfo', undefined, dispatcher).start();
+    new FileRenameAction('.buildinfo', '.buildinfo', '.buildinfo2', '.buildinfo2', undefined, dispatcher).start();
 
     fixture.detectChanges();
     tick(10000);
@@ -672,20 +669,22 @@ describe('WorkspaceComponent with UserAction', () => {
     expect(saveSpy.calls.count()).toBe(1);
   }))
 
-  it('SelectAction', fakeAsync(() => {
+  it('SelectAction()', fakeAsync(() => {
     fixture.detectChanges();
     tick(3000);
     fixture.detectChanges();
     tick(3000);
-
-    let nodeSelectedSpy = spyOn(component, 'nodeSelected');
-    let existSpy = spyOn(component.editor, 'exist');
-    existSpy.and.returnValue(false);
-    new SelectAction('.buildinfo', undefined, dispatcher).start();
+    let router = TestBed.get(Router);
+    
+    new SelectAction('.gitignore', undefined, dispatcher).start();
 
     fixture.detectChanges();
     tick(10000);
-    expect(nodeSelectedSpy.calls.count()).toBe(1);
+    let branch = (routerSpy.navigate as jasmine.Spy).calls.all()[0].args[1].queryParams.path; // started at unknowun
+    expect(branch).toBe('.gitignore');
+    let policy = (routerSpy.navigate as jasmine.Spy).calls.all()[1].args[1].queryParams.path; // started at TabComponent
+    expect(policy).toBe('.gitignore');
+    expect(routerSpy.navigate.calls.count()).toBe(2);
     tick(15000);
   }))
   
@@ -762,15 +761,15 @@ export class ActivatedRouteStub {
   // and pump new values into the `paramMap` observable
   private subject = new ReplaySubject<ParamMap>();
   private qsubject = new ReplaySubject<ParamMap>();
+  private qparams = new ReplaySubject<Params>();
 
   constructor(initialParams?: Params) {
     this.setParamMap(initialParams);
   }
 
-  /** The mock paramMap observable */
   readonly paramMap = this.subject.asObservable();
-  /** The mock paramMap observable */
   readonly queryParamMap = this.qsubject.asObservable();
+  readonly queryParams = this.qparams.asObservable();
 
   snapshot = new ActivatedRouteSnapshotStub();
 
@@ -783,6 +782,7 @@ export class ActivatedRouteStub {
   /** Set the paramMap observables's next value */
   setQueryParamMap(params?: Params) {
     this.qsubject.next(convertToParamMap(params));
+    this.qparams.next(params);
     this.snapshot.queryParamMap = convertToParamMap(params);
     this.snapshot.queryParams = params;
   };

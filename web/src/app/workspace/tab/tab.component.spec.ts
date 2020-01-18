@@ -11,16 +11,18 @@ import { SelectAction } from '../core/action/user/select-action';
 import { FileRenameAction } from '../core/action/user/file-rename-action';
 import { RemoveNodeAction } from '../core/action/user/remove-node-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
+import { MicroActionComponentMap, SupportedComponents } from '../core/action/micro/micro-action-component-map';
 
 describe('TabComponent', () => {
   let component: TabComponent;
   let fixture: ComponentFixture<TabComponent>;
-
+  let dispatcher: UserActionDispatcher;
+  
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ TabComponent ],
       imports: [MatTabsModule, MatIconModule, BrowserAnimationsModule],
-      providers: []
+      providers: [{provide: UserActionDispatcher, useValue: new UserActionDispatcher()}]
     })
     .compileComponents();
   }));
@@ -29,6 +31,10 @@ describe('TabComponent', () => {
     fixture = TestBed.createComponent(TabComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+    dispatcher = TestBed.get(UserActionDispatcher);
+    MicroActionComponentMap.getSubjectByComponent(SupportedComponents.WorkspaceComponent).subscribe(m => m.succeed(()=>{}));
+    MicroActionComponentMap.getSubjectByComponent(SupportedComponents.EditorComponent).subscribe(m => m.succeed(()=>{}));
+    MicroActionComponentMap.getSubjectByComponent(SupportedComponents.GithubTreeComponent).subscribe(m => m.succeed(()=>{}));
   });
 
   it('should create', () => {
@@ -76,12 +82,6 @@ describe('TabComponent', () => {
 
   it('load()', fakeAsync(() => {
     let tabSelectedSpy = spyOn(component, 'tabSelected');
-    let fileName1 = 'test.txt';
-    component.addTab(fileName1);
-    let fileName2 = 'test2.txt';
-    component.addTab(fileName2);
-    let fileName3 = 'test3.txt';
-    component.addTab(fileName3);
     fixture.detectChanges();
     tick(3000);
     
@@ -90,10 +90,7 @@ describe('TabComponent', () => {
     tick(3000);
 
     let cinfo1: MatTab = tabSelectedSpy.calls.all()[0].args[0];
-    let cinfo2: MatTab = tabSelectedSpy.calls.all()[1].args[0];
-
-    expect(cinfo1.textLabel).toBe(fileName1);
-    expect(cinfo2.textLabel).toBe('load2.txt');
+    expect(cinfo1.textLabel).toBe('load1.txt');
   }));
 
   it('SelectNode() from service', fakeAsync(() => {
@@ -133,7 +130,7 @@ describe('TabComponent', () => {
     expect(removeTabSpy.calls.count()).toBe(1);
   }));
   
-  it('MoveNodeInTree() from service', fakeAsync(() => {
+  it('FileRenameAction()', fakeAsync(() => {
     fixture.detectChanges();
     tick(3000);
     fixture.detectChanges();
@@ -143,8 +140,10 @@ describe('TabComponent', () => {
     let newNode = Object.assign({}, tree.tree[0]);
     newNode.path = 'newname.txt';
     component.addTab(fileName);
+    fixture.detectChanges();
+    tick(10000);
 
-    new FileRenameAction(fileName, fileName, newNode.path, GithubTreeNode.getNameFromPath(newNode.path), undefined, new UserActionDispatcher()).start();
+    new FileRenameAction(fileName, fileName, newNode.path, GithubTreeNode.getNameFromPath(newNode.path), undefined, dispatcher).start();
     fixture.detectChanges();
     tick(3000);
 

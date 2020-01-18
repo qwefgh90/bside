@@ -3,11 +3,11 @@ import { UserAction } from '../user/user-action';
 export abstract class MicroAction<T> {
     constructor(readonly parent: UserAction<any>){
     }
-    undo: ()=>void;
+    undo: () => void;
     data: T;
     error: Error;
     status: Status = Status.PROGRESS;
-    succeed(undo:()=>void, data?: T){
+    succeed(undo:() => void, data?: T){
         this.undo = undo;
         this.data = data;
         this.status = Status.SUCCESS;

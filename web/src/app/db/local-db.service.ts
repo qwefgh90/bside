@@ -76,7 +76,7 @@ export class LocalDbService implements Database, Cookie {
     if (json != undefined && json != '')
       return Promise.resolve(JSON.parse(LZString.decompressFromUTF16(json)) as WorkspacePack);
     else
-      return Promise.reject("Data for last workspace doesn't exist.");
+      return Promise.reject(`the saved pack of ${repositoryId}, ${branchName}, ${commit_sha} doesn't exist.`);
   }
 
   list(repositoryId: number): Promise<Array<WorkspacePack>> {

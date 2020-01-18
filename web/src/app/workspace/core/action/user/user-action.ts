@@ -22,9 +22,10 @@ export abstract class UserAction<T> {
     protected recover(){
         let index = this.currentActionIndex-1;
         for(; index>=0; index--){
-            let action = this.microActions[index];
-            if(!action.undo)
-                action.undo();
+            let microAction = this.microActions[index];
+            if(microAction.undo)
+                microAction.undo();
+            console.debug(`\t[${index+1}/${this.max}] undo ${microAction.constructor.name}`);
         }
     }
     protected doMicroAction(microAction: MicroAction<any>){

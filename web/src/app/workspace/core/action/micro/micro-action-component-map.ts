@@ -16,6 +16,7 @@ import { TabSnapshotMicroAction } from './tab-snapshot-micro-action';
 import { WorkspaceSnapshotMicroAction } from './workspace-snapshot-micro-action';
 import { WorkspaceUndoMicroAction } from './workspace-undo-micro-action';
 import { WorkspaceClearMicroAction } from './workspace-clear-micro-action';
+import { GithubTreeRenameMicroAction } from './github-tree-rename-micro-action';
 
 export class MicroActionComponentMap {
     private static init = false;
@@ -26,6 +27,7 @@ export class MicroActionComponentMap {
         if (!this.init) {
             this.setKeyValuePair(GithubTreeSelectMicroAction, SupportedComponents.GithubTreeComponent);
             this.setKeyValuePair(GithubTreeSnapshotMicroAction, SupportedComponents.GithubTreeComponent);
+            this.setKeyValuePair(GithubTreeRenameMicroAction, SupportedComponents.GithubTreeComponent);
             this.setKeyValuePair(TabRenameMicroAction, SupportedComponents.TabComponent);
             this.setKeyValuePair(TabSelectAction, SupportedComponents.TabComponent);
             this.setKeyValuePair(TabCloseMicroAction, SupportedComponents.TabComponent);

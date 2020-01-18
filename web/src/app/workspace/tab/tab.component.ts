@@ -48,7 +48,10 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
             let path = micro.selectedPath;
             this.select(path);
           }
-          micro.succeed(() => { });
+          micro.succeed(() => { 
+            let addedPath = micro.selectedPath;
+            this.removeTab(addedPath);
+          });
         } catch {
           micro.fail();
         }
@@ -84,8 +87,8 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
     loadedPack.tabs.forEach(v => {
       this.addTab(v);
     });
-    this.changeTab(loadedPack.selectedNodePath);
-    this.executeSelectAction(loadedPack.selectedNodePath);
+    // this.changeTab(loadedPack.selectedNodePath);
+    // this.executeSelectAction(loadedPack.selectedNodePath);
   }
 
   ngAfterContentInit() {
@@ -101,7 +104,6 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
           if (selectedTabIndex != -1){
             this.selectedTabindex = selectedTabIndex;
             this.selectedPath = path;
-            this.indexFromChangeTab = this.selectedTabindex;
           }
         }
       }
@@ -123,12 +125,10 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
       this.actionAfterTabInitialized = undefined;
     }
     if (tab != undefined){
-      if(this.indexFromChangeTab != this.selectedTabindex){
-        this.changeTab(tab.textLabel);
+      this.changeTab(tab.textLabel);
         this.executeSelectAction(tab.textLabel);
-      }
+      
     }
-    this.indexFromChangeTab = undefined;
   }
 
   addTab(path: string) {

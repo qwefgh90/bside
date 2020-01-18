@@ -22,6 +22,8 @@ import { RemoveNodeAction } from '../core/action/user/remove-node-action';
 import { CreateAction } from '../core/action/user/create-action';
 import { GithubTreeSnapshotMicroAction } from '../core/action/micro/github-tree-snapshot-micro-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
+import { TabRenameMicroAction } from '../core/action/micro/tab-rename-micro-action';
+import { GithubTreeRenameMicroAction } from '../core/action/micro/github-tree-rename-micro-action';
 @Component({
   selector: 'app-tree',
   templateUrl: './github-tree.component.html',
@@ -67,7 +69,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
           const oldPath = githubNode.path;
           (rest.from.data as GithubTreeNode).move(newParent.parent == null ? this.root : newParent.data,
               (node, parent, pre, newPath) => {              
-                new FileRenameAction(oldPath, oldName, node.path, node.name, this, this.dispatcher).start();
+                new FileRenameAction(pre, GithubTreeNode.getNameFromPath(pre), node.path, node.name, this, this.dispatcher).start();
               });
           TREE_ACTIONS.MOVE_NODE(m, n, event, rest);
         }else{
@@ -223,11 +225,15 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
       MicroActionComponentMap.getSubjectByComponent(SupportedComponents.GithubTreeComponent).subscribe((micro) => {
         if (micro instanceof GithubTreeSelectMicroAction) {
           try {
-            let path = micro.selectedPath;
-            if (this.selectedNode == undefined || path != this.selectedNode.data.path) {
-              this.selectNode(micro.selectedPath);
+            if(this.get(micro.selectedPath)){
+              let path = micro.selectedPath;
+              if (this.selectedNode == undefined || path != this.selectedNode.data.path) {
+                this.selectNode(micro.selectedPath);
+              }
+              micro.succeed(() => { });
+            }else{
+              micro.fail(new Error(`${micro.selectedPath} is not found.`));
             }
-            micro.succeed(() => { });
           } catch{
             micro.fail();
           }
@@ -238,6 +244,17 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
             return acc;
           }, [] as Array<GithubNode>, false);
           micro.succeed(() => {}, treeArr);
+        }else if(micro instanceof GithubTreeRenameMicroAction){
+          try{
+            if(micro.parent.origin == this){
+              micro.succeed(() => {});
+            }else{
+              this.renameNode(micro.oldPath, micro.newName);
+              micro.succeed(() => {});
+            }
+          } catch {
+            micro.fail();
+          }
         }
       })
     )
@@ -291,17 +308,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
         console.log(`${this.renamingFormControl.value} abide by naming pattern`);
       } else {
         const githubNode = this.renamingNode.data as GithubTreeNode;
-        const oldName = githubNode.name;
-        const oldPath = githubNode.path;
-        githubNode.rename(this.renamingFormControl.value, (node, parent, pre, newPath) => {
-          let stateArr = (githubNode as GithubTreeNode).state;
-          if (stateArr.length == 2 && stateArr[0] == NodeStateAction.Created)
-            new CreateAction(node.path, this, this.dispatcher).start();
-          else{
-            let action = new FileRenameAction(oldPath, oldName, node.path, node.name, this, this.dispatcher)
-            action.start();
-          }
-        });
+        this.renameNode(githubNode, this.renamingFormControl.value);
       }
       if (this.renamingNode.data.name == undefined) {
         this.remove(this.renamingNode);
@@ -310,6 +317,19 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
       this.renamingNode = undefined;
     }
     this.refreshTree();
+  }
+
+  renameNode(oldPathOrNode: string | GithubTreeNode, newName: string){
+    let githubNode = oldPathOrNode instanceof GithubTreeNode ? oldPathOrNode : this.get(oldPathOrNode);
+    githubNode.rename(newName, (node, parent, pre, newPath) => {
+      let stateArr = (githubNode as GithubTreeNode).state;
+      if (stateArr.length == 2 && stateArr[0] == NodeStateAction.Created)
+        new CreateAction(node.path, this, this.dispatcher).start();
+      else{
+        let action = new FileRenameAction(pre, GithubTreeNode.getNameFromPath(pre), node.path, node.name, this, this.dispatcher)
+        action.start();
+      }
+    });
   }
 
   findInSiblings(node: TreeNode, predicate: (n2: TreeNode) => boolean): boolean{
@@ -397,7 +417,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     this.upload.select(parentPath);
   }
 
-  get(path: string): GithubTreeNode {
+  get(path: string): GithubTreeNode | undefined {
     try {
       const treeNode: TreeNode = this.treeComponent.treeModel.getNodeBy((p) => p.data.path == path);
       return treeNode == null ? undefined : treeNode.data
