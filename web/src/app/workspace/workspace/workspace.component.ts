@@ -44,7 +44,7 @@ import { SaveAction } from '../core/action/user/save-action';
 import { WorkspaceClearMicroAction } from '../core/action/micro/workspace-clear-micro-action';
 import { WorkspaceUndoMicroAction as WorkspaceUndoMicroAction } from '../core/action/micro/workspace-undo-micro-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
-import { MatCheckbox } from '@angular/material';
+import { MatCheckbox } from '@angular/material/checkbox';
 import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, timestamp, map, filter } from 'rxjs/operators';
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
 
@@ -94,8 +94,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   @ViewChild("tree", { static: true }) tree: GithubTreeComponent;
-  @ViewChild("editor1", { static: false }) editor1: Editor;
-  @ViewChild("editor2", { static: false }) editor2: Editor;
+  @ViewChild("editor1") editor1: Editor;
+  @ViewChild("editor2") editor2: Editor;
   @ViewChild("stage", { static: true }) stage: Stage;
   @ViewChild("action", { static: true }) action: ActionComponent;
   @ViewChild(CommitProgressComponent, { static: true }) commitProgress: CommitProgressComponent;
@@ -145,8 +145,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   saveBufferPeriod = 10;
   saveTimePeriod = 15000;
 
-  @ViewChild("leftDrawer", { static: false }) leftPane: MatDrawer;
-  @ViewChild("rightDrawer", { static: false }) rightPane: MatDrawer;
+  @ViewChild("leftDrawer") leftPane: MatDrawer;
+  @ViewChild("rightDrawer") rightPane: MatDrawer;
 
   isBeingChanged = false;
   saving = false;

@@ -46,7 +46,8 @@ import { RemoveNodeAction } from '../core/action/user/remove-node-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { CreateAction } from '../core/action/user/create-action';
 import { NotifyContentChangeAction } from '../core/action/user/notify-content-change-action';
-import { MatCheckboxModule, MatTooltipModule } from '@angular/material';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({selector: 'app-stage', template: ''})
 class StageComponent {
