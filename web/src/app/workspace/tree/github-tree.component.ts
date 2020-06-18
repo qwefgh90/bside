@@ -37,8 +37,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   @Input("tree") tree: GithubTreeNode;
   @Output("nodeUploaded") nodeUploaded = new EventEmitter<{node: GithubTreeNode, base64: string}>();
   
-  @ViewChild('blobRenamingInput', { static: false }) blobRenamingInput: ElementRef;
-  @ViewChild('treeRenamingInput', { static: false }) treeRenamingInput: ElementRef;
+  @ViewChild('blobRenamingInput') blobRenamingInput: ElementRef;
+  @ViewChild('treeRenamingInput') treeRenamingInput: ElementRef;
   @ViewChild(UploadComponent, { static: true }) upload: Upload;
 
   root: GithubTreeNode;
