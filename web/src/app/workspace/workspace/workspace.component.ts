@@ -44,7 +44,7 @@ import { SaveAction } from '../core/action/user/save-action';
 import { WorkspaceClearMicroAction } from '../core/action/micro/workspace-clear-micro-action';
 import { WorkspaceUndoMicroAction as WorkspaceUndoMicroAction } from '../core/action/micro/workspace-undo-micro-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
-import { MatCheckbox } from '@angular/material';
+import { MatCheckbox } from '@angular/material/checkbox';
 import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, timestamp, map, filter } from 'rxjs/operators';
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
 
