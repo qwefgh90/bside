@@ -30,8 +30,7 @@
             ],
             "scripts": [
               "node_modules/easymde/dist/easymde.min.js"
-            ]
-              ,
+            ],
             "es5BrowserSupport": true,
             "webWorkerTsConfig": "tsconfig.worker.json"
           },
@@ -91,7 +90,8 @@
               "node_modules/easymde/dist/easymde.min.css"
             ],
             "scripts": [
-              "node_modules/easymde/dist/easymde.min.js"],
+              "node_modules/easymde/dist/easymde.min.js"
+            ],
             "assets": [
               "src/favicon.ico",
               "src/assets",
@@ -145,5 +145,8 @@
       }
     }
   },
-  "defaultProject": "web"
+  "defaultProject": "web",
+  "cli": {
+    "analytics": false
+  }
 }
