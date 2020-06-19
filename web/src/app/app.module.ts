@@ -20,6 +20,7 @@ import { OAuthService } from './oauth/service/o-auth.service';
 import { WorkspaceModule } from './workspace/workspace.module';
 import { TemplatesModule } from './templates/templates.module';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { StoreModule } from '@ngrx/store';
 
 export function initAuth(oauthService: OAuthService){
   return () => oauthService.initAccessTokenOnSession();
@@ -31,6 +32,7 @@ export function initAuth(oauthService: OAuthService){
     WelcomeComponent,
   ],
   imports: [
+    StoreModule.forRoot({}),
     ProjectsModule,
     TemplatesModule,
     AuthModule,
@@ -46,7 +48,8 @@ export function initAuth(oauthService: OAuthService){
     MatProgressSpinnerModule,
     MatDividerModule,
     MatBadgeModule,
-    FlexLayoutModule
+    FlexLayoutModule,
+    StoreModule.forRoot({}, {})
   ],
   providers: [{ provide: APP_INITIALIZER, useFactory: initAuth, deps: [OAuthService], multi: true }],
   bootstrap: [AppComponent]

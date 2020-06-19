@@ -24,8 +24,6 @@ export class OAuthService {
     this.loginSubject.next(isLogin);
   }
 
-  redirectUrl: string;
-
   private loginSubject = new ReplaySubject<boolean>(1);
   readonly channel = new OAuthServiceChannel(this.loginSubject);
   

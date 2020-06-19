@@ -16,8 +16,6 @@ export class WrapperService {
    * blobCache contains blobs which associated with urls. blob is a kind of immutable things.
    */
   private blobCache = new Map<string, Blob>();
-
-
   
   /**
    * [
