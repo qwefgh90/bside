@@ -3,10 +3,11 @@ import { ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate, Router } from
 import { Observable } from 'rxjs';
 import { OAuthService } from '../service/o-auth.service';
 import { CookieToken, Cookie } from 'src/app/db/cookie';
-import { Store } from '@ngrx/store';
+import { Store, select, createFeatureSelector, createSelector } from '@ngrx/store';
 import { redirectUrlChanged } from '../auth.actions';
 import { environment } from 'src/environments/environment';
 import { TextUtil } from 'src/app/workspace/text/text-util';
+import { authReducerKey, AuthState } from '../auth.reducer';
 
 @Injectable({
   providedIn: 'root'
@@ -14,8 +15,15 @@ import { TextUtil } from 'src/app/workspace/text/text-util';
 export class LoginGuard implements CanActivate {
   constructor(private oauthService: OAuthService, private router: Router, @Inject(CookieToken) private cookie: Cookie, private store: Store<{}>
     ){
-
+      let selector = createFeatureSelector<any, AuthState>(authReducerKey);
+      let isLoginSelector = createSelector(selector, (state: AuthState) => state.isLogin);
+      let isLogin$ = this.store.pipe(select(isLoginSelector));
+      isLogin$.subscribe((isLogin: boolean) => {
+        this.isLogin = isLogin;
+      });
   }
+
+  isLogin = false;
   canActivate(
     next: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): boolean {
@@ -33,7 +41,7 @@ export class LoginGuard implements CanActivate {
   }
 
   checkLogin(url: string): boolean {
-    if (this.oauthService.isLogin) { return true; }
+    if (this.isLogin) { return true; }
 
     // Store the attempted URL for redirecting
     // this.oauthService.redirectUrl = url;

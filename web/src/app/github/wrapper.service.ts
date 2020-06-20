@@ -4,6 +4,8 @@ import Github from 'github-api';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Blob } from './type/blob';
 import { Content } from './type/content';
+import { Store, createFeatureSelector, select, createSelector } from '@ngrx/store';
+import { authReducerKey, AuthState } from '../oauth/auth.reducer';
 /**
  * A returned data should be stored in each component;
  */
@@ -11,12 +13,32 @@ import { Content } from './type/content';
   providedIn: 'root'
 })
 export class WrapperService {
-  constructor(private oauth: OAuthService, private http: HttpClient) {   }
+  constructor(private oauth: OAuthService, private http: HttpClient, private store: Store<{}>) {
+
+    let selector = createFeatureSelector<any, AuthState>(authReducerKey);
+    let accessToken$ = this.store.pipe(select(selector));
+    accessToken$.subscribe((state: AuthState) => {
+      this._token = state.accessToken;
+      this._isLogin = state.isLogin;
+    });
+  }
+
+  _token = '';
+  _isLogin = false;
+
+  private hasToken() {
+    return this._isLogin;
+  }
+
+  private get token(): string {
+    return this._token;
+  }
+
   /**
    * blobCache contains blobs which associated with urls. blob is a kind of immutable things.
    */
   private blobCache = new Map<string, Blob>();
-  
+
   /**
    * [
   {
@@ -122,14 +144,14 @@ export class WrapperService {
   async repositories(login: string): Promise<Array<any>> {
     if (this.hasToken()) {
       const gh = new Github({
-        token: this.token()
+        token: this.token
       });
       let currentUser = await this.user();
       let promise: Promise<any>;
-      if(currentUser.login != login){
+      if (currentUser.login != login) {
         const user = gh.getUser(login);
         promise = user.listRepos().then(r => r.data);
-      }else{
+      } else {
         promise = this.repositoriesOfCurrentUserWithHttp()
       }
       return promise.then(result => result);
@@ -140,7 +162,7 @@ export class WrapperService {
 
   private repositoriesOfCurrentUserWithHttp() {
     const url = `https://api.github.com/user/repos?per_page=100`;
-    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}` } })
     return reposResponse.toPromise();
   }
 
@@ -499,13 +521,13 @@ export class WrapperService {
     }
   }
 
-  repository(login: string, repositoryName: string){
+  repository(login: string, repositoryName: string) {
     const url = `https://api.github.com/repos/${login}/${repositoryName}`;
-    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` }});
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}` } });
     return reposResponse.toPromise().then(v => v == undefined ? Promise.reject() : Promise.resolve(v));
   }
 
-  
+
   /**
    * curl -H "Authorization: token xxxx" https://api.github.com/repos/TaylanTatli/Moon/forks -X POST -i
    * HTTP/1.1 202 Accepted
@@ -842,13 +864,13 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
    */
   fork(owner: string, repositoryName: string) {
     const url = `https://api.github.com/repos/${owner}/${repositoryName}/forks`;
-    let reposResponse = this.http.post<any>(url, null, { headers: { Authorization: `token ${this.token()}` } })
+    let reposResponse = this.http.post<any>(url, null, { headers: { Authorization: `token ${this.token}` } })
     return reposResponse.toPromise();
   }
 
   forkList(owner: string, repositoryName: string) {
     const url = `https://api.github.com/repos/${owner}/${repositoryName}/forks?sort=newest`;
-    let reposResponse = this.http.get<any[]>(url, { headers: { Authorization: `token ${this.token()}` } })
+    let reposResponse = this.http.get<any[]>(url, { headers: { Authorization: `token ${this.token}` } })
     return reposResponse.toPromise();
   }
 
@@ -867,9 +889,9 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
       }
 
    */
-  buildPage(owner: string, repositoryName: string){
+  buildPage(owner: string, repositoryName: string) {
     const url = `https://api.github.com/repos/${owner}/${repositoryName}/pages/builds`;
-    let reposResponse = this.http.post<any>(url, null, { headers: { Authorization: `token ${this.token()}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
+    let reposResponse = this.http.post<any>(url, null, { headers: { Authorization: `token ${this.token}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
     return reposResponse.toPromise();
   }
 
@@ -912,23 +934,23 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
    * @param owner 
    * @param repositoryName 
    */
-  buildStatus(owner: string, repositoryName: string): Promise<any[]>{
+  buildStatus(owner: string, repositoryName: string): Promise<any[]> {
     const url = `https://api.github.com/repos/${owner}/${repositoryName}/pages/builds`;
-    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
     return reposResponse.toPromise();
   }
 
-  createPageBranch(owner: string, repositoryName: string, branch: string){
+  createPageBranch(owner: string, repositoryName: string, branch: string) {
     const url = `https://api.github.com/repos/${owner}/${repositoryName}/pages`;
-    let data = {source: {branch: branch}}
-    let reposResponse = this.http.post<any>(url, data, { headers: { Authorization: `token ${this.token()}`, Accept: 'application/vnd.github.switcheroo-preview+json' } })
+    let data = { source: { branch: branch } }
+    let reposResponse = this.http.post<any>(url, data, { headers: { Authorization: `token ${this.token}`, Accept: 'application/vnd.github.switcheroo-preview+json' } })
     return reposResponse.toPromise();
   }
 
-  updatePageBranch(owner: string, repositoryName: string, branch: string){
+  updatePageBranch(owner: string, repositoryName: string, branch: string) {
     const url = `https://api.github.com/repos/${owner}/${repositoryName}/pages`;
-    let data = {source: branch};
-    let reposResponse = this.http.put<any>(url, data, { headers: { Authorization: `token ${this.token()}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
+    let data = { source: branch };
+    let reposResponse = this.http.put<any>(url, data, { headers: { Authorization: `token ${this.token}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
     return reposResponse.toPromise();
   }
   /**
@@ -946,9 +968,9 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
    * @param owner 
    * @param repositoryName 
    */
-  async getPageBranch(owner: string, repositoryName: string){
+  async getPageBranch(owner: string, repositoryName: string) {
     const url = `https://api.github.com/repos/${owner}/${repositoryName}/pages`;
-    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
     return reposResponse.toPromise();
   }
   /**
@@ -1301,10 +1323,10 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
    * @param oldName 
    * @param newName 
    */
-  rename(owner: string, oldName: string, newName: string){
+  rename(owner: string, oldName: string, newName: string) {
     const url = `https://api.github.com/repos/${owner}/${oldName}`;
-    let data = {name: newName};
-    let reposResponse = this.http.patch<any>(url, data, { headers: { Authorization: `token ${this.token()}` } })
+    let data = { name: newName };
+    let reposResponse = this.http.patch<any>(url, data, { headers: { Authorization: `token ${this.token}` } })
     return reposResponse.toPromise();
   }
 
@@ -1640,7 +1662,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
   tree(login: string, repositoryName: string, sha: string): Promise<any> {
     if (this.hasToken()) {
       const repo = new Github({
-        token: this.token()
+        token: this.token
       });
       let promise: Promise<any> = this.treeRecursive(login, repositoryName, sha);//repo.getRepo(login, repositoryName).getTree(sha);
       return promise.then(result => result);
@@ -1651,7 +1673,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
 
   private treeRecursive(login: string, repositoryName: string, sha: string) {
     const url = `https://api.github.com/repos/${login}/${repositoryName}/git/trees/${sha}?recursive=1`;
-    let treeResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
+    let treeResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}` } })
     return treeResponse.toPromise();
   }
 
@@ -1664,7 +1686,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
   blob(login: string, repositoryName: string, sha: string): Promise<Blob> {
     if (this.hasToken()) {
       const repo = new Github({
-        token: this.token()
+        token: this.token
       });
       let promise: Promise<any> = this.getBlob(login, repositoryName, sha)
       // let promise: Promise<any> = this.treeRecursive(login, repositoryName, sha);//repo.getRepo(login, repositoryName).getTree(sha);
@@ -1683,19 +1705,19 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
     "url": "https://api.github.com/repos/qwefgh90/test/git/blobs/5ab2f8a4323abafb10abb68657d9d39f1a775057"
     }
    */
-  createBlob(login: string, repositoryName: string, contentAsBase64: string){
+  createBlob(login: string, repositoryName: string, contentAsBase64: string) {
     const url = `https://api.github.com/repos/${login}/${repositoryName}/git/blobs`;
-    const data = {"content": contentAsBase64, "encoding": "base64"};
-    let treeResponse = this.http.post<{sha: string, url: string}>(url, data, { headers: { Authorization: `token ${this.token()}` } })
+    const data = { "content": contentAsBase64, "encoding": "base64" };
+    let treeResponse = this.http.post<{ sha: string, url: string }>(url, data, { headers: { Authorization: `token ${this.token}` } })
     return treeResponse.toPromise();
   }
-  
-  getBlob(login: string, repositoryName: string, sha: string){
+
+  getBlob(login: string, repositoryName: string, sha: string) {
     const url = `https://api.github.com/repos/${login}/${repositoryName}/git/blobs/${sha}`;
     if (this.blobCache.has(url))
       return Promise.resolve(this.blobCache.get(url));
     else {
-      let treeResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
+      let treeResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}` } })
       return treeResponse.toPromise().then((b: Blob) => {
         this.blobCache.set(url, b);
         return b;
@@ -1733,10 +1755,10 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
       }
    */
 
-  createTree(login: string, repositoryName: string, arr: Array<{path: string, mode: string, type: string, sha: string}>){
+  createTree(login: string, repositoryName: string, arr: Array<{ path: string, mode: string, type: string, sha: string }>) {
     const url = `https://api.github.com/repos/${login}/${repositoryName}/git/trees`;
-    const data = {"tree": arr.map(b => {return {path: b.path, mode: b.mode, type: b.type, sha: b.sha}})};
-    let treeResponse = this.http.post<{sha: string, url: string, tree: Array<any>}>(url, data, { headers: { Authorization: `token ${this.token()}` } })
+    const data = { "tree": arr.map(b => { return { path: b.path, mode: b.mode, type: b.type, sha: b.sha } }) };
+    let treeResponse = this.http.post<{ sha: string, url: string, tree: Array<any> }>(url, data, { headers: { Authorization: `token ${this.token}` } })
     return treeResponse.toPromise();
   }
 
@@ -1780,10 +1802,10 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
     }
     }
    */
-  createCommit(login: string, repositoryName: string, commitMsg: string, treeSha: string, parentCommitSha: string){
+  createCommit(login: string, repositoryName: string, commitMsg: string, treeSha: string, parentCommitSha: string) {
     const url = `https://api.github.com/repos/${login}/${repositoryName}/git/commits`;
-    const data = {"message": commitMsg, "tree":treeSha, "parents": [parentCommitSha] }
-    let treeResponse = this.http.post<any>(url, data, { headers: { Authorization: `token ${this.token()}` } })
+    const data = { "message": commitMsg, "tree": treeSha, "parents": [parentCommitSha] }
+    let treeResponse = this.http.post<any>(url, data, { headers: { Authorization: `token ${this.token}` } })
     return treeResponse.toPromise();
   }
 
@@ -1804,19 +1826,19 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
     }
     }
    */
-  updateBranch(login: string, repositoryName: string, branch: string, commitSha: string){
+  updateBranch(login: string, repositoryName: string, branch: string, commitSha: string) {
     const url = `https://api.github.com/repos/${login}/${repositoryName}/git/refs/heads/${branch}`;
-    const data = {"sha": commitSha }
+    const data = { "sha": commitSha }
     let treeResponse = this.http.post<{
       ref: string
-      ,node_id: string
-      ,url: string
-      ,object: {
+      , node_id: string
+      , url: string
+      , object: {
         sha: string
-        ,type: string
-        ,url: string
+        , type: string
+        , url: string
       }
-    }>(url, data, { headers: { Authorization: `token ${this.token()}` } })
+    }>(url, data, { headers: { Authorization: `token ${this.token}` } })
     return treeResponse.toPromise();
   }
 
@@ -1880,7 +1902,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
   async getContents(login: string, repositoryName: string, commitSha: string, path: string): Promise<Content> {
     if (this.hasToken()) {
       const github = new Github({
-        token: this.token()
+        token: this.token
       });
       let content = (await github.getRepo(login, repositoryName).getContents(commitSha, path, false));
       if (content.data != undefined) {
@@ -2027,7 +2049,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
   async branches(login: string, repositoryName: string): Promise<any[]> {
     if (this.hasToken()) {
       // const repo = new Github({
-      //   token: this.token()
+      //   token: this.token
       // });
       let repo = await this.repositoryDetails(login, repositoryName);
       return this.get((repo.branches_url as string).replace("{/branch}", "") + '?per_page=100');
@@ -2099,7 +2121,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
       }
     ]
    */
-  async rateLimit(){
+  async rateLimit() {
     if (this.hasToken()) {
       const url = `https://api.github.com/rate_limit`;
       return this.getResponse(url);
@@ -2110,7 +2132,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
 
   async scope(): Promise<string> {
     if (this.hasToken()) {
-      return this.rateLimit().then(v =>{
+      return this.rateLimit().then(v => {
         return v.headers.get('X-OAuth-Scopes');
       });
     } else {
@@ -2118,17 +2140,17 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
     }
   }
 
-  private async get(url: string){
-    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` } })
+  private async get(url: string) {
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}` } })
     return reposResponse.toPromise();
   }
 
-  async getResponse(url: string): Promise<HttpResponse<any>>{
-    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token()}` }, observe: 'response'})
+  async getResponse(url: string): Promise<HttpResponse<any>> {
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}` }, observe: 'response' })
     return reposResponse.toPromise();
   }
 
-  
+
   /**
    * {
   "login": "qwefgh90",
@@ -2167,20 +2189,12 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
   user(login?: string): Promise<any> {
     if (this.hasToken()) {
       const gh = new Github({
-        token: this.token()
+        token: this.token
       });
       const user = gh.getUser(login);
       return (user.getProfile() as Promise<any>).then(result => result.data);
     } else {
       return Promise.reject();
     }
-  }
-
-  private hasToken() {
-    return this.oauth.isLogin;
-  }
-
-  private token(): string {
-    return this.oauth.accessToken;
   }
 }

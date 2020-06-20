@@ -31,7 +31,6 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
         });
       }else{
         this.wrapper.user().then(user => {
-          // this.userId = user.login;
           this.router.navigate(["repos",user.login]);
         });
       }

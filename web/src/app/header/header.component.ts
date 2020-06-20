@@ -3,6 +3,8 @@ import { OAuthService } from '../oauth/service/o-auth.service';
 import { Router, ActivatedRoute, NavigationStart } from '@angular/router';
 import { WrapperService } from '../github/wrapper.service';
 import { Subscription } from 'rxjs';
+import { Store, createFeatureSelector, select, createSelector } from '@ngrx/store';
+import { AuthState, authReducerKey } from '../oauth/auth.reducer';
 
 @Component({
   selector: 'app-header',
@@ -11,22 +13,26 @@ import { Subscription } from 'rxjs';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
 
-  constructor(public oauth: OAuthService, private router: Router, private wrapperService: WrapperService, private activatedRoute: ActivatedRoute) {
+  constructor(public oauth: OAuthService, private router: Router, private wrapperService: WrapperService, private activatedRoute: ActivatedRoute, private store: Store<{}>) {
   }
 
   subscriptions: Array<Subscription> = []
 
+  //UI state
   isPrivate;
   user;
   redirecting = false;
-
+  //state synced
+  isLogin = false;
   ngOnInit() {
-    var s = this.oauth.channel.login.subscribe((isLogin) => {
+    let selector = createFeatureSelector(authReducerKey);
+    let isLogin$ = this.store.pipe(select(createSelector(selector, (state: AuthState) => state.isLogin)));
+    var s = isLogin$.subscribe((isLogin) => {
+      this.isLogin = isLogin;
       if(isLogin){
           this.wrapperService.user().then(user => {
             this.user = user;
           });
-          
           this.wrapperService.scope().then(v => {
             this.isPrivate = (v == 'repo');
           })

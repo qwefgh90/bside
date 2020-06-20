@@ -10,20 +10,26 @@ export interface AuthState {
     autoLogin: boolean;
     currentRouteUrl: string;
     redirectUrl: string;
+    accessToken: string;
+    isLogin: boolean;
 }
 
 export const initialState: AuthState = {
     isPrivate: false,
     autoLogin: false,
     currentRouteUrl: '',
-    redirectUrl: ''
+    redirectUrl: '',
+    accessToken: '',
+    isLogin: false
 };
 
 const _authReducer = createReducer(
     initialState,
     on(loginActions.navigateHere, (state, { autoLogin, isPrivate }) => ({...state, autoLogin, isPrivate })),
     on(loginActions.redirectUrlChanged, (state, { redirectUrl }) => ({...state, redirectUrl })),
-    on(loginActions.scopeChanged, (state, { isPrivate }) => ({...state, isPrivate }))
+    on(loginActions.scopeChanged, (state, { isPrivate }) => ({...state, isPrivate })),
+    on(loginActions.signOut, (state, { }) => ({...state, isLogin: false, accessToken: '' })),
+    on(loginActions.signIn, (state, { accessToken }) => ({...state, accessToken, isLogin: (accessToken != '' && accessToken != undefined) }))
 );
 
 export function authReducer(state: AuthState | undefined, action: Action) {

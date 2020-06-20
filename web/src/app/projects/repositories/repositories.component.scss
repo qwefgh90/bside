@@ -16,11 +16,6 @@
         flex: 0.1 0 auto;
         display: inline-block;
         text-align: left;
-        min-width: 30vw;
-        /* min-width: 30em; */
-        // background-color:  mat-color($primary, lighter);
-        // color: mat-color($primary, lighter-contrast);
-        // border: mat-color($primary, default) solid 1px;
         height: 100%;
     }
 
@@ -30,9 +25,6 @@
         // background-color:  mat-color($primary, 500);
         // color: mat-color($primary, 500-contrast);
     }
-    // .custom-sub-header h3{
-    //     color: mat-color($primary, "500-contrast");
-    // }
     .mat-list-base .mat-subheader:first-child{
         // margin-top: 0;
         background-color:  mat-color($primary, default-contrast);

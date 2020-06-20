@@ -10,6 +10,15 @@ export const scopeChanged = createAction(
   props<{ isPrivate: boolean }>()
 );
 
+export const signIn = createAction(
+  '[Login Component] sign in',
+  props<{ accessToken: string }>()
+);
+
+export const signOut = createAction(
+  '[Login Component] sign out',
+  props<{}>()
+);
 
 export const redirectUrlChanged = createAction(
   '[Login Guard] url changed',

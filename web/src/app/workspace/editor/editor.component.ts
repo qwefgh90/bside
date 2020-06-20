@@ -39,8 +39,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   subscriptions: Subscription[] = [];
   monaco: any;
   option: monacoNameSpace.editor.IEditorConstructionOptions = {
-    value: [""].join("\n"),
-    theme: "vs",
     automaticLayout: true
   };  
 
