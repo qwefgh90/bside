@@ -82,7 +82,7 @@ export class GithubTreeNode {
   //custom field
   children: GithubTreeNode[];
   removedChildren: GithubTreeNode[];
-  readonly state: Array<NodeStateAction> = [];
+  state: Array<NodeStateAction> = [];
   readonly isRoot: boolean;
   private parentNode: GithubTreeNode;
 
@@ -338,7 +338,7 @@ export class GithubTreeNode {
       type: this.type,
       size: this.size,
       url: this.url,
-      extra: {state: this.state}
+      extra: {state: [...this.state]}
     };
     return node;
   }

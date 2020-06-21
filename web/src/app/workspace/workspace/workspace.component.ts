@@ -47,6 +47,9 @@ import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher
 import { MatCheckbox } from '@angular/material/checkbox';
 import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, timestamp, map, filter } from 'rxjs/operators';
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
+import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
+import { WorkspaceState, workspaceReducerKey } from '../workspace.reducer';
+import { selectNode } from '../workspace.actions';
 
 declare const monaco;
 
@@ -89,7 +92,41 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     , private router: Router, private sanitizer: DomSanitizer, @Inject(DatabaseToken) private database: Database
     , private userActionDispatcher: UserActionDispatcher
     , public detector: DeviceDetectorService
-    , public dialog: MatDialog) {
+    , public dialog: MatDialog, private store: Store<{}>) {
+      let feature = createFeatureSelector(workspaceReducerKey);
+      let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
+      let renamedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRenamedPath);
+      let createdNodeSelector = createSelector(feature, (state: WorkspaceState) => state.latestCreatedPath);
+      let selectedNode$ = this.store.pipe(select(nodeSelector));
+      selectedNode$.subscribe(node => {
+        if (node) {
+          let path = node.path;
+          if (this.route.snapshot.queryParams['path'] == path) {
+            this.sameUrlNavigationSubject.next();
+          } else {
+            this.router.navigate([], { queryParamsHandling: 'merge', queryParams: { path: path } });
+          }
+        }
+      });
+
+      let renamedPath$ = this.store.pipe(select(renamedPathSelector));
+      renamedPath$.subscribe((renameInfo) => {
+        if(renameInfo){
+          let {oldPath, newPath} = renameInfo;
+          this.nodeMoved(oldPath, this.tree.get(newPath));
+          this.dispatchSaveAction(this.autoSaveRef.checked);
+        }
+      });
+
+      let createdNode$ = this.store.pipe(select(createdNodeSelector));
+      createdNode$.subscribe((path) => {
+        if (this.selectedNodePath != path) {
+          this.nodeCreated(path);
+          this.dispatchSaveAction(this.autoSaveRef.checked);
+        }
+      });
+
+
     this.isDesktop = this.detector.isDesktop();
   }
 
@@ -165,25 +202,25 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     
     this.subscriptions.push(MicroActionComponentMap.getSubjectByComponent(SupportedComponents.WorkspaceComponent).subscribe(async (micro) => {
       if (micro instanceof WorkspaceRenameMicroAction) {
-        try {
-          this.nodeMoved(micro.oldPath, this.tree.get(micro.newPath));
-          this.dispatchSaveAction(this.autoSaveRef.checked);
-          micro.succeed(() => { });
-        } catch(ex){
-          micro.fail(ex);
-        }
+        // try {
+        //   this.nodeMoved(micro.oldPath, this.tree.get(micro.newPath));
+        //   this.dispatchSaveAction(this.autoSaveRef.checked);
+        //   micro.succeed(() => { });
+        // } catch(ex){
+        //   micro.fail(ex);
+        // }
       } else if (micro instanceof WorkspaceSelectMicroAction) {
-        try {
-          let path = micro.selectedPath;
-          if(this.route.snapshot.queryParams['path'] == path){
-            this.sameUrlNavigationSubject.next();
-          }else{
-            this.router.navigate([], {queryParamsHandling: 'merge', queryParams: {path: path}});
-          }
-          micro.succeed(() => { });
-        } catch(ex){
-          micro.fail(ex);
-        }
+        // try {
+        //   let path = micro.selectedPath;
+        //   if(this.route.snapshot.queryParams['path'] == path){
+        //     this.sameUrlNavigationSubject.next();
+        //   }else{
+        //     this.router.navigate([], {queryParamsHandling: 'merge', queryParams: {path: path}});
+        //   }
+        //   micro.succeed(() => { });
+        // } catch(ex){
+        //   micro.fail(ex);
+        // }
       } else if (micro instanceof WorkspaceRemoveNodeMicroAction) {
         try {
           let path = micro.removedPath;
@@ -194,15 +231,15 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           micro.fail(ex);
         }
       } else if (micro instanceof WorkspaceCreateMicroAction) {
-        try {
-          if (this.selectedNodePath != micro.path) {
-            this.nodeCreated(micro.path);
-            this.dispatchSaveAction(this.autoSaveRef.checked);
-          }
-          micro.succeed(() => { });
-        } catch(ex){
-          micro.fail(ex);
-        }
+        // try {
+        //   if (this.selectedNodePath != micro.path) {
+        //     this.nodeCreated(micro.path);
+        //     this.dispatchSaveAction(this.autoSaveRef.checked);
+        //   }
+        //   micro.succeed(() => { });
+        // } catch(ex){
+        //   micro.fail(ex);
+        // }
       } else if (micro instanceof WorkspaceContentChangeMicroAction) {
         try {
           await this.nodeContentChanged(micro.path);
@@ -263,19 +300,20 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         let firstLoadedPath = pack.selectedNodePath ;
         this.editor.load(pack);
         this.tab.load(pack);
-        new SelectAction(firstLoadedPath, this, this.userActionDispatcher).start();
+        this.store.dispatch(selectNode({path: firstLoadedPath}));
+        // new SelectAction(firstLoadedPath, this, this.userActionDispatcher).start();
       }, 300);
       console.log('workspace have been initialized with saved data.');
     }))
 
     /**
-     * After reloading component and all children are loaded, 
+     * After reloading component and all children are loaded, ㄴ
      * pass the packs to others components.
     */
     this.subscriptions.push(combineLatest(this.subjectWithoutSaveFile, this.afterViewInit, monacoLoaderSubject).subscribe(([path]) => {
       setTimeout(() => {
       if(path)
-        new SelectAction(path, this, this.userActionDispatcher).start();
+        this.store.dispatch(selectNode({path}));
       }, 300);
       console.log('the workspace have been just loaded.');
     }))
@@ -300,7 +338,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       if([paramMapWithTS.timestamp, branchChangeWithTS.timestamp, refreshWithTS.timestamp].every(timestamp => timestamp < pathWithSameUrlNavigationWithTS.timestamp) ||
           ([paramMapWithTS.timestamp, pathWithSameUrlNavigationWithTS.timestamp, refreshWithTS.timestamp].every(timestamp => timestamp < branchChangeWithTS.timestamp)
           && (branch == undefined || (this.selectedBranch && (branch == this.selectedBranch.name))))){
-        console.debug(`The path becomes ${path}`);
         if(path != this.selectedNodePath){
           this.nodeSelected(path);
           this.dispatchSaveAction(this.autoSaveRef.checked);
@@ -627,9 +664,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.editor.removeContent(fromPath);
         this.editor.setContent(to.path, content);
       }
-      if (isSelectedNode) {
-        new SelectAction(to.path, this, this.userActionDispatcher).start();
-      }
+      // if (isSelectedNode) {
+      //   this.store.dispatch(selectNode({path: to.path}));
+      //   // new SelectAction(to.path, this, this.userActionDispatcher).start();
+      // }
     }
   }
 

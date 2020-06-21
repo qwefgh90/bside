@@ -37,10 +37,13 @@ import { InfoComponent } from './info/info.component';
 import { BuildHistoryComponent } from './build-history/build-history.component';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import { workspaceReducerKey, workspaceReducer } from './workspace.reducer';
+import { StoreModule } from '@ngrx/store';
 
 @NgModule({
   declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent, UploadComponent, DiffEditorComponent, CommitProgressComponent, TabComponent, MarkdownEditorComponent, InfoComponent, BuildHistoryComponent],
   imports: [
+    StoreModule.forFeature(workspaceReducerKey, workspaceReducer),
     CommonModule,
     WorkspaceRoutingModule,
     MatSidenavModule,
@@ -64,7 +67,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
     MatDialogModule,
     MatTableModule,
     MatCheckboxModule,
-    MatTooltipModule
+    MatTooltipModule,
   ],
   providers: [{provide: DatabaseToken, useClass: LocalDbService}],
   entryComponents: [

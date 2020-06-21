@@ -1,7 +1,5 @@
 import { Action, createReducer, on } from '@ngrx/store';
 import * as loginActions from './auth.actions';
-import { environment } from 'src/environments/environment';
-import { TextUtil } from '../workspace/text/text-util';
 
 export const authReducerKey = 'auth';
 

@@ -24,6 +24,9 @@ import { GithubTreeSnapshotMicroAction } from '../core/action/micro/github-tree-
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { TabRenameMicroAction } from '../core/action/micro/tab-rename-micro-action';
 import { GithubTreeRenameMicroAction } from '../core/action/micro/github-tree-rename-micro-action';
+import { createFeatureSelector, createSelector, select, Store } from '@ngrx/store';
+import { workspaceReducerKey, WorkspaceState } from '../workspace.reducer';
+import { nodeSelected, nodeRemoved, nodeRenamed, nodeCreated } from '../workspace.actions';
 @Component({
   selector: 'app-tree',
   templateUrl: './github-tree.component.html',
@@ -44,13 +47,24 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   root: GithubTreeNode;
   renamingFormControl: FormControl = new FormControl();
   renamingNode: TreeNode;
-  selectedNode: TreeNode;
   dataSource: GithubTreeNode[];
   searchInputFormControl = new FormControl('');
 
   subscriptions: Array<Subscription> = [];
+  //UI state
+  selectedNode: TreeNode;
 
-  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private localUpload: LocalUploadService, private dispatcher: UserActionDispatcher) {
+  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private localUpload: LocalUploadService, private dispatcher: UserActionDispatcher, private store: Store<{}>) {
+    let feature = createFeatureSelector(workspaceReducerKey);
+    let pathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
+    let selectedPath$ = this.store.pipe(select(pathSelector));
+    selectedPath$.subscribe(path => {
+        if(this.get(path)){
+          if (this.selectedNode == undefined || path != this.selectedNode.data.path) {
+            this.selectNode(path);
+          }
+        }
+    });
     iconRegistry.addSvgIcon(
       'outline-note',
       sanitizer.bypassSecurityTrustResourceUrl('assets/outline-note-24px.svg'));
@@ -68,8 +82,11 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
           const oldName = githubNode.name;
           const oldPath = githubNode.path;
           (rest.from.data as GithubTreeNode).move(newParent.parent == null ? this.root : newParent.data,
-              (node, parent, pre, newPath) => {              
-                new FileRenameAction(pre, GithubTreeNode.getNameFromPath(pre), node.path, node.name, this, this.dispatcher).start();
+              (node, parent, pre, newPath) => {         
+                this.store.dispatch(nodeRenamed({oldPath: pre, oldName: GithubTreeNode.getNameFromPath(pre), newPath: node.path, newName: node.name}));
+                if(node.path == this.selectedNode.data.path){
+                  this.store.dispatch(nodeSelected({node: this.selectedNode.data.toGithubNode()}));
+                }
               });
           TREE_ACTIONS.MOVE_NODE(m, n, event, rest);
         }else{
@@ -224,19 +241,19 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     this.subscriptions.push(
       MicroActionComponentMap.getSubjectByComponent(SupportedComponents.GithubTreeComponent).subscribe((micro) => {
         if (micro instanceof GithubTreeSelectMicroAction) {
-          try {
-            if(this.get(micro.selectedPath)){
-              let path = micro.selectedPath;
-              if (this.selectedNode == undefined || path != this.selectedNode.data.path) {
-                this.selectNode(micro.selectedPath);
-              }
-              micro.succeed(() => { });
-            }else{
-              micro.fail(new Error(`${micro.selectedPath} is not found.`));
-            }
-          } catch{
-            micro.fail();
-          }
+          // try {
+          //   if(this.get(micro.selectedPath)){
+          //     let path = micro.selectedPath;
+          //     if (this.selectedNode == undefined || path != this.selectedNode.data.path) {
+          //       this.selectNode(micro.selectedPath);
+          //     }
+          //     micro.succeed(() => { });
+          //   }else{
+          //     micro.fail(new Error(`${micro.selectedPath} is not found.`));
+          //   }
+          // } catch{
+          //   micro.fail();
+          // }
         }else if(micro instanceof GithubTreeSnapshotMicroAction){
           const treeArr = this.root.reduce((acc, node, tree) => {
             if (node.path != "")
@@ -289,7 +306,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
       this.selectedNode = node;
       if(node.data.type == 'blob'){
         if(!this.dispatcher.isRunning){
-          new SelectAction(node.data.path, this, this.dispatcher).start();
+          this.store.dispatch(nodeSelected({node: node.data.toGithubNode()}));
+          // new SelectAction(node.data.path, this, this.dispatcher).start();
         }
       }
     }
@@ -324,10 +342,12 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     githubNode.rename(newName, (node, parent, pre, newPath) => {
       let stateArr = (githubNode as GithubTreeNode).state;
       if (stateArr.length == 2 && stateArr[0] == NodeStateAction.Created)
-        new CreateAction(node.path, this, this.dispatcher).start();
+        this.store.dispatch(nodeCreated({path: node.path}));
       else{
-        let action = new FileRenameAction(pre, GithubTreeNode.getNameFromPath(pre), node.path, node.name, this, this.dispatcher)
-        action.start();
+        this.store.dispatch(nodeRenamed({oldPath: pre, oldName: GithubTreeNode.getNameFromPath(pre), newPath: node.path, newName: node.name}));
+        if(node.path == this.selectedNode.data.path){
+          this.store.dispatch(nodeSelected({node: this.selectedNode.data.toGithubNode()}));
+        }
       }
     });
   }
@@ -375,7 +395,6 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   }
 
   rename(node: TreeNode) {
-    this.selectedNode = undefined;
     this.renamingNode = node;
     this.renamingFormControl.setValue(node.data.name);
     setTimeout(() => {
@@ -389,7 +408,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   remove(node: TreeNode){
     node.data.remove((node: GithubTreeNode) => {
       console.debug(`${node.path} is removed`);
-      new RemoveNodeAction(node.path, this, this.dispatcher).start();
+      this.store.dispatch(nodeRemoved({node: node.toGithubNode()}));
     });
     this.refreshTree();
   }
