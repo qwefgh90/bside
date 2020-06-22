@@ -144,6 +144,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   isDesktop = false;
+  //these variables synchronized with router
+  //these variables sent to child components
   userId;
   repositoryName;
   repositoryDetails;
@@ -152,21 +154,23 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   selectedCommit;
   root: GithubTreeNode;
   nodesToStage: GithubTreeNode[];
+
+  //const
+  defaultEncoding = 'utf-8';
+  placeholderForCommit: string = `it's from ${window.location}`;
+  //local state
   saveActionSubject: Subject<any> = new Subject();
-
   selectedNodePath: string;
-  encoding = 'utf-8'
-  encodingMap: Map<string, string> = new Map<string, string>();
-  selectedFileType: FileType;
-  selectedImagePath: SafeResourceUrl;
-  selectedRawPath: SafeResourceUrl;
-  placeholderForCommit: string = `it's from ${window.location}`
-
-  dirtyCount: number = 0;
   contentStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
   treeStatus: TreeStatusOnWorkspace = TreeStatusOnWorkspace.NotInitialized;
   workspaceStatus: WorkspaceStatus = WorkspaceStatus.View;
+  selectedFileType: FileType;
+  encodingMap: Map<string, string> = new Map<string, string>();
+  selectedImagePath: SafeResourceUrl;
+  selectedRawPath: SafeResourceUrl;
   errorDescription: string;
+
+  dirtyCount: number = 0;
   commitStatePack: WorkspacePack;
   afterCommit: boolean;
   afterViewInit: Subject<void> = new ReplaySubject(1);;
@@ -202,44 +206,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     
     this.subscriptions.push(MicroActionComponentMap.getSubjectByComponent(SupportedComponents.WorkspaceComponent).subscribe(async (micro) => {
       if (micro instanceof WorkspaceRenameMicroAction) {
-        // try {
-        //   this.nodeMoved(micro.oldPath, this.tree.get(micro.newPath));
-        //   this.dispatchSaveAction(this.autoSaveRef.checked);
-        //   micro.succeed(() => { });
-        // } catch(ex){
-        //   micro.fail(ex);
-        // }
       } else if (micro instanceof WorkspaceSelectMicroAction) {
-        // try {
-        //   let path = micro.selectedPath;
-        //   if(this.route.snapshot.queryParams['path'] == path){
-        //     this.sameUrlNavigationSubject.next();
-        //   }else{
-        //     this.router.navigate([], {queryParamsHandling: 'merge', queryParams: {path: path}});
-        //   }
-        //   micro.succeed(() => { });
-        // } catch(ex){
-        //   micro.fail(ex);
-        // }
       } else if (micro instanceof WorkspaceRemoveNodeMicroAction) {
-        try {
-          let path = micro.removedPath;
-          this.nodeRemoved(path);
-          this.dispatchSaveAction(this.autoSaveRef.checked);
-          micro.succeed(() => { });
-        } catch(ex){
-          micro.fail(ex);
-        }
       } else if (micro instanceof WorkspaceCreateMicroAction) {
-        // try {
-        //   if (this.selectedNodePath != micro.path) {
-        //     this.nodeCreated(micro.path);
-        //     this.dispatchSaveAction(this.autoSaveRef.checked);
-        //   }
-        //   micro.succeed(() => { });
-        // } catch(ex){
-        //   micro.fail(ex);
-        // }
       } else if (micro instanceof WorkspaceContentChangeMicroAction) {
         try {
           await this.nodeContentChanged(micro.path);
@@ -339,7 +308,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           ([paramMapWithTS.timestamp, pathWithSameUrlNavigationWithTS.timestamp, refreshWithTS.timestamp].every(timestamp => timestamp < branchChangeWithTS.timestamp)
           && (branch == undefined || (this.selectedBranch && (branch == this.selectedBranch.name))))){
         if(path != this.selectedNodePath){
-          this.nodeSelected(path);
+          this.fillEditor(path);
           this.dispatchSaveAction(this.autoSaveRef.checked);
           this.editor.shrinkExpand();
         }
@@ -595,8 +564,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return branch != undefined ? true : false;
   }
 
-  nodeSelected(path: string | GithubTreeNode) {
-    if (path == undefined) {
+  fillEditor(path: string | GithubTreeNode | undefined) {
+    if (!path) {
       this.selectedNodePath = undefined;
       this.contentStatus = ContentStatusOnWorkspace.NotInitialized
     } else {
@@ -605,38 +574,38 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.selectedRawPath = undefined;
         this.selectedNodePath = node.path;
         this.contentStatus = ContentStatusOnWorkspace.Loading;
-        let type = TextUtil.getFileType(node.name);
-        this.selectedFileType = type;
+        let fileType = TextUtil.getFileType(node.name);
+        this.selectedFileType = fileType;
         if (node.state.filter((v) => v == NodeStateAction.Created).length == 1) {
           if (this.editor.exist(node.path)) {
             let base64OrText = this.editor.getContent(node.path);
-            if (type == FileType.Image) {
+            if (fileType == FileType.Image) {
               let mime = TextUtil.getMime(node.name);
               this.selectedImagePath = this.getImage(base64OrText, mime);
-            } else if (type == FileType.Text) {
-              let encoding = this.encoding;
+            } else if (fileType == FileType.Text) {
+              let encoding = this.defaultEncoding;
               this.encodingMap.set(node.sha, encoding);
               this.setContentAndFocusInEditor(node.path, base64OrText);
             }
           } else {
-            console.error(`The blob of ${node.path} must be in monaco editor`);
+            console.error(`The blob of ${node.path} must exist in monaco editor`);
           }
           this.contentStatus = ContentStatusOnWorkspace.Done;
         } else {
           this.wrapper.getBlob(this.userId, this.repositoryName, node.sha).then(
             (blob: Blob) => {
-              if (type == FileType.Image)
+              if (fileType == FileType.Image)
                 this.selectedImagePath = this.getImage(blob.content, TextUtil.getMime(node.syncedNode.path))
-              else if (type == FileType.Text) {
+              else if (fileType == FileType.Text) {
                 let bytes = TextUtil.base64ToBytes(blob.content);
-                let encoding = this.encoding;
+                let encoding = this.defaultEncoding;
                 this.encodingMap.set(node.sha, encoding);
                 this.setContentAndFocusInEditor(node.path, TextUtil.decode(bytes, encoding));
               }
               this.selectedRawPath = this.getRawUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, node.syncedNode.path);
             }, (reason) => {
-              console.debug("An error during getting the blob. Maybe selectedNode is invalid.");
-              console.debug(node);
+              console.error(`An error during getting the blob`);
+              console.error(node);
             }
           ).finally(() => {
             this.contentStatus = ContentStatusOnWorkspace.Done;
@@ -657,17 +626,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   nodeMoved(fromPath: string, to: GithubTreeNode) {
-    let isSelectedNode = (this.selectedNodePath != undefined) && (this.selectedNodePath == fromPath);
     if (to.type == 'blob') {
       if (this.editor.exist(fromPath)) {
         let content = this.editor.getContent(fromPath);
         this.editor.removeContent(fromPath);
         this.editor.setContent(to.path, content);
       }
-      // if (isSelectedNode) {
-      //   this.store.dispatch(selectNode({path: to.path}));
-      //   // new SelectAction(to.path, this, this.userActionDispatcher).start();
-      // }
     }
   }
 
@@ -675,7 +639,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let type = TextUtil.getFileType(event.node.name);
     if (type == FileType.Text) {
       let bytes = TextUtil.base64ToBytes(event.base64.toString());
-      let encoding = this.encoding;
+      let encoding = this.defaultEncoding;
       this.editor.setContent(event.node.path, TextUtil.decode(bytes, encoding));
     } else {
       this.editor.setContent(event.node.path, event.base64);
@@ -701,7 +665,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     if (sha != undefined) {
       return this.wrapper.getBlob(this.userId, this.repositoryName, sha).then((blob: Blob) => {
         let bytes = TextUtil.base64ToBytes(blob.content);
-        let encoding = this.encoding;
+        let encoding = this.defaultEncoding;
         const originalText: string = TextUtil.decode(bytes, encoding);
         return originalText;
       }, (reason) => {

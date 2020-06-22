@@ -57,12 +57,20 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private localUpload: LocalUploadService, private dispatcher: UserActionDispatcher, private store: Store<{}>) {
     let feature = createFeatureSelector(workspaceReducerKey);
     let pathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
+    let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
     let selectedPath$ = this.store.pipe(select(pathSelector));
     selectedPath$.subscribe(path => {
         if(this.get(path)){
-          if (this.selectedNode == undefined || path != this.selectedNode.data.path) {
+          if (!this.selectedNode || path != this.selectedNode.data.path) {
             this.selectNode(path);
           }
+        }
+    });
+    let selectedNode$ = this.store.pipe(select(nodeSelector));
+    selectedNode$.subscribe(githubNode => {
+      let treeNode = this.getTreeNode(githubNode?.path);
+        if(treeNode){
+          this.selectedNode = treeNode;
         }
     });
     iconRegistry.addSvgIcon(
@@ -241,19 +249,6 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     this.subscriptions.push(
       MicroActionComponentMap.getSubjectByComponent(SupportedComponents.GithubTreeComponent).subscribe((micro) => {
         if (micro instanceof GithubTreeSelectMicroAction) {
-          // try {
-          //   if(this.get(micro.selectedPath)){
-          //     let path = micro.selectedPath;
-          //     if (this.selectedNode == undefined || path != this.selectedNode.data.path) {
-          //       this.selectNode(micro.selectedPath);
-          //     }
-          //     micro.succeed(() => { });
-          //   }else{
-          //     micro.fail(new Error(`${micro.selectedPath} is not found.`));
-          //   }
-          // } catch{
-          //   micro.fail();
-          // }
         }else if(micro instanceof GithubTreeSnapshotMicroAction){
           const treeArr = this.root.reduce((acc, node, tree) => {
             if (node.path != "")
@@ -303,12 +298,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
 
   onSelectNode(node: TreeNode) {
     if(this.renamingNode != node){
-      this.selectedNode = node;
       if(node.data.type == 'blob'){
-        if(!this.dispatcher.isRunning){
-          this.store.dispatch(nodeSelected({node: node.data.toGithubNode()}));
-          // new SelectAction(node.data.path, this, this.dispatcher).start();
-        }
+        this.store.dispatch(nodeSelected({node: node.data.toGithubNode()}));
       }
     }
   }
@@ -440,6 +431,16 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     try {
       const treeNode: TreeNode = this.treeComponent.treeModel.getNodeBy((p) => p.data.path == path);
       return treeNode == null ? undefined : treeNode.data
+    } catch (e) {
+      console.warn(e);
+      return undefined;
+    }
+  }
+
+  private getTreeNode(path: string): TreeNode | undefined {
+    try {
+      const treeNode: TreeNode = this.treeComponent.treeModel.getNodeBy((p) => p.data.path == path);
+      return treeNode == null ? undefined : treeNode
     } catch (e) {
       console.warn(e);
       return undefined;

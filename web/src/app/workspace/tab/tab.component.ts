@@ -15,6 +15,7 @@ import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
 import { clickTab } from '../workspace.actions';
 import { workspaceReducerKey, WorkspaceState } from '../workspace.reducer';
+import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-tab',
@@ -23,15 +24,18 @@ import { workspaceReducerKey, WorkspaceState } from '../workspace.reducer';
 })
 export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, OnDestroy {
 
-  constructor(private userActionDispatcher: UserActionDispatcher, private store: Store<{}>) {
+  selectedIndex = new FormControl(0);
+
+  constructor(private store: Store<{}>) {
     let feature = createFeatureSelector(workspaceReducerKey);
     let pathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
     let removedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRemovedPath);
     let renamedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRenamedPath);
     let selectedPath$ = this.store.pipe(select(pathSelector));
-    selectedPath$.subscribe(path => {
-      this.selectedPath = path;
-      this.select(path);
+    selectedPath$.subscribe(pathToSelect => {
+      let selectedPath = this._tabs[this.selectedIndex.value];
+      if(selectedPath != pathToSelect)
+        this.selectTabOrInsertSelect(pathToSelect);
     });
     let removedPath$ = this.store.pipe(select(removedPathSelector));
     removedPath$.subscribe(path => {
@@ -42,14 +46,18 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
       if(renameInfo)
         this.renameTab(renameInfo.oldPath, renameInfo.newPath);
     });
+    this.selectedIndex.valueChanges.subscribe((value) => {
+      let tab = this._tabs[value];
+      this.dispatchSelectMessage(tab);
+    });
   }
 
-  actionAfterTabInitialized: () => void;
+  // actionAfterTabInitialized: () => void;
   _tabs: string[] = [];
   _tabsSet: Set<string> = new Set<string>();
 
   subscriptions: Subscription[] = [];
-  selectedTabindex: number;
+  // selectedTabindex: number;
   selectedPath: string;
 
   @ViewChild(MatTabGroup, { static: true }) group: MatTabGroup;
@@ -58,33 +66,8 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
     let actionSubject = MicroActionComponentMap.getSubjectByComponent(SupportedComponents.TabComponent);
     let s = actionSubject.subscribe((micro: MicroAction<any>) => {
       if (micro instanceof TabRenameMicroAction) {
-        // try {
-        //   this.renameTab(micro.oldPath, micro.newPath);
-        //   micro.succeed(() => { this.renameTab(micro.newPath, micro.oldPath) });
-        // } catch{
-        //   micro.fail();
-        // }
       } else if (micro instanceof TabSelectAction) {
-        // try {
-        //   if ((this.selectedPath != micro.selectedPath)) {
-        //     let path = micro.selectedPath;
-        //     this.select(path);
-        //   }
-        //   micro.succeed(() => { 
-        //     let addedPath = micro.selectedPath;
-        //     this.removeTab(addedPath);
-        //   });
-        // } catch {
-        //   micro.fail();
-        // }
       } else if (micro instanceof TabCloseMicroAction) {
-        // try {
-        //   let path = micro.removedPath;
-        //   this.removeTab(path);
-        //   micro.succeed(() => { this.select(path) });
-        // } catch{
-        //   micro.fail();
-        // }
       } else if (micro instanceof TabSnapshotMicroAction) {
         const tabs = Array.from(this.tabs);
         micro.succeed(() => { }, tabs);
@@ -116,35 +99,18 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
 
   indexFromChangeTab;
 
-  changeTab(path: string) {
-    if (typeof path == 'string') {
-      if (this.exists(path)) {
-        let selectedTabIndex = this.findTabIndex(path);
-        if (selectedTabIndex != -1) {
-          this.selectedTabindex = selectedTabIndex;
-        }
-      }
+  changeTabIndexWithPath(path: string) {
+    let selectedTabIndex = this.findTabIndex(path);
+    if (selectedTabIndex != -1) {
+      this.selectedIndex.setValue(selectedTabIndex);
     }
   }
 
-  private select(path: string) {
-    if (path != undefined) {
-      if (!this.exists(path)) {
+  private selectTabOrInsertSelect(path: string) {
+    if (path) {
+      if (!this.exists(path)) 
         this.addTab(path);
-      }
-      this.changeTab(path);
-    }
-  }
-
-  tabSelected(tab: MatTab) {
-    if (this.actionAfterTabInitialized != undefined) {
-      this.actionAfterTabInitialized();
-      this.actionAfterTabInitialized = undefined;
-    }
-    if (tab != undefined){
-      this.changeTab(tab.textLabel);
-        this.executeSelectAction(tab.textLabel);
-      
+      this.changeTabIndexWithPath(path);
     }
   }
 
@@ -170,16 +136,15 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
       }
       if ((this._tabs.length) > 0) {
         if (beforeSelectedIndex < this._tabs.length)
-          this.executeSelectAction(this._tabs[beforeSelectedIndex]);
+          this.changeTabIndexWithPath(this._tabs[beforeSelectedIndex]);
         else if (beforeSelectedIndex == this._tabs.length)
-          this.executeSelectAction(this._tabs[beforeSelectedIndex - 1]);
+          this.changeTabIndexWithPath(this._tabs[beforeSelectedIndex-1]);
       } else {
-        this.executeSelectAction(undefined);
       }
     }
   }
 
-  private executeSelectAction(path: string) {
+  private dispatchSelectMessage(path: string) {
     this.store.dispatch(clickTab({path}));
     // new SelectAction(path, this, this.userActionDispatcher).start()
   }
@@ -223,6 +188,6 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
     this._tabs.splice(0, this._tabs.length);
     this._tabsSet.clear();
     this.selectedPath = undefined;
-    this.selectedTabindex = undefined;
+    this.selectedIndex.setValue(0);
   }
 }

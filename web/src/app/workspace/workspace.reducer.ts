@@ -43,7 +43,10 @@ const _workspaceReducer = createReducer(initialState,
     }),
     on(workspaceActions.nodeRenamed, (state, {oldPath, oldName, newPath, newName}) => {
         console.debug(`nodeRenamed ${oldPath}, ${oldName}, ${newPath}, ${newName}`);
-        return ({...state, latestRenamedPath: {
+        if(oldPath == newPath)
+            return state;
+        else
+            return ({...state, latestRenamedPath: {
             oldName, oldPath, newName, newPath
         }});
     }),
