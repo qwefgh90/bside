@@ -21,6 +21,7 @@ import { WorkspaceModule } from './workspace/workspace.module';
 import { TemplatesModule } from './templates/templates.module';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { StoreModule } from '@ngrx/store';
+import { StoreRouterConnectingModule, routerReducer } from '@ngrx/router-store';
 
 export function initAuth(oauthService: OAuthService){
   return () => oauthService.initAccessTokenOnSession();
@@ -32,11 +33,14 @@ export function initAuth(oauthService: OAuthService){
     WelcomeComponent,
   ],
   imports: [
-    StoreModule.forRoot({}),
+    StoreModule.forRoot({
+      router: routerReducer
+    }),
     ProjectsModule,
     TemplatesModule,
     AuthModule,
     AppRoutingModule,
+    StoreRouterConnectingModule.forRoot(),
     BrowserModule,
     BrowserAnimationsModule,
     MatToolbarModule,
@@ -49,7 +53,6 @@ export function initAuth(oauthService: OAuthService){
     MatDividerModule,
     MatBadgeModule,
     FlexLayoutModule,
-    StoreModule.forRoot({}, {})
   ],
   providers: [{ provide: APP_INITIALIZER, useFactory: initAuth, deps: [OAuthService], multi: true }],
   bootstrap: [AppComponent]
