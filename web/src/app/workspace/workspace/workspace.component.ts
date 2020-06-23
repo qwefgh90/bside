@@ -50,7 +50,7 @@ import { Timestamp } from 'rxjs/internal/operators/timestamp';
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
 import { WorkspaceState, workspaceReducerKey } from '../workspace.reducer';
 import { selectNode } from '../workspace.actions';
-import { selectQueryParam, selectQueryParams } from 'src/app/app-routing.reducer';
+import { selectQueryParam, selectQueryParams, selectRouteParam } from 'src/app/app-routing.reducer';
 
 declare const monaco;
 
@@ -125,13 +125,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.nodeCreated(path);
         this.dispatchSaveAction(this.autoSaveRef.checked);
       }
-    });
-
-    let pathSelector = selectQueryParam('path');
-    let branchSelector = selectQueryParam('branch');
-    let path$ = this.store.select(createSelector(pathSelector, branchSelector, (path, branch) => path + branch));
-    path$.subscribe(p => {
-      console.log(`path: ${p}`);
     });
 
     this.isDesktop = this.detector.isDesktop();
@@ -277,7 +270,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.editor.load(pack);
         this.tab.load(pack);
         this.store.dispatch(selectNode({ path: firstLoadedPath }));
-        // new SelectAction(firstLoadedPath, this, this.userActionDispatcher).start();
       }, 300);
       console.log('workspace have been initialized with saved data.');
     }))
@@ -292,58 +284,92 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           this.store.dispatch(selectNode({ path }));
       }, 300);
       console.log('the workspace have been just loaded.');
-    }))
+    }));
+
+    let pathSelector = selectQueryParam('path');
+    let branchNameSelector = selectQueryParam('branch');
+    let repoNameSelector = selectRouteParam('repositoryName');
+    let userIdSelector = selectRouteParam('userId');
+
+    let tuple = createSelector(branchNameSelector, repoNameSelector, userIdSelector, (v1, v2, v3) => ({branchName: v1 ? v1 : (this.selectedBranch ? this.selectedBranch.name : undefined)
+      , repositoryName: v2, userId: v3}));
+      
+    let fullTuple = createSelector(branchNameSelector, repoNameSelector, userIdSelector, pathSelector, (v1, v2, v3, v4) => ({branchName: v1 ? v1 : (this.selectedBranch ? this.selectedBranch.name : undefined)
+      , repositoryName: v2, userId: v3, path: v4}));
+      
+    this.store.select(tuple).subscribe(({userId, repositoryName, branchName}) => {
+      let promise = this.initialize(userId, repositoryName, branchName);
+      console.debug(`repo: ${userId}, ${repositoryName}, ${branchName}`);
+    });
+
+    this.store.select(pathSelector).subscribe((path) =>{
+      console.debug(`path: ${path}`);
+      this.fillEditor(path);
+      this.dispatchSaveAction(this.autoSaveRef.checked);
+    });
+
+    this.sameUrlNavigationSubject.subscribe(() => {
+      let path = this.route.snapshot.queryParamMap.get('path');
+      console.debug(`same path: ${path}`);
+      this.fillEditor(path);
+      this.dispatchSaveAction(this.autoSaveRef.checked);
+    });
+
+    this.refreshSubject.subscribe(() => {
+      let promise = this.initialize(this.userId, this.repositoryName, this.selectedBranch.name);
+      console.debug(`refreshSubject: ${this.userId}, ${this.repositoryName}, ${this.selectedBranch.name}`);
+    });
 
     /**
      * When parameters of url have some changes, initialize the workspace again. 
      */
-    let pathWithSameUrlNavigation = this.sameUrlNavigationSubject.pipe(timestamp());
-    let branchChange = this.route.queryParams.pipe(timestamp());
-    this.subscriptions.push(combineLatest(this.route.paramMap.pipe(timestamp())
-      , branchChange
-      , this.refreshSubject.pipe(timestamp())
-      , pathWithSameUrlNavigation
-    )
-      .subscribe(([paramMapWithTS, branchChangeWithTS, refreshWithTS, pathWithSameUrlNavigationWithTS
-      ]) => {
-        let promise: Promise<void>;
-        let p = paramMapWithTS.value;
-        let q = branchChangeWithTS.value;
-        let branch = q['branch'];
-        let path = q['path'];
-        if ([paramMapWithTS.timestamp, branchChangeWithTS.timestamp, refreshWithTS.timestamp].every(timestamp => timestamp < pathWithSameUrlNavigationWithTS.timestamp) ||
-          ([paramMapWithTS.timestamp, pathWithSameUrlNavigationWithTS.timestamp, refreshWithTS.timestamp].every(timestamp => timestamp < branchChangeWithTS.timestamp)
-            && (branch == undefined || (this.selectedBranch && (branch == this.selectedBranch.name))))) {
-          if (path != this.selectedNodePath) {
-            this.fillEditor(path);
-            this.dispatchSaveAction(this.autoSaveRef.checked);
-            this.editor.shrinkExpand();
-          }
-        } else {
-          if (p.has('userId') && p.has('repositoryName')) {
-            const userId = p.get('userId');
-            const repositoryName = p.get('repositoryName');
-            const branchName = branch ? branch : (this.selectedBranch ? this.selectedBranch.name : undefined);
-            promise = this.initialize(userId, repositoryName, branchName, path);
-          } else {
-            promise = new Promise((r, reject) => {
-              reject('It does not have user id or repository name');
-            });
-          }
-          promise.catch((err) => {
-            console.error(err);
-            this.errorDescription = err;
-            this.treeStatus = TreeStatusOnWorkspace.Fail;
-          });
-        }
-      }));
+    // let pathWithSameUrlNavigation = this.sameUrlNavigationSubject.pipe(timestamp());
+    // let branchChange = this.route.queryParams.pipe(timestamp());
+    // this.subscriptions.push(combineLatest(this.route.paramMap.pipe(timestamp())
+    //   , branchChange
+    //   , this.refreshSubject.pipe(timestamp())
+    //   , pathWithSameUrlNavigation
+    // )
+    //   .subscribe(([paramMapWithTS, branchChangeWithTS, refreshWithTS, pathWithSameUrlNavigationWithTS
+    //   ]) => {
+    //     let promise: Promise<void>;
+    //     let p = paramMapWithTS.value;
+    //     let q = branchChangeWithTS.value;
+    //     let branch = q['branch'];
+    //     let path = q['path'];
+    //     if ([paramMapWithTS.timestamp, branchChangeWithTS.timestamp, refreshWithTS.timestamp].every(timestamp => timestamp < pathWithSameUrlNavigationWithTS.timestamp) ||
+    //       ([paramMapWithTS.timestamp, pathWithSameUrlNavigationWithTS.timestamp, refreshWithTS.timestamp].every(timestamp => timestamp < branchChangeWithTS.timestamp)
+    //         && (branch == undefined || (this.selectedBranch && (branch == this.selectedBranch.name))))) {
+    //       if (path != this.selectedNodePath) {
+    //         //this.fillEditor(path);
+    //         //this.dispatchSaveAction(this.autoSaveRef.checked);
+    //         //this.editor.shrinkExpand();
+    //       }
+    //     } else {
+    //       if (p.has('userId') && p.has('repositoryName')) {
+    //         // const userId = p.get('userId');
+    //         // const repositoryName = p.get('repositoryName');
+    //         // const branchName = branch ? branch : (this.selectedBranch ? this.selectedBranch.name : undefined);
+    //         // promise = this.initialize(userId, repositoryName, branchName, path);
+    //       } else {
+    //         promise = new Promise((r, reject) => {
+    //           reject('It does not have user id or repository name');
+    //         });
+    //       }
+    //       // promise.catch((err) => {
+    //       //   console.error(err);
+    //       //   this.errorDescription = err;
+    //       //   this.treeStatus = TreeStatusOnWorkspace.Fail;
+    //       // });
+    //     }
+    //   }));
 
     // Below lines are for making combineLatest work as soon as booting up.
-    this.refreshSubject.next();
-    this.sameUrlNavigationSubject.next();
+    //this.refreshSubject.next();
+    //this.sameUrlNavigationSubject.next();
   }
 
-  initialize(userId, repositoryName, branchName, initialPath): Promise<void> {
+  initialize(userId, repositoryName, branchName): Promise<void> {
     this.treeStatus = TreeStatusOnWorkspace.Loading;
     this.contentStatus = ContentStatusOnWorkspace.NotInitialized;
     if (!this.afterCommit) {
@@ -351,7 +377,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       this.resetEditor();
     }
     this.resetWorkspace();
-    let promise = this.initialzeWorkspace(userId, repositoryName, branchName, initialPath).then(() => {
+    let promise = this.initialzeWorkspace(userId, repositoryName, branchName).then(() => {
       if (this.root == undefined)
         this.treeStatus = TreeStatusOnWorkspace.TreeEmpty;
       else
@@ -360,7 +386,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return promise;
   }
 
-  async initialzeWorkspace(userId, repositoryName, branchName: string, initialPath: string): Promise<void> {
+  async initialzeWorkspace(userId, repositoryName, branchName: string): Promise<void> {
     try {
       this.userId = userId;
       this.repositoryName = repositoryName;
@@ -398,12 +424,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         let doAfterLoadingTree: () => void;
         if (loadedPack) { // load the saved file
           tree = Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha });
-          if (initialPath)
-            loadedPack.selectedNodePath = initialPath;
+          // if (initialPath)
+            // loadedPack.selectedNodePath = initialPath;
           doAfterLoadingTree = () => this.subjectWithSaveFile.next(loadedPack);
         } else {  // just load the tree
           tree = this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha);
-          doAfterLoadingTree = () => this.subjectWithoutSaveFile.next(initialPath);
+          // doAfterLoadingTree = () => this.subjectWithoutSaveFile.next(initialPath);
+          doAfterLoadingTree = () => {};
         }
         return this.initTree(tree).then(() => doAfterLoadingTree(), () => console.error("A tree can't be loaded."));
       }
@@ -766,6 +793,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       } finally {
         this.afterCommit = true;
         this.clearCommits();
+        this.treeStatus = TreeStatusOnWorkspace.Done;
         this.refreshSubject.next();
       }
     }
