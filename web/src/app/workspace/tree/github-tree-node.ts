@@ -112,6 +112,27 @@ export class GithubTreeNode {
     this.isRoot = isRoot;
   }
 
+  find(path: string): GithubTreeNode{
+    if(this.isRoot){
+      let partial = path.split('/');
+      return this._find(partial);
+    }
+  }
+
+  private _find(partialPath: Array<string>): GithubTreeNode | undefined{
+    if(partialPath.length == 0)
+      return undefined;
+    else if(partialPath.length == 1){
+      let firstPathComponent = partialPath[0];
+      return this.children.find((child) => child.name == firstPathComponent);
+    }else{
+      let firstPathComponent = partialPath[0];
+      let foundChild = this.children.find((child) => child.name == firstPathComponent);
+      partialPath.splice(0, 1);
+      return foundChild ? foundChild._find(partialPath) : undefined;
+    }
+  }
+
   getParentNode() {
     return this.parentNode;
   }

@@ -26,7 +26,7 @@ import { TabRenameMicroAction } from '../core/action/micro/tab-rename-micro-acti
 import { GithubTreeRenameMicroAction } from '../core/action/micro/github-tree-rename-micro-action';
 import { createFeatureSelector, createSelector, select, Store } from '@ngrx/store';
 import { workspaceReducerKey, WorkspaceState } from '../workspace.reducer';
-import { nodeSelected, nodeRemoved, nodeRenamed, nodeCreated } from '../workspace.actions';
+import { nodeSelected, nodeRemoved, nodeRenamed, nodeCreated, treeLoaded } from '../workspace.actions';
 @Component({
   selector: 'app-tree',
   templateUrl: './github-tree.component.html',
@@ -58,21 +58,26 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     let feature = createFeatureSelector(workspaceReducerKey);
     let pathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
     let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
-    let selectedPath$ = this.store.pipe(select(pathSelector));
-    selectedPath$.subscribe(path => {
-        if(this.get(path)){
+    let treeLoadedSelector = createSelector(feature, (state: WorkspaceState) => state.treeLoaded);
+    let selectedPath$ = this.store.pipe(select(createSelector(pathSelector, treeLoadedSelector, (path, treeLoaded) => ({path, treeLoaded}))));
+    selectedPath$.subscribe(({path, treeLoaded}) => {
+        if(treeLoaded && path && this.get(path)){
           if (!this.selectedNode || path != this.selectedNode.data.path) {
             this.selectNode(path);
           }
         }
     });
+
     let selectedNode$ = this.store.pipe(select(nodeSelector));
     selectedNode$.subscribe(githubNode => {
-      let treeNode = this.getTreeNode(githubNode?.path);
-        if(treeNode){
+      if (githubNode) {
+        let treeNode = this.getTreeNode(githubNode?.path);
+        if (treeNode) {
           this.selectedNode = treeNode;
         }
+      }
     });
+
     iconRegistry.addSvgIcon(
       'outline-note',
       sanitizer.bypassSecurityTrustResourceUrl('assets/outline-note-24px.svg'));
@@ -271,11 +276,13 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
       })
     )
   }
+
   ngOnChanges(changes: SimpleChanges) {
     if (changes.tree != undefined && changes.tree.currentValue != undefined) {
       console.debug("tree is changed")
       this.dataSource = this.tree.children;
       this.root = this.tree;
+      this.store.dispatch(treeLoaded({}));
       this.refreshTree();
     }
   }
@@ -285,7 +292,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
    * @param path 
    */
   private selectNode(path: string): GithubTreeNode{
-    let node: TreeNode = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data.path == path)
+    let node: TreeNode = this.treeComponent.treeModel.getNodeBy((e: TreeNode) => e.data.path == path) // TODO when treecomponent is not ready
     if(node != null){
       node.setIsActive(true);
       this.onSelectNode(node);
@@ -406,7 +413,6 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
 
   refreshTree() {
     this.treeComponent.treeModel.update();
-    // this.searchInputFormControl.setValue('');
   }
 
   restore(packs: BlobPack[]){
@@ -429,8 +435,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
 
   get(path: string): GithubTreeNode | undefined {
     try {
-      const treeNode: TreeNode = this.treeComponent.treeModel.getNodeBy((p) => p.data.path == path);
-      return treeNode == null ? undefined : treeNode.data
+      const n = this.root.find(path);
+      return n == null ? undefined : n
     } catch (e) {
       console.warn(e);
       return undefined;

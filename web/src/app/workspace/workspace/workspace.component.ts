@@ -49,7 +49,7 @@ import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, times
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
 import { WorkspaceState, workspaceReducerKey } from '../workspace.reducer';
-import { selectNode } from '../workspace.actions';
+import { routerPathParameterChanged } from '../workspace.actions';
 import { selectQueryParam, selectQueryParams, selectRouteParam } from 'src/app/app-routing.reducer';
 
 declare const monaco;
@@ -95,6 +95,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     , public detector: DeviceDetectorService
     , public dialog: MatDialog, private store: Store<{}>) {
     let feature = createFeatureSelector(workspaceReducerKey);
+    let pathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
     let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
     let renamedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRenamedPath);
     let createdNodeSelector = createSelector(feature, (state: WorkspaceState) => state.latestCreatedPath);
@@ -102,6 +103,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     selectedNode$.subscribe(node => {
       if (node) {
         let path = node.path;
+        this.fillEditor(path);
+        this.dispatchSaveAction(this.autoSaveRef.checked);
+      }
+    });
+    let pathSelector$ = this.store.pipe(select(pathSelector));
+    pathSelector$.subscribe(path => {
+      if(path && path != ''){
         if (this.route.snapshot.queryParams['path'] == path) {
           this.sameUrlNavigationSubject.next();
         } else {
@@ -114,7 +122,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     renamedPath$.subscribe((renameInfo) => {
       if (renameInfo) {
         let { oldPath, newPath } = renameInfo;
-        this.nodeMoved(oldPath, this.tree.get(newPath));
+        this.nodeMoved(oldPath, this.root.find(newPath));
         this.dispatchSaveAction(this.autoSaveRef.checked);
       }
     });
@@ -241,7 +249,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         }
       } else if (micro instanceof WorkspaceUndoMicroAction) {
         try {
-          const node = this.tree.get(micro.path);
+          const node = this.root.find(micro.path);
           if (node != undefined) {
             const asyncText = this.getOriginalText(node.sha)
             await asyncText.then(async (text) => {
@@ -269,7 +277,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         let firstLoadedPath = pack.selectedNodePath;
         this.editor.load(pack);
         this.tab.load(pack);
-        this.store.dispatch(selectNode({ path: firstLoadedPath }));
+        this.router.navigate([], { queryParamsHandling: 'merge', queryParams: { path: firstLoadedPath } });
+        // this.store.dispatch(pathParameterChanged({ path: firstLoadedPath }));
       }, 300);
       console.log('workspace have been initialized with saved data.');
     }))
@@ -281,7 +290,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.subscriptions.push(combineLatest(this.subjectWithoutSaveFile, this.afterViewInit, monacoLoaderSubject).subscribe(([path]) => {
       setTimeout(() => {
         if (path)
-          this.store.dispatch(selectNode({ path }));
+          this.router.navigate([], { queryParamsHandling: 'merge', queryParams: { path } });
+          // this.store.dispatch(pathParameterChanged({ path }));
       }, 300);
       console.log('the workspace have been just loaded.');
     }));
@@ -299,20 +309,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       
     this.store.select(tuple).subscribe(({userId, repositoryName, branchName}) => {
       let promise = this.initialize(userId, repositoryName, branchName);
-      console.debug(`repo: ${userId}, ${repositoryName}, ${branchName}`);
-    });
-
-    this.store.select(pathSelector).subscribe((path) =>{
-      console.debug(`path: ${path}`);
-      this.fillEditor(path);
-      this.dispatchSaveAction(this.autoSaveRef.checked);
-    });
-
-    this.sameUrlNavigationSubject.subscribe(() => {
-      let path = this.route.snapshot.queryParamMap.get('path');
-      console.debug(`same path: ${path}`);
-      this.fillEditor(path);
-      this.dispatchSaveAction(this.autoSaveRef.checked);
+      promise.then(() => {
+        let s = this.store.select(pathSelector).subscribe((path) =>{
+          console.debug(`navigate path!: ${path}`);
+          this.store.dispatch(routerPathParameterChanged({ path }));
+        });
+        s.unsubscribe();
+      });
     });
 
     this.refreshSubject.subscribe(() => {
@@ -426,7 +429,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           tree = Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha });
           // if (initialPath)
             // loadedPack.selectedNodePath = initialPath;
-          doAfterLoadingTree = () => this.subjectWithSaveFile.next(loadedPack);
+          // doAfterLoadingTree = () => this.subjectWithSaveFile.next(loadedPack);
+          doAfterLoadingTree = () => {};
         } else {  // just load the tree
           tree = this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha);
           // doAfterLoadingTree = () => this.subjectWithoutSaveFile.next(initialPath);
@@ -598,12 +602,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return branch != undefined ? true : false;
   }
 
-  fillEditor(path: string | GithubTreeNode | undefined) {
-    if (!path) {
+  fillEditor(pathOrNode: string | GithubTreeNode | undefined) {
+    if (!pathOrNode) {
       this.selectedNodePath = undefined;
       this.contentStatus = ContentStatusOnWorkspace.NotInitialized
     } else {
-      const node = (typeof path == 'string') ? this.tree.get(path) : path;
+      const node = (typeof pathOrNode == 'string') ? this.root?.find(pathOrNode) : pathOrNode;
       if (node && node.type == 'blob') {
         this.selectedRawPath = undefined;
         this.selectedNodePath = node.path;
@@ -646,7 +650,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           });
         }
       } else {
-        console.warn(`${path} is not found in the tree`);
+        console.warn(`${pathOrNode} is not found in the tree`);
       }
     }
   }
@@ -681,7 +685,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   async nodeContentChanged(path: string) {
-    const node = this.tree.get(path);
+    const node = this.root.find(path);
     if (node != undefined && node.type == 'blob') {
       const asyncText = this.getOriginalText(node.sha)
       await asyncText.then((originalText) => {
@@ -870,7 +874,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     const treeSha = this.root.sha;
     const name = this.selectedBranch.name;
     const packs = Array.from(this.editor.getPathList())
-      .map((path) => this.tree.get(path))
+      .map((path) => this.root.find(path))
       .filter((node) => node != undefined)
       .map((node) => {
         let path = node.path;
@@ -899,7 +903,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     const name = this.selectedBranch.name;
     const tabs = Array.from(this.tab.tabs);
     const packs = Array.from(this.editor.getPathList())
-      .map((path) => this.tree.get(path))
+      .map((path) => this.root.find(path))
       .filter((node) => node != undefined)
       .map((node) => {
         let path = node.path;
@@ -935,7 +939,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   showInfo(path: string) {
-    let node = this.tree.get(path);
+    let node = this.root.find(path);
     let mime = TextUtil.getMime(node.name);
     let size = node.size;
     if (this.selectedFileType == FileType.Text) {
