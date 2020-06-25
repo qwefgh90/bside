@@ -29,12 +29,22 @@ export const treeLoaded = createAction(
     '[Github-Tree Component] Tree loaded',
     props<{}>()
 )
+export const editorLoaded = createAction(
+    '[Workspace Component] Monaco editor loaded',
+    props<{}>()
+)
 
-export const routerPathParameterChanged = createAction(
+export const selectPath = createAction(
     '[Workspace Component] Select the node',
     props<{path: string}>()
 );
+
 export const rootLoaded = createAction(
     '[Workspace Component] A root node loaded',
     props<{root: GithubTreeNode}>()
+);
+
+export const workspaceDestoryed = createAction(
+    '[Workspace Component] An workspace destroyed',
+    props<{}>()
 );

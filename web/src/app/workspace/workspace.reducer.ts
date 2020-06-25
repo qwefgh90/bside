@@ -16,6 +16,7 @@ export interface WorkspaceState {
         newName: string
     }
     treeLoaded: boolean;
+    editorLoaded: boolean;
 }
 
 export const initialState: WorkspaceState = {
@@ -25,7 +26,8 @@ export const initialState: WorkspaceState = {
     latestRemovedPath: undefined,
     latestRenamedPath: undefined,
     latestCreatedPath: undefined,
-    treeLoaded: false
+    treeLoaded: false,
+    editorLoaded: false
 }
 
 const _workspaceReducer = createReducer(initialState,
@@ -38,7 +40,7 @@ const _workspaceReducer = createReducer(initialState,
     on(workspaceActions.nodeRemoved, (state, { node }) => {
         return { ...state, latestRemovedPath: node.path };
     }),
-    on(workspaceActions.routerPathParameterChanged, (state, { path }) => {
+    on(workspaceActions.selectPath, (state, { path }) => {
         return (state.selectedPath == path ? state : { ...state, selectedPath: path }) // use previous state if the path isn't changed
     }),
     on(workspaceActions.treeLoaded, (state, { }) => {
@@ -59,6 +61,12 @@ const _workspaceReducer = createReducer(initialState,
     }),
     on(workspaceActions.rootLoaded, (state, { root }) => {
         return ({ ...state, root });
+    }),
+    on(workspaceActions.editorLoaded, (state, {}) => {
+        return ({ ...state, editorLoaded: true });
+    }),
+    on(workspaceActions.workspaceDestoryed, (state, {}) => {
+        return ({ ...initialState });
     })
 );
 

@@ -279,11 +279,12 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.tree != undefined && changes.tree.currentValue != undefined) {
-      console.debug("tree is changed")
       this.dataSource = this.tree.children;
       this.root = this.tree;
-      this.store.dispatch(treeLoaded({}));
       this.refreshTree();
+      setTimeout(() => {
+        this.store.dispatch(treeLoaded({}));
+      }, 0);
     }
   }
 
