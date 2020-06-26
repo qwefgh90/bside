@@ -26,7 +26,7 @@ import { TabRenameMicroAction } from '../core/action/micro/tab-rename-micro-acti
 import { GithubTreeRenameMicroAction } from '../core/action/micro/github-tree-rename-micro-action';
 import { createFeatureSelector, createSelector, select, Store } from '@ngrx/store';
 import { workspaceReducerKey, WorkspaceState } from '../workspace.reducer';
-import { nodeSelected, nodeRemoved, nodeRenamed, nodeCreated, treeLoaded } from '../workspace.actions';
+import { nodeSelected, nodeRemoved, renamingNode, nodeCreated, treeLoaded } from '../workspace.actions';
 @Component({
   selector: 'app-tree',
   templateUrl: './github-tree.component.html',
@@ -61,7 +61,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     let treeLoadedSelector = createSelector(feature, (state: WorkspaceState) => state.treeLoaded);
     let selectedPath$ = this.store.pipe(select(createSelector(pathSelector, treeLoadedSelector, (path, treeLoaded) => ({path, treeLoaded}))));
     selectedPath$.subscribe(({path, treeLoaded}) => {
-        if(treeLoaded && path && this.get(path)){
+        if(treeLoaded){
           if (!this.selectedNode || path != this.selectedNode.data.path) {
             this.selectNode(path);
           }
@@ -96,7 +96,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
           const oldPath = githubNode.path;
           (rest.from.data as GithubTreeNode).move(newParent.parent == null ? this.root : newParent.data,
               (node, parent, pre, newPath) => {         
-                this.store.dispatch(nodeRenamed({oldPath: pre, oldName: GithubTreeNode.getNameFromPath(pre), newPath: node.path, newName: node.name}));
+                this.store.dispatch(renamingNode({oldPath: pre, oldName: GithubTreeNode.getNameFromPath(pre), newPath: node.path, newName: node.name}));
                 if(node.path == this.selectedNode.data.path){
                   this.store.dispatch(nodeSelected({node: this.selectedNode.data.toGithubNode()}));
                 }
@@ -299,6 +299,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
       this.onSelectNode(node);
       return node.data;
     }else{
+      this.store.dispatch(nodeSelected({node: undefined}));
       console.warn(`${path} was not found`);
       return null;
     }
@@ -343,7 +344,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
       if (stateArr.length == 2 && stateArr[0] == NodeStateAction.Created)
         this.store.dispatch(nodeCreated({path: node.path}));
       else{
-        this.store.dispatch(nodeRenamed({oldPath: pre, oldName: GithubTreeNode.getNameFromPath(pre), newPath: node.path, newName: node.name}));
+        this.store.dispatch(renamingNode({oldPath: pre, oldName: GithubTreeNode.getNameFromPath(pre), newPath: node.path, newName: node.name}));
         if(node.path == this.selectedNode.data.path){
           this.store.dispatch(nodeSelected({node: this.selectedNode.data.toGithubNode()}));
         }

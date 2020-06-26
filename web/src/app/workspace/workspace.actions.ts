@@ -13,7 +13,7 @@ export const nodeCreated = createAction(
 
 export const nodeSelected = createAction(
     '[Github-Tree Component] Node selected',
-    props<{node: GithubNode}>()
+    props<{node: GithubNode | undefined}>()
 );
 
 export const nodeRemoved = createAction(
@@ -21,8 +21,8 @@ export const nodeRemoved = createAction(
     props<{node: GithubNode}>()
 )
 
-export const nodeRenamed = createAction(
-    '[Github-Tree Component] Node renamed',
+export const renamingNode = createAction(
+    '[Github-Tree Component] Renaming node',
     props<{oldPath: string, oldName: string, newPath: string, newName: string}>()
 )
 export const treeLoaded = createAction(

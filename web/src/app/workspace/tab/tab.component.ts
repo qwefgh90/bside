@@ -29,13 +29,16 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
   constructor(private store: Store<{}>) {
     let feature = createFeatureSelector(workspaceReducerKey);
     let pathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
+    let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
     let removedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRemovedPath);
-    let renamedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRenamedPath);
-    let selectedPath$ = this.store.pipe(select(pathSelector));
-    selectedPath$.subscribe(pathToSelect => {
-      let selectedPath = this._tabs[this.selectedIndex.value];
-      if(selectedPath != pathToSelect)
-        this.selectTabOrInsertSelect(pathToSelect);
+    let renamedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRenamingPath);
+    let selectedPathAndNode$ = this.store.pipe(select(createSelector(pathSelector, nodeSelector, (path, node) => ({path, node}) )));
+    selectedPathAndNode$.subscribe(({path, node}) => {
+      if(node){
+        let selectedPath = this._tabs[this.selectedIndex.value];
+        if(selectedPath != path)
+          this.selectTabOrInsertSelect(path);
+      }
     });
     let removedPath$ = this.store.pipe(select(removedPathSelector));
     removedPath$.subscribe(path => {

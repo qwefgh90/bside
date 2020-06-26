@@ -9,7 +9,7 @@ export interface WorkspaceState {
     root: GithubTreeNode;
     latestCreatedPath: string;
     latestRemovedPath: string;
-    latestRenamedPath: {
+    latestRenamingPath: {
         oldPath: string,
         oldName: string,
         newPath: string,
@@ -24,7 +24,7 @@ export const initialState: WorkspaceState = {
     selectedNode: undefined,
     root: undefined,
     latestRemovedPath: undefined,
-    latestRenamedPath: undefined,
+    latestRenamingPath: undefined,
     latestCreatedPath: undefined,
     treeLoaded: false,
     editorLoaded: false
@@ -35,7 +35,7 @@ const _workspaceReducer = createReducer(initialState,
         return (state.selectedPath == path ? state : { ...state, selectedPath: path }) // use previous state if the path isn't changed
     }),
     on(workspaceActions.nodeSelected, (state, { node }) => {
-        return { ...state, selectedNode: node, selectedPath: node.path };
+        return { ...state, selectedNode: node, selectedPath: node?.path };
     }),
     on(workspaceActions.nodeRemoved, (state, { node }) => {
         return { ...state, latestRemovedPath: node.path };
@@ -46,12 +46,12 @@ const _workspaceReducer = createReducer(initialState,
     on(workspaceActions.treeLoaded, (state, { }) => {
         return ({ ...state, treeLoaded: true }) // use previous state if the path isn't changed
     }),
-    on(workspaceActions.nodeRenamed, (state, { oldPath, oldName, newPath, newName }) => {
+    on(workspaceActions.renamingNode, (state, { oldPath, oldName, newPath, newName }) => {
         if (oldPath == newPath)
             return state;
         else
             return ({
-                ...state, latestRenamedPath: {
+                ...state, latestRenamingPath: {
                     oldName, oldPath, newName, newPath
                 }
             });

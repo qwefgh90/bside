@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, Inject } from '@angular/core';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription, Subject, combineLatest, from, ReplaySubject, empty, of } from 'rxjs';
+import { Subscription, Subject, combineLatest, from, ReplaySubject, empty, of, timer, interval, Observable } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSelectChange } from '@angular/material/select';
 import { MatDrawer } from '@angular/material/sidenav';
@@ -45,7 +45,7 @@ import { WorkspaceClearMicroAction } from '../core/action/micro/workspace-clear-
 import { WorkspaceUndoMicroAction as WorkspaceUndoMicroAction } from '../core/action/micro/workspace-undo-micro-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { MatCheckbox } from '@angular/material/checkbox';
-import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, timestamp, map, filter } from 'rxjs/operators';
+import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, timestamp, map, filter, switchMap, takeUntil, takeWhile, skipWhile, retry } from 'rxjs/operators';
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
 import { WorkspaceState, workspaceReducerKey } from '../workspace.reducer';
@@ -166,12 +166,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let selectedPathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
     let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
     let editorSelector = createSelector(feature, (state: WorkspaceState) => state.editorLoaded);
-    let renamedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRenamedPath);
+    let renamedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRenamingPath);
     let createdNodeSelector = createSelector(feature, (state: WorkspaceState) => state.latestCreatedPath);
     let selectedNode$ = this.store.pipe(select(createSelector(nodeSelector, editorSelector, (node, loaded) => ({node, loaded}))));
     let s0 = selectedNode$.subscribe(({node, loaded}) => {
-      if (node && loaded) {
-        let path = node.path;
+      if (loaded) {
+        let path = node?.path;
         this.fillEditor(path);
         this.dispatchSaveAction(this.autoSaveRef.checked);
       }
@@ -191,7 +191,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let s2 = renamedPath$.subscribe((renameInfo) => {
       if (renameInfo) {
         let { oldPath, newPath } = renameInfo;
-        this.nodeMoved(oldPath, this.root.find(newPath));
+        this.nodeMoved(oldPath, newPath);
         this.dispatchSaveAction(this.autoSaveRef.checked);
       }
     });
@@ -252,7 +252,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   ngOnInit() {
     let loadPromise = this.initalizeVSLoader();
-    let monacoLoaderSubject = from(loadPromise);
     loadPromise.then(() => {
       this.store.dispatch(editorLoaded({}));
     });
@@ -605,12 +604,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.editor.removeContent(path);
   }
 
-  nodeMoved(fromPath: string, to: GithubTreeNode) {
-    if (to.type == 'blob') {
+  nodeMoved(fromPath: string, toPath: string) {
+    let target = this.root.find(fromPath);
+    if (target.type == 'blob') {
       if (this.editor.exist(fromPath)) {
         let content = this.editor.getContent(fromPath);
         this.editor.removeContent(fromPath);
-        this.editor.setContent(to.path, content);
+        this.editor.setContent(toPath, content);
       }
     }
   }
@@ -728,7 +728,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
             let createdCommit = await this.wrapper.createCommit(this.userId, this.repositoryName, msg, createdTree.sha, this.selectedBranch.commit.sha);
             this.commitProgress.updateBranch(this.selectedBranch.name);
             let createdBranch = await this.wrapper.updateBranch(this.userId, this.repositoryName, this.selectedBranch.name, createdCommit.sha);
-            this.commitProgress.done(this.repositoryName, 30);
+            this.commitProgress.done(this.repositoryName, 30, 10);
             console.log(`The commit and updating ${createdBranch.ref} have succeeded which is ${createdBranch.object.sha}. Check out all in ${createdBranch.url}`);
           } else {
             console.error("Invalid state of nodes is found because blobs containing more than zero state exist");
@@ -737,14 +737,54 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       } catch (e) {
         console.error(e);
       } finally {
-        this.afterCommit = true;
-        this.clearCommits();
-        // this.treeStatus = TreeStatusOnWorkspace.Done;
-        setTimeout(() => {
+        const shaBeforeCommit = this.selectedBranch.commit.sha;
+        let resultOfPolling = this.pollBranchCommitChange(branch => shaBeforeCommit != branch.commit.sha, 6, 2000);
+        resultOfPolling.then((branch) => {
+          console.info(`It is successful in getting new commit which is ${branch.commit.sha}`);
+          this.treeStatus = TreeStatusOnWorkspace.Done;
           this.document.location.reload();
-        }, 10000);
+        }
+        ,(err) => {
+          console.error(err);
+          console.error(`It isn't successful in getting new commit of ${this.selectedBranch.name}`);
+          this.treeStatus = TreeStatusOnWorkspace.Done;
+          // this.document.location.reload();
+        })
+        // this.afterCommit = true;
+        // this.clearCommits();
+        // setTimeout(() => {
+        //   this.treeStatus = TreeStatusOnWorkspace.Done;
+        //   this.document.location.reload();
+        // }, 10000);
       }
     }
+  }
+
+  /**
+   * 
+   * @param branchChecker 
+   * @param maxTryCount 
+   * @param intervalSencond 
+   * @returns branch
+   */
+  private pollBranchCommitChange(branchChecker: (param: any) => boolean, maxTryCount: number, intervalSencond: number = 1000): Promise<any> {
+    let counter = 0;
+    return interval(intervalSencond).pipe(
+      switchMap(seq => {
+        let promise = this.wrapper.branch(this.userId, this.repositoryName, this.selectedBranch.name).then(branch => ({ branch, seq }));
+        return promise;
+      }),
+      switchMap(({ branch, seq }) => {
+        if (seq >= maxTryCount) {
+          return Promise.reject(`It is over ${maxTryCount}`);
+        }
+        if (!branchChecker(branch))
+          return Promise.resolve(branch);
+        else
+          return Promise.resolve(undefined);
+      }),
+      skipWhile(v => v == undefined)
+    ).toPromise();
   }
 
   public compactByCuttingUnchangedBlobs(objectsForCreatingTree: GithubTreeNode[], root: GithubTreeNode) {

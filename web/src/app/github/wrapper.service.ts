@@ -2059,6 +2059,20 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
       return Promise.reject();
     }
   }
+  async branch(login: string, repositoryName: string, branchName: string): Promise<any> {
+    if (this.hasToken()) {
+      // const repo = new Github({
+      //   token: this.token
+      // });
+      let repo = await this.repositoryDetails(login, repositoryName);
+      return this.get((repo.branches_url as string).replace("{/branch}", `/${branchName}`));
+      // let promise: Promise<any> = repo.getRepo(login, repositoryName).listBranches();
+      // return promise.then(result => result.data);
+    } else {
+      return Promise.reject();
+    }
+  }
+
 
   /**
    * [

@@ -44,11 +44,12 @@ export class CommitProgressComponent implements OnInit, OnDestroy {
 
   second = 0;
 
-  done(repositoryName, timeout: number=30){
-    let handle: NodeJS.Timeout;
+  done(repositoryName, timeout: number=30,  expectingTime: number=10){
+    let dotdotdot = [".", "..", "..."]
+    let handle: any;
     handle = setInterval(() => {
       this.second += 1;
-      this.msg = `Loading ${repositoryName} \n ${this.second}...`;
+      this.msg = `Loading ${repositoryName}${dotdotdot[this.second%3]}\nIt takes about ${expectingTime} seconds.`;
       if(this.second > timeout){
         clearInterval(handle);
       }
