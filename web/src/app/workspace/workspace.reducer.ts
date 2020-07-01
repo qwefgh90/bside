@@ -1,7 +1,15 @@
 import { GithubNode, GithubTreeNode } from './tree/github-tree-node';
 import { createReducer, on, Action } from '@ngrx/store';
 import * as workspaceActions from './workspace.actions';
+import { WorkspaceSnapshot } from './core/action/micro/workspace-snapshot-micro-action';
+import { TabSnapshot } from './tab/tab-snapshot';
+import { GithubTreeSnapshot } from './tree/github-tree-snapshot';
 export const workspaceReducerKey = "workspaceReducerKey";
+
+enum SaveStatus{
+
+    READY,
+}
 
 export interface WorkspaceState {
     selectedPath: string;
@@ -17,6 +25,13 @@ export interface WorkspaceState {
     }
     treeLoaded: boolean;
     editorLoaded: boolean;
+    latestSnapshot: {
+        requestTime: Date,
+        doneTime: Date,
+        treeSnapshot: GithubTreeSnapshot,
+        workspaceSnapshot: WorkspaceSnapshot,
+        tabSnapshot: TabSnapshot
+    };
 }
 
 export const initialState: WorkspaceState = {
@@ -27,7 +42,14 @@ export const initialState: WorkspaceState = {
     latestRenamingPath: undefined,
     latestCreatedPath: undefined,
     treeLoaded: false,
-    editorLoaded: false
+    editorLoaded: false,
+    latestSnapshot: {
+        requestTime: undefined,
+        doneTime: undefined,
+        treeSnapshot: undefined,
+        workspaceSnapshot: undefined,
+        tabSnapshot: undefined
+    }
 }
 
 const _workspaceReducer = createReducer(initialState,
@@ -67,7 +89,33 @@ const _workspaceReducer = createReducer(initialState,
     }),
     on(workspaceActions.workspaceDestoryed, (state, {}) => {
         return ({ ...initialState });
-    })
+    }),
+    on(workspaceActions.requestToSave, (state, {}) => {
+        let onProgress = state.latestSnapshot.requestTime && !state.latestSnapshot.doneTime;
+        return onProgress ? state : ({ ...state, latestSnapshot:
+            {...initialState.latestSnapshot, requestTime: new Date()}});
+    }),
+    on(workspaceActions.updateTabSnapshot, (state, {snapshot}) => {
+        let isDone = (snapshot && state.latestSnapshot.treeSnapshot && state.latestSnapshot.workspaceSnapshot);
+        return ({ ...state, latestSnapshot: {...state.latestSnapshot, 
+            tabSnapshot: snapshot, doneTime: 
+                (isDone ? new Date() : undefined)
+        }});
+    }),
+    on(workspaceActions.updateWorkspaceSnapshot, (state, {snapshot}) => {
+        let isDone = (snapshot && state.latestSnapshot.tabSnapshot && state.latestSnapshot.treeSnapshot);
+        return ({ ...state, latestSnapshot: {...state.latestSnapshot, 
+            workspaceSnapshot: snapshot, doneTime: 
+            (isDone ? new Date() : undefined)
+        }});
+    }),
+    on(workspaceActions.updateTreeSnapshot, (state, {snapshot}) => {
+        let isDone = (snapshot && state.latestSnapshot.tabSnapshot && state.latestSnapshot.workspaceSnapshot);
+        return ({ ...state, latestSnapshot: {...state.latestSnapshot, 
+            treeSnapshot: snapshot, doneTime: 
+            (isDone ? new Date() : undefined)
+        }});
+    }),
 );
 
 export function workspaceReducer(state: WorkspaceState | undefined, action: Action) {

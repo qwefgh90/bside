@@ -26,7 +26,7 @@ import { TabRenameMicroAction } from '../core/action/micro/tab-rename-micro-acti
 import { GithubTreeRenameMicroAction } from '../core/action/micro/github-tree-rename-micro-action';
 import { createFeatureSelector, createSelector, select, Store } from '@ngrx/store';
 import { workspaceReducerKey, WorkspaceState } from '../workspace.reducer';
-import { nodeSelected, nodeRemoved, renamingNode, nodeCreated, treeLoaded } from '../workspace.actions';
+import { nodeSelected, nodeRemoved, renamingNode, nodeCreated, treeLoaded, updateTreeSnapshot } from '../workspace.actions';
 @Component({
   selector: 'app-tree',
   templateUrl: './github-tree.component.html',
@@ -59,6 +59,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     let pathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
     let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
     let treeLoadedSelector = createSelector(feature, (state: WorkspaceState) => state.treeLoaded);
+    let saveRequestSelector = createSelector(feature, (state: WorkspaceState) => state.latestSnapshot.requestTime);
     let selectedPath$ = this.store.pipe(select(createSelector(pathSelector, treeLoadedSelector, (path, treeLoaded) => ({path, treeLoaded}))));
     selectedPath$.subscribe(({path, treeLoaded}) => {
         if(treeLoaded){
@@ -66,6 +67,17 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
             this.selectNode(path);
           }
         }
+    });
+
+    let s0 = this.store.select(saveRequestSelector).subscribe((requestTime) => {
+      if(requestTime){
+        const treeArr = this.root.reduce((acc, node, tree) => {
+          if (node.path != "")
+            acc.push(node.toGithubNode());
+          return acc;
+        }, [] as Array<GithubNode>, false);
+        this.store.dispatch(updateTreeSnapshot({snapshot: {nodes: treeArr}}));
+      }
     });
 
     let selectedNode$ = this.store.pipe(select(nodeSelector));
@@ -81,6 +93,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     iconRegistry.addSvgIcon(
       'outline-note',
       sanitizer.bypassSecurityTrustResourceUrl('assets/outline-note-24px.svg'));
+
+      this.subscriptions.push(s0);
   }
 
   actionMapping: IActionMapping = {

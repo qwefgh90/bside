@@ -49,7 +49,7 @@ import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, times
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
 import { WorkspaceState, workspaceReducerKey } from '../workspace.reducer';
-import { selectPath as selectPathWithRouterOrSnapshot, editorLoaded, workspaceDestoryed } from '../workspace.actions';
+import { selectPath as selectPathWithRouterOrSnapshot, editorLoaded, workspaceDestoryed, requestToSave, updateWorkspaceSnapshot } from '../workspace.actions';
 import { selectQueryParam, selectQueryParams, selectRouteParam } from 'src/app/app-routing.reducer';
 import { DOCUMENT } from '@angular/common';
 
@@ -168,6 +168,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let editorSelector = createSelector(feature, (state: WorkspaceState) => state.editorLoaded);
     let renamedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRenamingPath);
     let createdNodeSelector = createSelector(feature, (state: WorkspaceState) => state.latestCreatedPath);
+    let saveRequestSelector = createSelector(feature, (state: WorkspaceState) => state.latestSnapshot.requestTime);
+    let latestSnapshotSelector = createSelector(feature, (state: WorkspaceState) => state.latestSnapshot);
     let selectedNode$ = this.store.pipe(select(createSelector(nodeSelector, editorSelector, (node, loaded) => ({node, loaded}))));
     let s0 = selectedNode$.subscribe(({node, loaded}) => {
       if (loaded) {
@@ -243,11 +245,24 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       }
     });
 
+    let s6 = this.store.select(saveRequestSelector).subscribe((requestTime) => {
+      if(requestTime)
+        this.store.dispatch(updateWorkspaceSnapshot({snapshot: this.getSnapshot()}));
+    });
+
     let s5 = this.refreshSubject.subscribe(() => {
       let promise = this.initialize(this.userId, this.repositoryName, this.selectedBranch.name);
       console.debug(`refreshSubject: ${this.userId}, ${this.repositoryName}, ${this.selectedBranch.name}`);
     });
-    this.subscriptions.push(s0, s1,s2,s3,s4,s5);
+
+    let s7 = this.store.select(latestSnapshotSelector).subscribe((snapshotInfo) => {
+      if(snapshotInfo?.doneTime){
+        let pack = WorkspacePack.of(snapshotInfo.workspaceSnapshot.repositoryId, snapshotInfo.workspaceSnapshot.repositoryName, snapshotInfo.workspaceSnapshot.commitSha, snapshotInfo.workspaceSnapshot.treeSha, snapshotInfo.workspaceSnapshot.name, snapshotInfo.workspaceSnapshot.packs, snapshotInfo.treeSnapshot.nodes, snapshotInfo.tabSnapshot.tabs, snapshotInfo.workspaceSnapshot.selectedNodePath, snapshotInfo.workspaceSnapshot.autoSave);
+        this.database.save(pack);
+      }
+    });
+    
+    this.subscriptions.push(s0, s1, s2, s3, s4, s5, s6, s7);
   }
 
   ngOnInit() {
@@ -738,9 +753,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         console.error(e);
       } finally {
         const shaBeforeCommit = this.selectedBranch.commit.sha;
-        let resultOfPolling = this.pollBranchCommitChange(branch => shaBeforeCommit != branch.commit.sha, 6, 2000);
-        resultOfPolling.then((branch) => {
-          console.info(`It is successful in getting new commit which is ${branch.commit.sha}`);
+        let resultOfPolling = this.pollBranchCommitChange(shaBeforeCommit, 6);
+        resultOfPolling.then((sha) => {
+          console.info(`It is successful in getting new commit which is ${sha}`);
           this.treeStatus = TreeStatusOnWorkspace.Done;
           this.document.location.reload();
         }
@@ -767,24 +782,21 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
    * @param intervalSencond 
    * @returns branch
    */
-  private pollBranchCommitChange(branchChecker: (param: any) => boolean, maxTryCount: number, intervalSencond: number = 1000): Promise<any> {
-    let counter = 0;
-    return interval(intervalSencond).pipe(
-      switchMap(seq => {
-        let promise = this.wrapper.branch(this.userId, this.repositoryName, this.selectedBranch.name).then(branch => ({ branch, seq }));
-        return promise;
-      }),
-      switchMap(({ branch, seq }) => {
-        if (seq >= maxTryCount) {
-          return Promise.reject(`It is over ${maxTryCount}`);
-        }
-        if (!branchChecker(branch))
-          return Promise.resolve(branch);
-        else
-          return Promise.resolve(undefined);
-      }),
-      skipWhile(v => v == undefined)
-    ).toPromise();
+  private pollBranchCommitChange(shaBeforeCommit: string, maxTry: number): Promise<string>{
+    return this._pollBranchCommitChange(shaBeforeCommit, 0, maxTry);
+  }
+
+  private _pollBranchCommitChange(shaBeforeCommit: string, count: number, maxTry: number): Promise<string>{
+    let promise = this.wrapper.branch(this.userId, this.repositoryName, this.selectedBranch.name);
+    count++;
+    return promise.then((branch) => {
+       if(shaBeforeCommit != branch?.commit?.sha){
+         return branch.commit.sha;
+       }else if(count > maxTry){
+          throw new Error(`The count is over ${maxTry}`);
+       }else
+        return this._pollBranchCommitChange(shaBeforeCommit, count, maxTry);
+    });
   }
 
   public compactByCuttingUnchangedBlobs(objectsForCreatingTree: GithubTreeNode[], root: GithubTreeNode) {
@@ -873,7 +885,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       });
     return {
       repositoryId: repositoryId, repositoryName: repositoryName, commitSha: commitSha,
-      treeSha: treeSha, name: name, packs: packs, selectedNodePath: this.selectedNodePath, database: this.database,
+      treeSha: treeSha, name: name, packs: packs, selectedNodePath: this.selectedNodePath, 
       autoSave: autoSave
     };
   }
@@ -915,7 +927,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   private dispatchSaveAction(eagerly: boolean): Promise<string> | void {
     if (eagerly) {
       this.isBeingChanged = false;
-      return new SaveAction(this, this.userActionDispatcher).start();
+      // return new SaveAction(this, this.userActionDispatcher).start();
+      this.store.dispatch(requestToSave({}));
     } else {
       this.isBeingChanged = true;
       return this.saveActionSubject.next();

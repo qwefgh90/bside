@@ -1,5 +1,8 @@
 import { createAction, props } from '@ngrx/store';
 import { GithubNode, GithubTreeNode } from './tree/github-tree-node';
+import { WorkspaceSnapshot } from './core/action/micro/workspace-snapshot-micro-action';
+import { GithubTreeSnapshot } from './tree/github-tree-snapshot';
+import { TabSnapshot } from './tab/tab-snapshot';
 
 export const clickTab = createAction(
     '[Tab Component] Click the tab',
@@ -48,3 +51,21 @@ export const workspaceDestoryed = createAction(
     '[Workspace Component] An workspace destroyed',
     props<{}>()
 );
+
+export const requestToSave = createAction(
+    '[Component] Request to save current state',
+    props<{}>()
+)
+
+export const updateWorkspaceSnapshot = createAction(
+    '[Workspace Component] Update the snapshot',
+    props<{snapshot: WorkspaceSnapshot}>()
+)
+export const updateTreeSnapshot = createAction(
+    '[Github-Tree Component] Update the snapshot',
+    props<{snapshot: GithubTreeSnapshot}>()
+)
+export const updateTabSnapshot = createAction(
+    '[Tab Component] Update the snapshot',
+    props<{snapshot: TabSnapshot}>()
+)

@@ -13,7 +13,7 @@ import { SelectAction } from '../core/action/user/select-action';
 import { TabSnapshotMicroAction } from '../core/action/micro/tab-snapshot-micro-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
-import { clickTab } from '../workspace.actions';
+import { clickTab, updateTabSnapshot } from '../workspace.actions';
 import { workspaceReducerKey, WorkspaceState } from '../workspace.reducer';
 import { FormControl } from '@angular/forms';
 
@@ -32,6 +32,7 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
     let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
     let removedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRemovedPath);
     let renamedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRenamingPath);
+    let saveRequestSelector = createSelector(feature, (state: WorkspaceState) => state.latestSnapshot.requestTime);
     let selectedPathAndNode$ = this.store.pipe(select(createSelector(pathSelector, nodeSelector, (path, node) => ({path, node}) )));
     selectedPathAndNode$.subscribe(({path, node}) => {
       if(node){
@@ -49,10 +50,17 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
       if(renameInfo)
         this.renameTab(renameInfo.oldPath, renameInfo.newPath);
     });
+    
+    let s0 = this.store.select(saveRequestSelector).subscribe((requestTime) => {
+      this.store.dispatch(updateTabSnapshot({snapshot: {tabs: Array.from(this.tabs)}}));
+    });
+
     this.selectedIndex.valueChanges.subscribe((value) => {
       let tab = this._tabs[value];
       this.dispatchSelectMessage(tab);
     });
+
+    this.subscriptions.push(s0);
   }
 
   // actionAfterTabInitialized: () => void;

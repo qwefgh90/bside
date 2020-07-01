@@ -2154,8 +2154,12 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
     }
   }
 
+  /**
+   * Additional header can't not be allowed.
+   * @param url 
+   */
   private async get(url: string) {
-    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}` } })
+    let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}`} })
     return reposResponse.toPromise();
   }
 
