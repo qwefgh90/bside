@@ -21,7 +21,6 @@ export class DiffEditorComponent implements OnInit, AfterViewInit, OnChanges, On
   monaco: any;
   option: monacoNameSpace.editor.IDiffEditorConstructionOptions = {
     readOnly: true,
-    theme: "vs",
     automaticLayout: true
   };
 
@@ -111,7 +110,9 @@ export class DiffEditorComponent implements OnInit, AfterViewInit, OnChanges, On
 
   setContent(original: monacoNameSpace.editor.ITextModel, changes: monacoNameSpace.editor.ITextModel){
     if (this.monaco != undefined) {
-      this.editor.setModel({original: original, modified: changes});
+      var originalModel = this.monaco.editor.createModel("heLLo world!", "text/plain");
+      var modifiedModel = this.monaco.editor.createModel("hello orlando!", "text/plain");
+      this.editor.setModel({original: originalModel, modified: modifiedModel});
     }else
       this.throwWhenNotInitialized();
   }

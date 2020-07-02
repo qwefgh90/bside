@@ -21,14 +21,14 @@
       </div>
       <div style="flex:1"></div>
       <div>
-          <button mat-icon-button>
-            <mat-icon aria-label="New file" title="New file" (click)="newNode('blob')">note_add</mat-icon>
+          <button mat-icon-button (click)="newNode('blob')">
+            <mat-icon aria-label="New file" title="New file">note_add</mat-icon>
           </button>
-          <button mat-icon-button>
-            <mat-icon aria-label="New folder" title="New folder" (click)="newNode('tree')">create_new_folder</mat-icon>
+          <button mat-icon-button (click)="newNode('tree')">
+            <mat-icon aria-label="New folder" title="New folder">create_new_folder</mat-icon>
           </button>
-          <button mat-icon-button>
-            <mat-icon aria-label="Upload" title="Upload" (click)="uploadFile('')">cloud_upload</mat-icon>
+          <button mat-icon-button (click)="uploadFile('')">
+            <mat-icon aria-label="Upload" title="Upload">cloud_upload</mat-icon>
           </button>
       </div>
     </div>

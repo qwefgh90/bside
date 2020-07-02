@@ -30,11 +30,12 @@ enum EditorMode{
 export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor {
 
   editor: monacoNameSpace.editor.IStandaloneCodeEditor;
+  diffEditor: monacoNameSpace.editor.IDiffEditor;
   model: monacoNameSpace.editor.ITextModel
   notifyContentChangeSubject: Subject<string> = new Subject();
 
   @ViewChild("editor", { static: true }) editorContent: ElementRef;
-  @ViewChild("diffeditor1", { static: true }) diffEditor: DiffEditor;
+  // @ViewChild("diffeditor1", { static: true }) diffEditor: DiffEditor;
   @ViewChild("markdowneditor", { static: true }) markdownEditor: MarkdownEditorComponent;
 
   diffTargetPath: string;
@@ -87,10 +88,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
 
   get isMdOn(){
     return this._isMdOn;
-  }
-  
-  get isNone(){
-    return this.fsm.currentState == EditorMode.None;
   }
 
   constructor(private monacoService: MonacoService, private deviceService: DeviceDetectorService, private store: Store) {  
@@ -166,20 +163,27 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   // Will be called once monaco library is available
   private createMonacoEditor(monaco) {
     if (monaco != undefined) {
+      this.releaseEditors();
       const myDiv: HTMLDivElement = this.editorContent.nativeElement;
-      if (this.editor != undefined) {
-        this.editor.dispose();
-        myDiv.childNodes.forEach((c) => c.remove());
-      }
       this.editor = monaco.editor.create(myDiv, this.option);
     }
   }
 
-  private releaseEditor(){
-    if (this.editor != undefined) {
-      console.debug("release resources of monaco editor");
-      this.editor.dispose();
+  private createDiffEditor(monaco) {
+    if (monaco != undefined) {
+      this.releaseEditors();
+      const myDiv: HTMLDivElement = this.editorContent.nativeElement;
+      this.diffEditor = monaco.editor.createDiffEditor(myDiv, this.option);
     }
+  }
+
+
+  private releaseEditors() {
+    console.debug("release resources of monaco editor");
+    this.editor?.dispose();
+    this.diffEditor?.dispose();
+    this.editor = undefined;
+    this.diffEditor = undefined;
   }
 
   private releaseGlobalResource(){
@@ -190,7 +194,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   }
 
   ngOnDestroy() {
-    this.releaseEditor();
+    this.releaseEditors();
     this.releaseGlobalResource();
     this.subscriptions.forEach(s => s.unsubscribe());
   }
@@ -212,8 +216,11 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
 
   select(path: string): boolean {
     if (this.monaco != undefined) {
-      this.fsm.go(EditorMode.None);
-
+      
+      if (this._isDiffOn) {
+        this.createMonacoEditor(this.monaco);
+        this.fsm.go(EditorMode.None);
+      }
       let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
       if (existsModel) {
         this.editor.setModel(existsModel);
@@ -285,10 +292,15 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   diffWith(path: string, content: string, originalPath?: string){
     if (this._isDiffOn == false) {
       let targetModel= this.getModel(originalPath);
+      this.createDiffEditor(this.monaco);
       this.diffTargetPath = prefix + path;
       let originalModel = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(this.diffTargetPath));
-      this.diffEditor.setContent(originalModel, targetModel);
-      this._isDiffOn = true;
+      // this.diffEditor.setContent(originalModel, targetModel);
+      // var originalModel = this.monaco.editor.createModel("heLLo world!", "text/plain");
+      // var modifiedModel = this.monaco.editor.createModel("hello orlando!", "text/plain");
+      this.diffEditor.setModel({original: originalModel, modified: targetModel});
+        this.fsm.go(EditorMode.Diff);
+        // this._isDiffOn = true;
     }
   }
   

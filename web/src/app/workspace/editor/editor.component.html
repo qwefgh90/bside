@@ -1,8 +1,7 @@
-<div style="height: 100%;" (window:resize)="onResize($event)" [class.flex]="isNone" [class.none]="!isNone">
+<div style="height: 100%;" (window:resize)="onResize($event)" class="flex">
   <div #editor class="monaco-editor" style="width:100%;height: 100%;" [class.shrink]="shrink"></div>
-  <div style="align-items: center;
- display: flex;
- justify-content: center;width: 100%; height: 100%; flex-direction: column" *ngIf="shrink">
+  <div style="align-items: center; display: flex; justify-content: center;width: 100%; height: 100%; flex-direction: column" 
+    *ngIf="shrink">
 
     <mat-spinner [strokeWidth]="3"></mat-spinner>
     <div>Coordinating...</div>
@@ -14,4 +13,4 @@
   
   <app-markdown-editor #markdowneditor style="width: 100%;" [preview]="true"></app-markdown-editor>
 </div>
-<app-diff-editor #diffeditor1 style="width: 100%; height: 100%;" [class.flex]="isDiffOn" [class.none]="!isDiffOn"></app-diff-editor>
+<!-- <app-diff-editor #diffeditor1 style="width: 100%; height: 100%;" [class.flex]="isDiffOn" [class.none]="!isDiffOn"></app-diff-editor> -->
