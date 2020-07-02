@@ -359,7 +359,7 @@ export class GithubTreeNode {
       type: this.type,
       size: this.size,
       url: this.url,
-      extra: {state: [...this.state]}
+      extra: {state: [... this.state]}
     };
     return node;
   }

@@ -14,16 +14,6 @@ import { LocalUploadService } from '../upload/local-upload.service';
 import { GithubTree } from './github-tree';
 import { BlobPack } from '../workspace/pack';
 import { TextUtil } from '../text/text-util';
-import { FileRenameAction } from '../core/action/user/file-rename-action';
-import { SelectAction } from '../core/action/user/select-action';
-import { MicroActionComponentMap, SupportedComponents } from '../core/action/micro/micro-action-component-map';
-import { GithubTreeSelectMicroAction } from '../core/action/micro/github-tree-select-micro-action';
-import { RemoveNodeAction } from '../core/action/user/remove-node-action';
-import { CreateAction } from '../core/action/user/create-action';
-import { GithubTreeSnapshotMicroAction } from '../core/action/micro/github-tree-snapshot-micro-action';
-import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
-import { TabRenameMicroAction } from '../core/action/micro/tab-rename-micro-action';
-import { GithubTreeRenameMicroAction } from '../core/action/micro/github-tree-rename-micro-action';
 import { createFeatureSelector, createSelector, select, Store } from '@ngrx/store';
 import { workspaceReducerKey, WorkspaceState } from '../workspace.reducer';
 import { nodeSelected, nodeRemoved, renamingNode, nodeCreated, treeLoaded, updateTreeSnapshot } from '../workspace.actions';
@@ -54,7 +44,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   //UI state
   selectedNode: TreeNode;
 
-  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private localUpload: LocalUploadService, private dispatcher: UserActionDispatcher, private store: Store<{}>) {
+  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private localUpload: LocalUploadService, private store: Store<{}>) {
     let feature = createFeatureSelector(workspaceReducerKey);
     let pathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
     let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
@@ -265,30 +255,6 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
       this.searchInputFormControl.valueChanges.subscribe((v: string) => {
         this.treeComponent.treeModel.filterNodes(v, false);
       }));
-    this.subscriptions.push(
-      MicroActionComponentMap.getSubjectByComponent(SupportedComponents.GithubTreeComponent).subscribe((micro) => {
-        if (micro instanceof GithubTreeSelectMicroAction) {
-        }else if(micro instanceof GithubTreeSnapshotMicroAction){
-          const treeArr = this.root.reduce((acc, node, tree) => {
-            if (node.path != "")
-              acc.push(node.toGithubNode());
-            return acc;
-          }, [] as Array<GithubNode>, false);
-          micro.succeed(() => {}, treeArr);
-        }else if(micro instanceof GithubTreeRenameMicroAction){
-          try{
-            if(micro.parent.origin == this){
-              micro.succeed(() => {});
-            }else{
-              this.renameNode(micro.oldPath, micro.newName);
-              micro.succeed(() => {});
-            }
-          } catch {
-            micro.fail();
-          }
-        }
-      })
-    )
   }
 
   ngOnChanges(changes: SimpleChanges) {

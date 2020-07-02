@@ -7,7 +7,6 @@ import { GithubTreeSnapshot } from './tree/github-tree-snapshot';
 export const workspaceReducerKey = "workspaceReducerKey";
 
 enum SaveStatus{
-
     READY,
 }
 
@@ -32,6 +31,12 @@ export interface WorkspaceState {
         workspaceSnapshot: WorkspaceSnapshot,
         tabSnapshot: TabSnapshot
     };
+    latestPathForChangesInContent: {
+        path: string,
+        time: Date
+    },
+    latestPathToUndo: string,
+    latestResetTime: Date
 }
 
 export const initialState: WorkspaceState = {
@@ -49,7 +54,13 @@ export const initialState: WorkspaceState = {
         treeSnapshot: undefined,
         workspaceSnapshot: undefined,
         tabSnapshot: undefined
-    }
+    },
+    latestPathForChangesInContent: {
+        path: undefined, 
+        time: undefined
+    },
+    latestPathToUndo: undefined,
+    latestResetTime: undefined
 }
 
 const _workspaceReducer = createReducer(initialState,
@@ -68,6 +79,9 @@ const _workspaceReducer = createReducer(initialState,
     on(workspaceActions.treeLoaded, (state, { }) => {
         return ({ ...state, treeLoaded: true }) // use previous state if the path isn't changed
     }),
+    on(workspaceActions.undo, (state, {path}) => {
+        return ({ ...state, latestPathToUndo: path }) // use previous state if the path isn't changed
+    }),
     on(workspaceActions.renamingNode, (state, { oldPath, oldName, newPath, newName }) => {
         if (oldPath == newPath)
             return state;
@@ -84,11 +98,17 @@ const _workspaceReducer = createReducer(initialState,
     on(workspaceActions.rootLoaded, (state, { root }) => {
         return ({ ...state, root });
     }),
+    on(workspaceActions.resetWorkspace, (state, {}) => {
+        return ({ ...state, latestResetTime: new Date() });
+    }),
     on(workspaceActions.editorLoaded, (state, {}) => {
         return ({ ...state, editorLoaded: true });
     }),
     on(workspaceActions.workspaceDestoryed, (state, {}) => {
         return ({ ...initialState });
+    }),
+    on(workspaceActions.notifyChangesInContent, (state, {path}) => {
+        return ({ ...state, latestPathForChangesInContent: {path, time: new Date()} });
     }),
     on(workspaceActions.requestToSave, (state, {}) => {
         let onProgress = state.latestSnapshot.requestTime && !state.latestSnapshot.doneTime;

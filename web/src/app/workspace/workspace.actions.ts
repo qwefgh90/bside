@@ -69,3 +69,15 @@ export const updateTabSnapshot = createAction(
     '[Tab Component] Update the snapshot',
     props<{snapshot: TabSnapshot}>()
 )
+export const notifyChangesInContent = createAction(
+    '[Editor Component] Notify changes in the content',
+    props<{path: string}>()
+)
+export const undo = createAction(
+    '[Stage Component] Undo',
+    props<{path: string}>()
+)
+export const resetWorkspace = createAction(
+    '[Stage Component] Reset the workspace',
+    props<{}>()
+)

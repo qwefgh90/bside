@@ -6,6 +6,8 @@ import { togglePreview } from 'easymde';
 import { TextUtil, FileType } from '../text/text-util';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { NotifyContentChangeAction } from '../core/action/user/notify-content-change-action';
+import { Store } from '@ngrx/store';
+import { notifyChangesInContent } from '../workspace.actions';
 
 
 @Component({
@@ -21,7 +23,7 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
     content: undefined
   };
   mde: EasyMDE;
-  constructor(private dispatcher: UserActionDispatcher) {
+  constructor(private store: Store) {
   }
 
   @Input("preview")
@@ -47,7 +49,7 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
     if (!this.preview) {
       this.mde.codemirror.on("change", () => {
         this.models.set(this.current.path, this.mde.value());
-        new NotifyContentChangeAction(this.current.path, this, this.dispatcher);
+        this.store.dispatch(notifyChangesInContent({path: this.current.path}));
       });
     }
   }

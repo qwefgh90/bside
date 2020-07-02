@@ -1,17 +1,8 @@
-import { Component, OnInit, EventEmitter, Output, ViewChild, Input, OnChanges, SimpleChanges, AfterContentInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, OnChanges, SimpleChanges, AfterContentInit, OnDestroy } from '@angular/core';
 import { Tab } from './tab';
-import { MatTab, MatTabGroup } from '@angular/material/tabs';
-import { filter } from 'rxjs/operators';
-import { Subject, Subscription } from 'rxjs';
+import { MatTabGroup } from '@angular/material/tabs';
+import { Subscription } from 'rxjs';
 import { WorkspacePack } from '../workspace/workspace-pack';
-import { MicroActionComponentMap, SupportedComponents } from '../core/action/micro/micro-action-component-map';
-import { MicroAction } from '../core/action/micro/micro-action';
-import { TabRenameMicroAction } from '../core/action/micro/tab-rename-micro-action';
-import { TabSelectAction } from '../core/action/micro/tab-select-action';
-import { TabCloseMicroAction } from '../core/action/micro/tab-close-micro-action';
-import { SelectAction } from '../core/action/user/select-action';
-import { TabSnapshotMicroAction } from '../core/action/micro/tab-snapshot-micro-action';
-import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
 import { clickTab, updateTabSnapshot } from '../workspace.actions';
 import { workspaceReducerKey, WorkspaceState } from '../workspace.reducer';
@@ -74,17 +65,6 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
   @ViewChild(MatTabGroup, { static: true }) group: MatTabGroup;
 
   ngOnInit() {
-    let actionSubject = MicroActionComponentMap.getSubjectByComponent(SupportedComponents.TabComponent);
-    let s = actionSubject.subscribe((micro: MicroAction<any>) => {
-      if (micro instanceof TabRenameMicroAction) {
-      } else if (micro instanceof TabSelectAction) {
-      } else if (micro instanceof TabCloseMicroAction) {
-      } else if (micro instanceof TabSnapshotMicroAction) {
-        const tabs = Array.from(this.tabs);
-        micro.succeed(() => { }, tabs);
-      }
-    })
-    this.subscriptions.push(s);
   }
 
   ngOnDestroy() {

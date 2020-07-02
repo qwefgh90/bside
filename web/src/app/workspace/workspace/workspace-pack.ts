@@ -1,5 +1,6 @@
 import { BlobPack } from './pack';
 import { GithubNode } from '../tree/github-tree-node';
+import { nodeCreated } from '../workspace.actions';
 
 export class WorkspacePack {
     public static of(repositoryId: number, repositoryName: string, commit_sha: string, tree_sha: string, branchName: string, editorPacks: BlobPack[], treePacks: GithubNode[]
@@ -11,7 +12,9 @@ export class WorkspacePack {
         p.branchName = branchName;
         p.editorPacks = editorPacks;
         p.tabs = tabs;
-        p.treePacks = treePacks;
+        p.treePacks = treePacks.map((node) => {
+            return {...node, url: ''};
+        });
         p.tree_sha = tree_sha;
         p.selectedNodePath = selectedNodePath;
         p.autoSave = autoSave;
@@ -20,10 +23,6 @@ export class WorkspacePack {
     }
 
     private optimizeTree(){
-        //trim the url of node. it is not usuful and too long.
-        this.treePacks.forEach(v => {
-            v.url = '';
-        })
     }
 
     selectedNodePath: string;

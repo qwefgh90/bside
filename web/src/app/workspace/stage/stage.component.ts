@@ -9,6 +9,8 @@ import { SelectAction } from '../core/action/user/select-action';
 import { UndoAction } from '../core/action/user/undo-action';
 import { ClearAction } from '../core/action/user/clear-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
+import { Store } from '@ngrx/store';
+import { undo, resetWorkspace } from '../workspace.actions';
 
 @Component({
   selector: 'app-stage',
@@ -27,7 +29,7 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   options = {
   };
 
-  constructor(private dispatcher: UserActionDispatcher, private wrapper: WrapperService) { }
+  constructor(private dispatcher: UserActionDispatcher, private wrapper: WrapperService, private store: Store) { }
 
   ngOnInit() {
   }
@@ -68,11 +70,13 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   }
 
   undoAll(){
-    new ClearAction(this, this.dispatcher).start();
+    this.store.dispatch(resetWorkspace({}));
+    // new ClearAction(this, this.dispatcher).start();
   }
 
   undo(node:GithubTreeNode) {
-    new UndoAction(node.path, this, this.dispatcher).start();
+    this.store.dispatch(undo({path: node.path}));
+    // new UndoAction(node.path, this, this.dispatcher).start();
   }
   
   isPossibleCommit: boolean = true;

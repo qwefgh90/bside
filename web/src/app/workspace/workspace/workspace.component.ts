@@ -31,27 +31,19 @@ import {
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { InfoComponent, DisplayInfo } from '../info/info.component';
 import { BuildHistoryComponent } from '../build-history/build-history.component';
-import { async } from '@angular/core/testing';
 import { MicroActionComponentMap, SupportedComponents } from '../core/action/micro/micro-action-component-map';
-import { WorkspaceRenameMicroAction } from '../core/action/micro/workspace-rename-micro-action';
-import { WorkspaceSelectMicroAction } from '../core/action/micro/workspace-select-micro-action';
-import { SelectAction } from '../core/action/user/select-action';
-import { WorkspaceRemoveNodeMicroAction } from '../core/action/micro/workspace-remove-node-micro-action';
-import { WorkspaceCreateMicroAction } from '../core/action/micro/workspace-create-micro-action';
-import { WorkspaceContentChangeMicroAction } from '../core/action/micro/workspace-content-change-micro-action';
-import { WorkspaceSnapshotMicroAction, WorkspaceSnapshot } from '../core/action/micro/workspace-snapshot-micro-action';
-import { SaveAction } from '../core/action/user/save-action';
 import { WorkspaceClearMicroAction } from '../core/action/micro/workspace-clear-micro-action';
 import { WorkspaceUndoMicroAction as WorkspaceUndoMicroAction } from '../core/action/micro/workspace-undo-micro-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { MatCheckbox } from '@angular/material/checkbox';
-import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, timestamp, map, filter, switchMap, takeUntil, takeWhile, skipWhile, retry } from 'rxjs/operators';
+import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, timestamp, map, filter, switchMap, takeUntil, takeWhile, skipWhile, retry, take } from 'rxjs/operators';
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
 import { WorkspaceState, workspaceReducerKey } from '../workspace.reducer';
 import { selectPath as selectPathWithRouterOrSnapshot, editorLoaded, workspaceDestoryed, requestToSave, updateWorkspaceSnapshot } from '../workspace.actions';
-import { selectQueryParam, selectQueryParams, selectRouteParam } from 'src/app/app-routing.reducer';
+import { selectQueryParam, selectRouteParam } from 'src/app/app-routing.reducer';
 import { DOCUMENT } from '@angular/common';
+import { WorkspaceSnapshot } from '../core/action/micro/workspace-snapshot-micro-action';
 
 declare const monaco;
 
@@ -168,8 +160,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let editorSelector = createSelector(feature, (state: WorkspaceState) => state.editorLoaded);
     let renamedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRenamingPath);
     let createdNodeSelector = createSelector(feature, (state: WorkspaceState) => state.latestCreatedPath);
+    let pathToUndoSelector = createSelector(feature, (state: WorkspaceState) => state.latestPathToUndo);
     let saveRequestSelector = createSelector(feature, (state: WorkspaceState) => state.latestSnapshot.requestTime);
     let latestSnapshotSelector = createSelector(feature, (state: WorkspaceState) => state.latestSnapshot);
+    let removedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRemovedPath);
+    let latestResetTimeSelector = createSelector(feature, (state: WorkspaceState) => state.latestResetTime);
+    let latestPathForChangesInContentSelector = createSelector(feature, (state: WorkspaceState) => state.latestPathForChangesInContent);
+    
     let selectedNode$ = this.store.pipe(select(createSelector(nodeSelector, editorSelector, (node, loaded) => ({node, loaded}))));
     let s0 = selectedNode$.subscribe(({node, loaded}) => {
       if (loaded) {
@@ -178,6 +175,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.dispatchSaveAction(this.autoSaveRef.checked);
       }
     });
+
     let pathSelector$ = this.store.pipe(select(selectedPathSelector));
     let s1 = pathSelector$.subscribe(path => {
       if(path && path != ''){
@@ -194,7 +192,32 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       if (renameInfo) {
         let { oldPath, newPath } = renameInfo;
         this.nodeMoved(oldPath, newPath);
+        this.invalidateDirtyCount();
         this.dispatchSaveAction(this.autoSaveRef.checked);
+      }
+    });
+
+    let removedPath$ = this.store.pipe(select(removedPathSelector));
+    let s8 = removedPath$.subscribe((removedPath) => {
+      if (removedPath) {
+        this.invalidateDirtyCount();
+        this.dispatchSaveAction(this.autoSaveRef.checked);
+      }
+    });
+
+    let latestPathForChanges$ = this.store.pipe(select(latestPathForChangesInContentSelector));
+    let s9 = latestPathForChanges$.subscribe(({path, time}) => {
+      if (path) {
+        this.nodeContentChanged(path);
+        this.dispatchSaveAction(this.autoSaveRef.checked);
+      }
+    });
+
+    let latestResetTime$ = this.store.pipe(select(latestResetTimeSelector));
+    let s11 = latestResetTime$.subscribe((date) => {
+      if (date) {
+        this.database.delete(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
+        this.document.location.reload();
       }
     });
 
@@ -202,9 +225,30 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let s3 = createdNode$.subscribe((path) => {
       if (this.selectedNodePath != path) {
         this.nodeCreated(path);
+        this.invalidateDirtyCount();
         this.dispatchSaveAction(this.autoSaveRef.checked);
       }
     });
+
+    let pathToUndo$ = this.store.pipe(select(pathToUndoSelector));
+    let s10 = pathToUndo$.subscribe((path) => {
+      if (path) {
+        const node = this.root.find(path);
+        if (node != undefined) {
+          const asyncText = this.getOriginalText(node.sha)
+          asyncText.then(async (text) => {
+            this.editor.setContent(path, text);
+            await this.nodeContentChanged(path);
+            this.dispatchSaveAction(this.autoSaveRef.checked);
+          }, () => {
+            console.error(`The original content of ${path} couldn't be loaded.`);
+          });
+        }else{
+          console.warn(`${path} couldn't be found.`);
+        }
+      }
+    });
+
 
     let queryPathSelector = selectQueryParam('path');
     let branchNameSelector = selectQueryParam('branch');
@@ -218,24 +262,22 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       if (editorLoaded && userId && repositoryName) {
         let promise = this.initialize(userId, repositoryName, branchName);
         promise.then(async() => {
+          this.invalidateDirtyCount();
           let loadedPack = await this.database.get(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha)
             .then(v => {
               console.log(`${v.commit_sha} have been loaded completely.`)
               return v;
             })
             .catch(r => {
-              console.log(r);
+              console.error(r);
               return undefined;
             }) as WorkspacePack;
 
-            let s = this.store.select(queryPathSelector).subscribe((path) => {
-            if(path){
+          let s = this.store.select(queryPathSelector).subscribe((path) => {
+            if (path) {
               this.store.dispatch(selectPathWithRouterOrSnapshot({ path }));
-            }else if(loadedPack.selectedNodePath){
-              setTimeout(() => {
-                this.store.dispatch(selectPathWithRouterOrSnapshot({ path: loadedPack.selectedNodePath }));
-                // this.router.navigate([], { queryParamsHandling: 'merge', queryParams: { path: loadedPack.selectedNodePath } });
-              }, 100);
+            } else if (loadedPack.selectedNodePath) {
+              setTimeout(() => this.store.dispatch(selectPathWithRouterOrSnapshot({ path: loadedPack.selectedNodePath })), 100);
             }
           });
           s.unsubscribe();
@@ -262,7 +304,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       }
     });
     
-    this.subscriptions.push(s0, s1, s2, s3, s4, s5, s6, s7);
+    this.subscriptions.push(s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11);
   }
 
   ngOnInit() {
@@ -279,56 +321,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.subscriptions.push(this.saveActionSubject.pipe(tap(() => {
     }), debounceTime(15000)).subscribe(() => {
       this.dispatchSaveAction(true);
-    }));
-
-    this.subscriptions.push(MicroActionComponentMap.getSubjectByComponent(SupportedComponents.WorkspaceComponent).subscribe(async (micro) => {
-      if (micro instanceof WorkspaceContentChangeMicroAction) {
-        try {
-          await this.nodeContentChanged(micro.path);
-          this.dispatchSaveAction(this.autoSaveRef.checked);
-          micro.succeed(() => { });
-        } catch (ex) {
-          micro.fail(ex);
-        }
-      } else if (micro instanceof WorkspaceSnapshotMicroAction) {
-        if (this.treeStatus == TreeStatusOnWorkspace.Done) {
-          this.saving = true;
-          micro.parent.promise().finally(() => {
-            setTimeout(() => {
-              this.saving = false;
-            }, 300);
-          })
-          micro.succeed(() => { }, this.getSnapshot());
-        } else {
-          micro.fail(new Error('the workspace component is not ready'));
-        }
-      } else if (micro instanceof WorkspaceClearMicroAction) {
-        try {
-          this.database.delete(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
-          this.editor.clear();
-          this.selectedNodePath = undefined;
-          this.refreshSubject.next();
-          micro.succeed(() => { });
-        } catch (ex) {
-          micro.fail(ex);
-        }
-      } else if (micro instanceof WorkspaceUndoMicroAction) {
-        try {
-          const node = this.root.find(micro.path);
-          if (node != undefined) {
-            const asyncText = this.getOriginalText(node.sha)
-            await asyncText.then(async (text) => {
-              this.editor.setContent(micro.path, text);
-              await this.nodeContentChanged(micro.path);
-              this.dispatchSaveAction(this.autoSaveRef.checked);
-            })
-          }
-          micro.succeed(() => { });
-        } catch (ex) {
-          micro.fail(ex);
-        }
-      }
-      this.invalidateDirtyCount();
     }));
   }
 
@@ -620,7 +612,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   nodeMoved(fromPath: string, toPath: string) {
-    let target = this.root.find(fromPath);
+    let target = this.root.find(toPath);
     if (target.type == 'blob') {
       if (this.editor.exist(fromPath)) {
         let content = this.editor.getContent(fromPath);
@@ -924,11 +916,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return `https://github.com/${this.userId}/${this.repositoryName}/blob/${this.selectedBranch.name}/${path}`
   }
 
-  private dispatchSaveAction(eagerly: boolean): Promise<string> | void {
+  private dispatchSaveAction(eagerly: boolean): Promise<any> | void {
     if (eagerly) {
       this.isBeingChanged = false;
-      // return new SaveAction(this, this.userActionDispatcher).start();
       this.store.dispatch(requestToSave({}));
+      let feature = createFeatureSelector(workspaceReducerKey);
+      let done = this.store.select(createSelector(feature, (state:WorkspaceState) => state.latestSnapshot.doneTime));
+      return done.pipe(take(1)).toPromise();
     } else {
       this.isBeingChanged = true;
       return this.saveActionSubject.next();

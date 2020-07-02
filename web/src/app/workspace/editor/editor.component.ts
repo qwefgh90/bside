@@ -12,6 +12,8 @@ import { MarkdownEditorComponent } from '../markdown-editor/markdown-editor.comp
 import { NotifyContentChangeAction } from '../core/action/user/notify-content-change-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { debounceTime } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
+import { notifyChangesInContent } from '../workspace.actions';
 
 const prefix: string = 'X'.repeat(100);
 enum EditorMode{
@@ -91,7 +93,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
     return this.fsm.currentState == EditorMode.None;
   }
 
-  constructor(private monacoService: MonacoService, private deviceService: DeviceDetectorService, private dispatcher: UserActionDispatcher) {  
+  constructor(private monacoService: MonacoService, private deviceService: DeviceDetectorService, private store: Store) {  
     this.initFsm();
   }
 
@@ -114,7 +116,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
     this.subscriptions.push(this.notifyContentChangeSubject.pipe(
       debounceTime(2000)
     ).subscribe((path) => {
-      new NotifyContentChangeAction(path, this, this.dispatcher).start();
+      this.store.dispatch(notifyChangesInContent({path}));
+      // new NotifyContentChangeAction(path, this, this.dispatcher).start();
     }));
   }
 
