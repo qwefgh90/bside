@@ -15,7 +15,7 @@ import { notifyChangesInContent } from '../workspace.actions';
   templateUrl: './markdown-editor.component.html',
   styleUrls: ['./markdown-editor.component.css']
 })
-export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit {
+export class MarkdownEditorComponent implements Editor, OnInit, AfterContentInit {
 
   models: Map<string, string> = new Map<string, string>();
   current: {path: string, content: string} = {
@@ -118,8 +118,11 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
   /**
    * go to markdown view
    */
-  md() {
-    togglePreview(this.mde);
+  md(on: boolean) {
+    if(on && !this.isMdOn)
+      togglePreview(this.mde);
+    else if(!on && this.isMdOn)
+      togglePreview(this.mde);
   }
   /**
    * get a path list

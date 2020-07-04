@@ -42,7 +42,7 @@ export interface Editor extends WorkspaceChild{
     /**
      * go to markdown view
      */
-    md()
+    md(on: boolean)
     /**
      * get a path list
      */

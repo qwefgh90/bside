@@ -40,10 +40,11 @@ import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, times
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
 import { WorkspaceState, workspaceReducerKey } from '../workspace.reducer';
-import { selectPath as selectPathWithRouterOrSnapshot, editorLoaded, workspaceDestoryed, requestToSave, updateWorkspaceSnapshot } from '../workspace.actions';
+import { selectPath as selectPathWithRouterOrSnapshot, monacoLoaded, workspaceDestoryed, requestToSave, updateWorkspaceSnapshot, createNewGithubTree } from '../workspace.actions';
 import { selectQueryParam, selectRouteParam } from 'src/app/app-routing.reducer';
 import { DOCUMENT } from '@angular/common';
 import { WorkspaceSnapshot } from '../core/action/micro/workspace-snapshot-micro-action';
+import { MarkdownEditorComponent } from '../markdown-editor/markdown-editor.component';
 
 declare const monaco;
 
@@ -94,6 +95,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   @ViewChild("tree", { static: true }) tree: GithubTreeComponent;
   @ViewChild("editor1") editor1: Editor;
   @ViewChild("editor2") editor2: Editor;
+  @ViewChild("preview") preview: MarkdownEditorComponent;
   @ViewChild("stage", { static: true }) stage: Stage;
   @ViewChild("action", { static: true }) action: ActionComponent;
   @ViewChild(CommitProgressComponent, { static: true }) commitProgress: CommitProgressComponent;
@@ -104,6 +106,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return this.isDesktop ? this.editor1 : this.editor2;
   }
 
+  isPreview = false;
   isDesktop = false;
   //these variables synchronized with router
   //these variables sent to child components
@@ -122,7 +125,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   //local state
   saveActionSubject: Subject<any> = new Subject();
   selectedNodePath: string;
-  contentStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
+  editorStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
   treeStatus: TreeStatusOnWorkspace = TreeStatusOnWorkspace.NotInitialized;
   workspaceStatus: WorkspaceStatus = WorkspaceStatus.View;
   selectedFileType: FileType;
@@ -132,20 +135,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   errorDescription: string;
 
   dirtyCount: number = 0;
-  commitStatePack: WorkspacePack;
-  afterCommit: boolean;
-  afterViewInit: Subject<void> = new ReplaySubject(1);;
 
   subjectWithoutSaveFile = new Subject<string>();
 
   subjectWithSaveFile = new Subject<WorkspacePack>();
-  refreshSubject = new Subject<void>()
-  sameUrlNavigationSubject = new Subject<void>()
   subscriptions: Array<Subscription> = []
   leftPaneOpened = false;
-
-  saveBufferPeriod = 10;
-  saveTimePeriod = 15000;
 
   @ViewChild("leftDrawer") leftPane: MatDrawer;
   @ViewChild("rightDrawer") rightPane: MatDrawer;
@@ -171,6 +166,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let s0 = selectedNode$.subscribe(({node, loaded}) => {
       if (loaded) {
         let path = node?.path;
+        this.hidePreview();
         this.fillEditor(path);
         this.dispatchSaveAction(this.autoSaveRef.checked);
       }
@@ -180,7 +176,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let s1 = pathSelector$.subscribe(path => {
       if(path && path != ''){
         if (this.route.snapshot.queryParams['path'] == path) {
-          this.sameUrlNavigationSubject.next();
         } else {
           this.router.navigate([], { queryParamsHandling: 'merge', queryParams: { path: path } }); //synchronization with router
         }
@@ -214,7 +209,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     });
 
     let latestResetTime$ = this.store.pipe(select(latestResetTimeSelector));
-    let s11 = latestResetTime$.subscribe((date) => {
+    let s5 = latestResetTime$.subscribe((date) => {
       if (date) {
         this.database.delete(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
         this.document.location.reload();
@@ -275,9 +270,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
           let s = this.store.select(queryPathSelector).subscribe((path) => {
             if (path) {
-              this.store.dispatch(selectPathWithRouterOrSnapshot({ path }));
+              setTimeout(() => this.store.dispatch(selectPathWithRouterOrSnapshot({ path })), 0);
             } else if (loadedPack.selectedNodePath) {
-              setTimeout(() => this.store.dispatch(selectPathWithRouterOrSnapshot({ path: loadedPack.selectedNodePath })), 100);
+              setTimeout(() => this.store.dispatch(selectPathWithRouterOrSnapshot({ path: loadedPack.selectedNodePath })), 0);
             }
           });
           s.unsubscribe();
@@ -292,11 +287,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.store.dispatch(updateWorkspaceSnapshot({snapshot: this.getSnapshot()}));
     });
 
-    let s5 = this.refreshSubject.subscribe(() => {
-      let promise = this.initialize(this.userId, this.repositoryName, this.selectedBranch.name);
-      console.debug(`refreshSubject: ${this.userId}, ${this.repositoryName}, ${this.selectedBranch.name}`);
-    });
-
     let s7 = this.store.select(latestSnapshotSelector).subscribe((snapshotInfo) => {
       if(snapshotInfo?.doneTime){
         let pack = WorkspacePack.of(snapshotInfo.workspaceSnapshot.repositoryId, snapshotInfo.workspaceSnapshot.repositoryName, snapshotInfo.workspaceSnapshot.commitSha, snapshotInfo.workspaceSnapshot.treeSha, snapshotInfo.workspaceSnapshot.name, snapshotInfo.workspaceSnapshot.packs, snapshotInfo.treeSnapshot.nodes, snapshotInfo.tabSnapshot.tabs, snapshotInfo.workspaceSnapshot.selectedNodePath, snapshotInfo.workspaceSnapshot.autoSave);
@@ -304,13 +294,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       }
     });
     
-    this.subscriptions.push(s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11);
+    this.subscriptions.push(s0, s1, s2, s3, s4, s6, s7, s8, s9, s10, s5);
   }
 
   ngOnInit() {
     let loadPromise = this.initalizeVSLoader();
     loadPromise.then(() => {
-      this.store.dispatch(editorLoaded({}));
+      this.store.dispatch(monacoLoaded({}));
     });
     this.initializeNgrx();
 
@@ -326,17 +316,18 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   initialize(userId, repositoryName, branchName): Promise<void> {
     this.treeStatus = TreeStatusOnWorkspace.Loading;
-    this.contentStatus = ContentStatusOnWorkspace.NotInitialized;
-    if (!this.afterCommit) {
-      this.resetTab();
-      this.resetEditor();
-    }
+    this.editorStatus = ContentStatusOnWorkspace.NotInitialized;
+    this.resetTab();
+    this.resetEditor();
     this.resetWorkspace();
     let promise = this.initializeWorkspace(userId, repositoryName, branchName).then(() => {
+      console.log('Your workspace have been initialized with latest saved data.');
       if (this.root == undefined)
         this.treeStatus = TreeStatusOnWorkspace.TreeEmpty;
       else
         this.treeStatus = TreeStatusOnWorkspace.Done;
+    }, () => {
+      this.treeStatus = TreeStatusOnWorkspace.Fail;
     });
     return promise;
   }
@@ -345,15 +336,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     try {
       this.userId = userId;
       this.repositoryName = repositoryName;
-      let details = this.wrapper.repositoryDetails(userId, repositoryName).then((result) => {
+      await this.wrapper.repositoryDetails(userId, repositoryName).then((result) => {
         this.repositoryDetails = result;
       }, () => Promise.reject("Repository can't be loaded."));
 
-      let branches = this.wrapper.branches(userId, repositoryName).then((result) => {
+      await this.wrapper.branches(userId, repositoryName).then((result) => {
         this.branches = result;
       }, () => Promise.reject("Branches can't be loaded."));
-
-      await Promise.all([details, branches]);
 
       if (this.branches.length == 0) {
         return Promise.reject("It seems that this repository is empty.");
@@ -382,10 +371,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           await this.tab.load(loadedPack);
         }else{
           await this.initializeTree(this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha));
+          await this.editor.load(undefined);
+          await this.tab.load(undefined);
         }
-        console.log('Your workspace have been initialized with latest saved data.');
-        return;
-        // return treeResult;//.then(() => doAfterLoadingTree(), () => console.error("A tree can't be loaded."));
+        return Promise.resolve();
       }
     } catch (error) {
       return Promise.reject(error);
@@ -397,6 +386,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       const nodeTransformer = new GithubTreeToTree(tree);
       const hiarachyTree = nodeTransformer.getTree();
       this.root = hiarachyTree;
+      this.store.dispatch(createNewGithubTree({}));
       console.log(`A tree is loaded with ${tree.tree.length} nodes.`)
     }, () => this.root = undefined);
   }
@@ -460,18 +450,22 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }
   }
 
-  toggleMd() {
-    if (this.editor.isMdOn) {
-      this.editor.select(this.selectedNodePath);
-    } else {
-      let nodes = this.root.getBlobNodes();
-      const filteredNodes = nodes.filter((v) => {
-        return v.path == this.selectedNodePath;
-      });
-      if (filteredNodes.length == 1) {
-        this.editor.md();
-      }
-    }
+  togglePreview(){
+    if(!this.isPreview)
+      this.showPreview();
+    else
+      this.hidePreview();
+  }
+
+  private showPreview() {
+    this.isPreview = true;
+    this.preview.setContent("preview", this.editor.getContent());
+    this.preview.select('preview');
+    setTimeout(() => this.preview.md(true), 0);
+  }
+
+  private hidePreview(){
+    this.isPreview = false;
   }
 
   resetTab() {
@@ -489,7 +483,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.selectedFileType = undefined;
     this.selectedNodePath = undefined;
     this.errorDescription = undefined;
-    this.afterCommit = false;
     this.action.select(ActionState.Edit);
   }
 
@@ -499,8 +492,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       ripples[0].remove();
     this.autoSaveRef.checked = false;
     this.toggle();
-    this.afterViewInit.next();
-    this.afterViewInit.complete();
   }
 
   ngOnDestroy() {
@@ -553,13 +544,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   fillEditor(pathOrNode: string | GithubTreeNode | undefined) {
     if (!pathOrNode) {
       this.selectedNodePath = undefined;
-      this.contentStatus = ContentStatusOnWorkspace.NotInitialized
+      this.editorStatus = ContentStatusOnWorkspace.NotInitialized
     } else {
       const node = (typeof pathOrNode == 'string') ? this.root?.find(pathOrNode) : pathOrNode;
       if (node && node.type == 'blob') {
         this.selectedRawPath = undefined;
         this.selectedNodePath = node.path;
-        this.contentStatus = ContentStatusOnWorkspace.Loading;
+        this.editorStatus = ContentStatusOnWorkspace.Loading;
         let fileType = TextUtil.getFileType(node.name);
         this.selectedFileType = fileType;
         if (node.state.filter((v) => v == NodeStateAction.Created).length == 1) {
@@ -576,7 +567,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           } else {
             console.error(`The blob of ${node.path} must exist in monaco editor`);
           }
-          this.contentStatus = ContentStatusOnWorkspace.Done;
+          this.editorStatus = ContentStatusOnWorkspace.Done;
         } else {
           this.wrapper.getBlob(this.userId, this.repositoryName, node.sha).then(
             (blob: Blob) => {
@@ -594,7 +585,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
               console.error(node);
             }
           ).finally(() => {
-            this.contentStatus = ContentStatusOnWorkspace.Done;
+            this.editorStatus = ContentStatusOnWorkspace.Done;
           });
         }
       } else {
@@ -755,14 +746,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           console.error(err);
           console.error(`It isn't successful in getting new commit of ${this.selectedBranch.name}`);
           this.treeStatus = TreeStatusOnWorkspace.Done;
-          // this.document.location.reload();
         })
-        // this.afterCommit = true;
-        // this.clearCommits();
-        // setTimeout(() => {
-        //   this.treeStatus = TreeStatusOnWorkspace.Done;
-        //   this.document.location.reload();
-        // }, 10000);
       }
     }
   }

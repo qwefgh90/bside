@@ -42,3 +42,12 @@ body{
 .mat-menu-panel{
     min-height: 0px !important;
 }
+
+.grow {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    min-height: 0px;
+    flex-direction: column;
+    /* height: 1000px; */
+}

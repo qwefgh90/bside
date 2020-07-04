@@ -23,6 +23,7 @@ export interface WorkspaceState {
         newName: string
     }
     treeLoaded: boolean;
+    tabLoaded: boolean;
     editorLoaded: boolean;
     latestSnapshot: {
         requestTime: Date,
@@ -36,7 +37,8 @@ export interface WorkspaceState {
         time: Date
     },
     latestPathToUndo: string,
-    latestResetTime: Date
+    latestResetTime: Date,
+    latestTreeLoadedTime: Date
 }
 
 export const initialState: WorkspaceState = {
@@ -47,6 +49,7 @@ export const initialState: WorkspaceState = {
     latestRenamingPath: undefined,
     latestCreatedPath: undefined,
     treeLoaded: false,
+    tabLoaded: false,
     editorLoaded: false,
     latestSnapshot: {
         requestTime: undefined,
@@ -60,12 +63,28 @@ export const initialState: WorkspaceState = {
         time: undefined
     },
     latestPathToUndo: undefined,
-    latestResetTime: undefined
+    latestResetTime: undefined,
+    latestTreeLoadedTime: undefined
 }
 
-const _workspaceReducer = createReducer(initialState,
+const componentLoadingStatus = [
+    on(workspaceActions.monacoLoaded, (state: WorkspaceState, {}) => {
+        return ({ ...state, editorLoaded: true });
+    }),
+    on(workspaceActions.treeLoaded, (state: WorkspaceState, { }) => {
+        return ({ ...state, treeLoaded: true }) 
+    }),
+    on(workspaceActions.tabLoaded, (state: WorkspaceState, { }) => {
+        return ({ ...state, tabLoaded: true })
+    })
+];
+
+const _workspaceReducer = createReducer(initialState, ...componentLoadingStatus,
+    on(workspaceActions.createNewGithubTree, (state: WorkspaceState, { }) => {
+        return ({ ...state, latestTreeLoadedTime: new Date() })
+    }),
     on(workspaceActions.clickTab, (state, { path }) => {
-        return (state.selectedPath == path ? state : { ...state, selectedPath: path }) // use previous state if the path isn't changed
+        return (state.selectedPath == path ? state : { ...state, selectedPath: path }) 
     }),
     on(workspaceActions.nodeSelected, (state, { node }) => {
         return { ...state, selectedNode: node, selectedPath: node?.path };
@@ -74,13 +93,10 @@ const _workspaceReducer = createReducer(initialState,
         return { ...state, latestRemovedPath: node.path };
     }),
     on(workspaceActions.selectPath, (state, { path }) => {
-        return (state.selectedPath == path ? state : { ...state, selectedPath: path }) // use previous state if the path isn't changed
-    }),
-    on(workspaceActions.treeLoaded, (state, { }) => {
-        return ({ ...state, treeLoaded: true }) // use previous state if the path isn't changed
+        return (state.selectedPath == path ? state : { ...state, selectedPath: path }) 
     }),
     on(workspaceActions.undo, (state, {path}) => {
-        return ({ ...state, latestPathToUndo: path }) // use previous state if the path isn't changed
+        return ({ ...state, latestPathToUndo: path }) 
     }),
     on(workspaceActions.renamingNode, (state, { oldPath, oldName, newPath, newName }) => {
         if (oldPath == newPath)
@@ -95,14 +111,8 @@ const _workspaceReducer = createReducer(initialState,
     on(workspaceActions.nodeCreated, (state, { path }) => {
         return ({ ...state, latestCreatedPath: path });
     }),
-    on(workspaceActions.rootLoaded, (state, { root }) => {
-        return ({ ...state, root });
-    }),
     on(workspaceActions.resetWorkspace, (state, {}) => {
         return ({ ...state, latestResetTime: new Date() });
-    }),
-    on(workspaceActions.editorLoaded, (state, {}) => {
-        return ({ ...state, editorLoaded: true });
     }),
     on(workspaceActions.workspaceDestoryed, (state, {}) => {
         return ({ ...initialState });

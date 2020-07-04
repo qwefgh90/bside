@@ -1,19 +1,15 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input, OnChanges, OnDestroy, Output, EventEmitter, SimpleChanges } from '@angular/core';
 import * as monacoNameSpace from 'monaco-editor';
 import { MonacoService } from './monaco.service';
-import { Subscription, Observable, Subject } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { Editor } from './editor';
-import { DiffEditor } from '../diff-editor/diff-editor';
 import { TypeState } from 'typestate';
 import { WorkspacePack } from '../workspace/workspace-pack';
 import { TextUtil, FileType } from '../text/text-util';
 import { DeviceDetectorService } from 'ngx-device-detector';
-import { MarkdownEditorComponent } from '../markdown-editor/markdown-editor.component';
-import { NotifyContentChangeAction } from '../core/action/user/notify-content-change-action';
-import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { debounceTime } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
-import { notifyChangesInContent } from '../workspace.actions';
+import { notifyChangesInContent, editorLoaded } from '../workspace.actions';
 
 const prefix: string = 'X'.repeat(100);
 enum EditorMode{
@@ -34,9 +30,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   model: monacoNameSpace.editor.ITextModel
   notifyContentChangeSubject: Subject<string> = new Subject();
 
-  @ViewChild("editor", { static: true }) editorContent: ElementRef;
-  // @ViewChild("diffeditor1", { static: true }) diffEditor: DiffEditor;
-  @ViewChild("markdowneditor", { static: true }) markdownEditor: MarkdownEditorComponent;
+  @ViewChild("editor", { static: true }) editorElement: ElementRef;
 
   diffTargetPath: string;
   subscriptions: Subscription[] = [];
@@ -54,8 +48,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       return true;
     });
     this.fsm.onExit(EditorMode.Md, (to: EditorMode) => {
-      this.markdownEditor.setContent('preview', '');
-      // this.markdown = '';
       return true;
     });
   }
@@ -118,8 +110,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
     }));
   }
 
-  load(pack: WorkspacePack) {
-    pack.editorPacks.forEach((v) => {
+  load(pack: WorkspacePack | undefined) {
+    pack?.editorPacks?.forEach((v) => {
       let content;
       let type = TextUtil.getFileType(v.path);
       if (type == FileType.Text) {
@@ -129,6 +121,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       }
       this.setContent(v.path, content);
     });
+    this.store.dispatch(editorLoaded({}));
+
   }
 
   ngAfterViewInit() {
@@ -164,7 +158,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   private createMonacoEditor(monaco) {
     if (monaco != undefined) {
       this.releaseEditors();
-      const myDiv: HTMLDivElement = this.editorContent.nativeElement;
+      const myDiv: HTMLDivElement = this.editorElement.nativeElement;
       this.editor = monaco.editor.create(myDiv, this.option);
     }
   }
@@ -172,7 +166,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   private createDiffEditor(monaco) {
     if (monaco != undefined) {
       this.releaseEditors();
-      const myDiv: HTMLDivElement = this.editorContent.nativeElement;
+      const myDiv: HTMLDivElement = this.editorElement.nativeElement;
       this.diffEditor = monaco.editor.createDiffEditor(myDiv, this.option);
     }
   }
@@ -217,7 +211,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   select(path: string): boolean {
     if (this.monaco != undefined) {
       
-      if (this._isDiffOn) {
+      if (this._isDiffOn || this.isMdOn) {
         this.createMonacoEditor(this.monaco);
         this.fsm.go(EditorMode.None);
       }
@@ -291,7 +285,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
 
   diffWith(path: string, content: string, originalPath?: string){
     if (this._isDiffOn == false) {
-      let targetModel= this.getModel(originalPath);
+      let targetModel = this.getModel(originalPath);
       this.createDiffEditor(this.monaco);
       this.diffTargetPath = prefix + path;
       let originalModel = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(this.diffTargetPath));
@@ -305,15 +299,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   }
   
   md(){
-    if (this._isMdOn == false) {
-      let targetModel= this.getModel();
-      // this.markdown = targetModel.getValue();
-      this.markdownEditor.setContent('preview', targetModel.getValue());
-      this.markdownEditor.select('preview');
-      if(!this.markdownEditor.isMdOn)
-        setTimeout(() => this.markdownEditor.md(), 0);
-      this._isMdOn = true;
-    }
   }
 
   getPathList(){

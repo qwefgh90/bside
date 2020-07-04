@@ -4,7 +4,7 @@ import { MatTabGroup } from '@angular/material/tabs';
 import { Subscription } from 'rxjs';
 import { WorkspacePack } from '../workspace/workspace-pack';
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
-import { clickTab, updateTabSnapshot } from '../workspace.actions';
+import { clickTab, updateTabSnapshot, tabLoaded } from '../workspace.actions';
 import { workspaceReducerKey, WorkspaceState } from '../workspace.reducer';
 import { FormControl } from '@angular/forms';
 
@@ -77,12 +77,12 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
   /**
    * It must be called after parent's ngAfterContentInit
    */
-  load(loadedPack: WorkspacePack) {
-    console.debug("the pack is loaded");
+  load(loadedPack: WorkspacePack | undefined) {
     this.clear();
-    loadedPack.tabs.forEach(v => {
+    loadedPack?.tabs?.forEach(v => {
       this.addTab(v);
     });
+    this.store.dispatch(tabLoaded({}));
   }
 
   ngAfterContentInit() {

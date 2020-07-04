@@ -57,14 +57,13 @@
               </button>
             </div>
             <span class="fileName">{{selectedNodePath != undefined ? selectedNodePath : ''}}
-              <span style="color: slategrey;" *ngIf="editor?.isMdOn">(preview)</span>
               <span style="color: slategrey;" *ngIf="editor?.isDiffOn">(diff)</span>
               <span
                 [@savingChanged]="saving ? 'in' : 'out'" style="color: #673ab7; font-size: 0.7em">
                 Saving...</span></span>
             <div class="spacer"></div>
             <div *ngIf="selectedNodePath != undefined && selectedFileType == FileType.Text">
-              <button mat-stroked-button title="Preview" (click)="toggleMd()" *ngIf="isDesktop"
+              <button mat-stroked-button title="Preview" (click)="togglePreview()" *ngIf="isDesktop"
                 [ngClass]="{'mat-button-toggle-checked':editor.isMdOn}">
                 <mat-icon>visibility</mat-icon>
               </button>
@@ -81,7 +80,7 @@
             </div>
           </div>
           <app-tab></app-tab>
-          <div style="flex:1; display: block" *ngIf="contentStatus == ContentStatus.NotInitialized">
+          <div style="flex:1; display: block" *ngIf="editorStatus == ContentStatus.NotInitialized">
             <div style="display: flex; justify-content: center; width: 100%; height: 100%; align-items: center;">
               <div style="text-align: center;">
                 <div>Welcome to BSide</div>
@@ -99,19 +98,23 @@
             </div>
           </div>
           <app-editor #editor1 style="flex:1; min-height: 0px;"
-            [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
-            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"
+            [class.block]="(selectedFileType == FileType.Text) && (editorStatus == ContentStatus.Done) && !isPreview"
+            [class.none]="((selectedFileType != FileType.Text) || (editorStatus != ContentStatus.Done)) || isPreview"
             *ngIf="isDesktop"></app-editor>
+          <app-markdown-editor #preview style="flex:1; min-height: 0px;" [preview]="true"
+            [class.block]="isPreview"
+            [class.none]="!isPreview"
+            *ngIf="isDesktop"></app-markdown-editor>
           <app-markdown-editor #editor2 style="margin-bottom: 2em; flex:1; min-height: 0px;"
-            [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
-            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"
+            [class.block]="(selectedFileType == FileType.Text) && (editorStatus == ContentStatus.Done)"
+            [class.none]="(selectedFileType != FileType.Text) || (editorStatus != ContentStatus.Done)"
             *ngIf="!isDesktop"></app-markdown-editor>
           <div style="flex:1; display: block; height: 100px "
-            *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">
+            *ngIf="(selectedFileType == FileType.Image) && (editorStatus == ContentStatus.Done)">
             <div style="overflow-y: scroll; height: 100%;"><img [src]="selectedImagePath" /></div>
           </div>
           <div style="flex:1; display: block; "
-            *ngIf="(selectedFileType == FileType.Other) && (contentStatus == ContentStatus.Done)">
+            *ngIf="(selectedFileType == FileType.Other) && (editorStatus == ContentStatus.Done)">
             <div style="display: flex; justify-content: center; width: 100%; height: 100%;">
               <div style="display:flex; flex-direction: row; align-items: center;   height: 100%;">
                 <div>This content is not readable.</div>
@@ -119,7 +122,7 @@
             </div>
           </div>
           <div style="display: flex; flex:1; justify-content: center; align-items: center;"
-            *ngIf="(contentStatus == ContentStatus.Loading)">
+            *ngIf="(editorStatus == ContentStatus.Loading)">
             <div class="loading">
               <mat-spinner [strokeWidth]="4"></mat-spinner>
               <div>Loading...</div>

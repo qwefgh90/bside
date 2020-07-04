@@ -32,7 +32,7 @@ export const treeLoaded = createAction(
     '[Github-Tree Component] Tree loaded',
     props<{}>()
 )
-export const editorLoaded = createAction(
+export const monacoLoaded = createAction(
     '[Workspace Component] Monaco editor loaded',
     props<{}>()
 )
@@ -40,11 +40,6 @@ export const editorLoaded = createAction(
 export const selectPath = createAction(
     '[Workspace Component] Select the node',
     props<{path: string}>()
-);
-
-export const rootLoaded = createAction(
-    '[Workspace Component] A root node loaded',
-    props<{root: GithubTreeNode}>()
 );
 
 export const workspaceDestoryed = createAction(
@@ -79,5 +74,20 @@ export const undo = createAction(
 )
 export const resetWorkspace = createAction(
     '[Stage Component] Reset the workspace',
+    props<{}>()
+)
+
+export const createNewGithubTree = createAction(
+    '[Workspace Component] create a new github tree',
+    props<{}>()
+)
+
+export const tabLoaded = createAction(
+    '[Tab Component] All data have been loaded',
+    props<{}>()
+)
+
+export const editorLoaded = createAction(
+    '[Editor Component] All data have been loaded',
     props<{}>()
 )
