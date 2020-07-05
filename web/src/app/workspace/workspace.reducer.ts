@@ -115,7 +115,7 @@ const _workspaceReducer = createReducer(initialState, ...componentLoadingStatus,
         return ({ ...state, latestResetTime: new Date() });
     }),
     on(workspaceActions.workspaceDestoryed, (state, {}) => {
-        return ({ ...initialState });
+        return (initialState);
     }),
     on(workspaceActions.notifyChangesInContent, (state, {path}) => {
         return ({ ...state, latestPathForChangesInContent: {path, time: new Date()} });

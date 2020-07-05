@@ -38,7 +38,7 @@
           </div>
         </div>
       </div>
-      <div class="left-fold" (click)="toggle()" [fxHide.xs]="true" [fxHide.sm]="true">
+      <div class="left-fold" (click)="toggleSidenav()" [fxHide.xs]="true" [fxHide.sm]="true">
         <mat-icon *ngIf="leftPaneOpened">chevron_left</mat-icon>
         <mat-icon *ngIf="!leftPaneOpened">chevron_right</mat-icon>
       </div>
@@ -64,11 +64,11 @@
             <div class="spacer"></div>
             <div *ngIf="selectedNodePath != undefined && selectedFileType == FileType.Text">
               <button mat-stroked-button title="Preview" (click)="togglePreview()" *ngIf="isDesktop"
-                [ngClass]="{'mat-button-toggle-checked':editor.isMdOn}">
+                [ngClass]="{'mat-button-toggle-checked':(editorStatusFsm.currentState == editorType.Md)}">
                 <mat-icon>visibility</mat-icon>
               </button>
               <button mat-stroked-button title="Compare with original" (click)="toggleDiff()" *ngIf="isDesktop"
-                [ngClass]="{'mat-button-toggle-checked':editor.isDiffOn}">
+                [ngClass]="{'mat-button-toggle-checked':(!(editorStatusFsm.currentState == editorType.Md) && editor.isDiffOn)}">
                 <mat-icon>compare</mat-icon>
               </button>
               <a href="https://github.com/{{userId}}/{{repositoryName}}/blob/{{selectedBranch?.name}}/{{selectedNodePath}}" target="_blank"
@@ -80,7 +80,7 @@
             </div>
           </div>
           <app-tab></app-tab>
-          <div style="flex:1; display: block" *ngIf="editorStatus == ContentStatus.NotInitialized">
+          <div style="flex:1; display: block" *ngIf="contentStatus == ContentStatus.NotInitialized">
             <div style="display: flex; justify-content: center; width: 100%; height: 100%; align-items: center;">
               <div style="text-align: center;">
                 <div>Welcome to BSide</div>
@@ -98,23 +98,23 @@
             </div>
           </div>
           <app-editor #editor1 style="flex:1; min-height: 0px;"
-            [class.block]="(selectedFileType == FileType.Text) && (editorStatus == ContentStatus.Done) && !isPreview"
-            [class.none]="((selectedFileType != FileType.Text) || (editorStatus != ContentStatus.Done)) || isPreview"
+            [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done) && (editorStatusFsm.currentState == editorType.Editor)"
+            [class.none]="((selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)) || (editorStatusFsm.currentState == editorType.Md)"
             *ngIf="isDesktop"></app-editor>
           <app-markdown-editor #preview style="flex:1; min-height: 0px;" [preview]="true"
-            [class.block]="isPreview"
-            [class.none]="!isPreview"
+            [class.block]="(editorStatusFsm.currentState == editorType.Md)"
+            [class.none]="!(editorStatusFsm.currentState == editorType.Md)"
             *ngIf="isDesktop"></app-markdown-editor>
           <app-markdown-editor #editor2 style="margin-bottom: 2em; flex:1; min-height: 0px;"
-            [class.block]="(selectedFileType == FileType.Text) && (editorStatus == ContentStatus.Done)"
-            [class.none]="(selectedFileType != FileType.Text) || (editorStatus != ContentStatus.Done)"
+            [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
+            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"
             *ngIf="!isDesktop"></app-markdown-editor>
           <div style="flex:1; display: block; height: 100px "
-            *ngIf="(selectedFileType == FileType.Image) && (editorStatus == ContentStatus.Done)">
+            *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">
             <div style="overflow-y: scroll; height: 100%;"><img [src]="selectedImagePath" /></div>
           </div>
           <div style="flex:1; display: block; "
-            *ngIf="(selectedFileType == FileType.Other) && (editorStatus == ContentStatus.Done)">
+            *ngIf="(selectedFileType == FileType.Other) && (contentStatus == ContentStatus.Done)">
             <div style="display: flex; justify-content: center; width: 100%; height: 100%;">
               <div style="display:flex; flex-direction: row; align-items: center;   height: 100%;">
                 <div>This content is not readable.</div>
@@ -122,7 +122,7 @@
             </div>
           </div>
           <div style="display: flex; flex:1; justify-content: center; align-items: center;"
-            *ngIf="(editorStatus == ContentStatus.Loading)">
+            *ngIf="(contentStatus == ContentStatus.Loading)">
             <div class="loading">
               <mat-spinner [strokeWidth]="4"></mat-spinner>
               <div>Loading...</div>

@@ -188,9 +188,9 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   }
 
   ngOnDestroy() {
-    this.releaseEditors();
-    this.releaseGlobalResource();
     this.subscriptions.forEach(s => s.unsubscribe());
+    this.releaseGlobalResource();
+    this.releaseEditors();
   }
 
   setContent(path: string, content: string) {

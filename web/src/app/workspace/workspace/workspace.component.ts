@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, Inject, Input } from '@angular/core';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, Subject, combineLatest, from, ReplaySubject, empty, of, timer, interval, Observable } from 'rxjs';
@@ -45,8 +45,17 @@ import { selectQueryParam, selectRouteParam } from 'src/app/app-routing.reducer'
 import { DOCUMENT } from '@angular/common';
 import { WorkspaceSnapshot } from '../core/action/micro/workspace-snapshot-micro-action';
 import { MarkdownEditorComponent } from '../markdown-editor/markdown-editor.component';
+import { RepositoryInformation } from '../workspace-initializer/workspace-initializer.component';
+import { routerRequestAction } from '@ngrx/router-store';
+import { TypeState } from 'typestate';
 
 declare const monaco;
+
+export enum EditorStatusOnWorkspace{
+  Editor,
+  Diff,
+  Md
+}
 
 export enum TreeStatusOnWorkspace {
   Loading, Committing, NotInitialized, Done, Fail, TreeEmpty, BranchChanging
@@ -79,13 +88,14 @@ export enum WorkspaceStatus {
   ]
 })
 export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
+  @Input() parameter: RepositoryInformation;
   FileType = FileType;
   TreeStatus = TreeStatusOnWorkspace;
+  editorType = EditorStatusOnWorkspace;
   ContentStatus = ContentStatusOnWorkspace;
   WorkspaceStatus = WorkspaceStatus;
   constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute
     , private router: Router, private sanitizer: DomSanitizer, @Inject(DatabaseToken) private database: Database
-    , private userActionDispatcher: UserActionDispatcher
     , public detector: DeviceDetectorService
     , public dialog: MatDialog, private store: Store<{}>,
     @Inject(DOCUMENT) private document: Document) {
@@ -106,7 +116,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return this.isDesktop ? this.editor1 : this.editor2;
   }
 
-  isPreview = false;
+
+  editorStatusFsm = new TypeState.FiniteStateMachine<EditorStatusOnWorkspace>(EditorStatusOnWorkspace.Editor);
   isDesktop = false;
   //these variables synchronized with router
   //these variables sent to child components
@@ -125,7 +136,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   //local state
   saveActionSubject: Subject<any> = new Subject();
   selectedNodePath: string;
-  editorStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
+  contentStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
   treeStatus: TreeStatusOnWorkspace = TreeStatusOnWorkspace.NotInitialized;
   workspaceStatus: WorkspaceStatus = WorkspaceStatus.View;
   selectedFileType: FileType;
@@ -148,7 +159,38 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   isBeingChanged = false;
   saving = false;
 
-  initializeNgrx(){
+  fsm(){
+    this.editorStatusFsm.fromAny(EditorStatusOnWorkspace).toAny(EditorStatusOnWorkspace);
+    this.editorStatusFsm.on(EditorStatusOnWorkspace.Diff, (from) => {
+      let nodes = this.root.getBlobNodes();
+      const filteredNodes = nodes.filter((v) => {
+        return v.path == this.selectedNodePath && !v.state.includes(NodeStateAction.Created);
+      });
+      if (filteredNodes.length == 1) {
+        let node = filteredNodes[0];
+        let type = TextUtil.getFileType(node.name);
+        if (type == FileType.Text) {
+          this.getOriginalText(node.sha).then((content: string) => {
+            setTimeout(() => this.editor.diffWith(this.selectedNodePath, content), 0);
+          });
+        }
+      } else {
+        console.warn(`${filteredNodes[0].path} are ${filteredNodes.length}. it's expected to be one`)
+      }
+    });
+    this.editorStatusFsm.on(EditorStatusOnWorkspace.Editor, (from) => {
+      if(from != EditorStatusOnWorkspace.Editor)
+        this.editor.select(this.selectedNodePath);
+    });
+    
+    this.editorStatusFsm.on(EditorStatusOnWorkspace.Md, (from) => {
+      this.preview.setContent("preview", this.editor.getContent());
+      this.preview.select('preview');
+      setTimeout(() => this.preview.md(true), 0);
+    });
+  }
+
+  ngrx(){
     let feature = createFeatureSelector(workspaceReducerKey);
     let selectedPathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
     let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
@@ -166,9 +208,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let s0 = selectedNode$.subscribe(({node, loaded}) => {
       if (loaded) {
         let path = node?.path;
-        this.hidePreview();
         this.fillEditor(path);
         this.dispatchSaveAction(this.autoSaveRef.checked);
+        this.editorStatusFsm.go(EditorStatusOnWorkspace.Editor);
       }
     });
 
@@ -244,14 +286,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       }
     });
 
-
     let queryPathSelector = selectQueryParam('path');
-    let branchNameSelector = selectQueryParam('branch');
-    let repoNameSelector = selectRouteParam('repositoryName');
-    let userIdSelector = selectRouteParam('userId');
 
-    let tuple = createSelector(editorSelector, branchNameSelector, repoNameSelector, userIdSelector, (editorLoaded, v1, v2, v3) => ({editorLoaded, branchName: v1 ? v1 : (this.selectedBranch ? this.selectedBranch.name : undefined)
-      , repositoryName: v2, userId: v3}));
+    let tuple = createSelector(editorSelector, (editorLoaded) => ({editorLoaded, userId: this.parameter.userId, 
+      repositoryName: this.parameter.repositoryName, branchName: this.parameter.branchName}));
       
     let s4 = this.store.select(tuple).subscribe(({editorLoaded, userId, repositoryName, branchName}) => {
       if (editorLoaded && userId && repositoryName) {
@@ -271,7 +309,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           let s = this.store.select(queryPathSelector).subscribe((path) => {
             if (path) {
               setTimeout(() => this.store.dispatch(selectPathWithRouterOrSnapshot({ path })), 0);
-            } else if (loadedPack.selectedNodePath) {
+            } else if (loadedPack?.selectedNodePath) {
               setTimeout(() => this.store.dispatch(selectPathWithRouterOrSnapshot({ path: loadedPack.selectedNodePath })), 0);
             }
           });
@@ -298,25 +336,25 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   ngOnInit() {
+    this.fsm();
     let loadPromise = this.initalizeVSLoader();
     loadPromise.then(() => {
       this.store.dispatch(monacoLoaded({}));
     });
-    this.initializeNgrx();
+    this.ngrx();
 
     //It saves data when the content is modified.
-    this.subscriptions.push(this.saveActionSubject.pipe(bufferCount(10)).subscribe(() => {
+    this.subscriptions.push(this.saveActionSubject.pipe(bufferCount(15)).subscribe(() => {
       this.dispatchSaveAction(true);
     }));
-    this.subscriptions.push(this.saveActionSubject.pipe(tap(() => {
-    }), debounceTime(15000)).subscribe(() => {
+    this.subscriptions.push(this.saveActionSubject.pipe(debounceTime(5000)).subscribe(() => {
       this.dispatchSaveAction(true);
     }));
   }
 
   initialize(userId, repositoryName, branchName): Promise<void> {
     this.treeStatus = TreeStatusOnWorkspace.Loading;
-    this.editorStatus = ContentStatusOnWorkspace.NotInitialized;
+    this.contentStatus = ContentStatusOnWorkspace.NotInitialized;
     this.resetTab();
     this.resetEditor();
     this.resetWorkspace();
@@ -429,44 +467,29 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   toggleDiff() {
-    if (this.editor.isDiffOn) {
-      this.editor.select(this.selectedNodePath);
-    } else {
-      let nodes = this.root.getBlobNodes();
-      const filteredNodes = nodes.filter((v) => {
-        return v.path == this.selectedNodePath && !v.state.includes(NodeStateAction.Created);
-      });
-      if (filteredNodes.length == 1) {
-        let node = filteredNodes[0];
-        let type = TextUtil.getFileType(node.name);
-        if (type == FileType.Text) {
-          this.getOriginalText(node.sha).then((content: string) => {
-            this.editor.diffWith(this.selectedNodePath, content);
-          });
-        }
-      } else {
-        console.warn(`${filteredNodes[0].path} are ${filteredNodes.length}. it's expected to be one`)
-      }
-    }
+    if(!(this.editorStatusFsm.currentState == EditorStatusOnWorkspace.Diff))
+      this.editorStatusFsm.go(EditorStatusOnWorkspace.Diff);
+    else
+      this.editorStatusFsm.go(EditorStatusOnWorkspace.Editor);
   }
 
   togglePreview(){
-    if(!this.isPreview)
-      this.showPreview();
+    if(!(this.editorStatusFsm.currentState == EditorStatusOnWorkspace.Md))
+      this.editorStatusFsm.go(EditorStatusOnWorkspace.Md);
     else
-      this.hidePreview();
+      this.editorStatusFsm.go(EditorStatusOnWorkspace.Editor);
   }
 
-  private showPreview() {
-    this.isPreview = true;
-    this.preview.setContent("preview", this.editor.getContent());
-    this.preview.select('preview');
-    setTimeout(() => this.preview.md(true), 0);
-  }
+  // private showPreview() {
+  //   this.editorStatusFsm.go(EditorStatusOnWorkspace.Md);
+  //   this.preview.setContent("preview", this.editor.getContent());
+  //   this.preview.select('preview');
+  //   setTimeout(() => this.preview.md(true), 0);
+  // }
 
-  private hidePreview(){
-    this.isPreview = false;
-  }
+  // private hidePreview(){
+  //   this.editorStatusFsm.go(EditorStatusOnWorkspace.Editor);
+  // }
 
   resetTab() {
     if (this.tab)
@@ -491,7 +514,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     if (ripples.length > 0)
       ripples[0].remove();
     this.autoSaveRef.checked = false;
-    this.toggle();
+    this.toggleSidenav();
   }
 
   ngOnDestroy() {
@@ -499,12 +522,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   private clean() {
-    this.subscriptions.forEach(subscribe =>
-      subscribe.unsubscribe());
+    this.subscriptions.forEach(subscribe => subscribe.unsubscribe());
     this.store.dispatch(workspaceDestoryed({}));
   }
 
-  toggle() {
+  toggleSidenav() {
     this.leftPaneOpened = !this.leftPaneOpened;
     if (this.leftPaneOpened && this.editor != undefined)
       this.editor.shrinkExpand();
@@ -544,13 +566,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   fillEditor(pathOrNode: string | GithubTreeNode | undefined) {
     if (!pathOrNode) {
       this.selectedNodePath = undefined;
-      this.editorStatus = ContentStatusOnWorkspace.NotInitialized
+      this.contentStatus = ContentStatusOnWorkspace.NotInitialized
     } else {
       const node = (typeof pathOrNode == 'string') ? this.root?.find(pathOrNode) : pathOrNode;
       if (node && node.type == 'blob') {
         this.selectedRawPath = undefined;
         this.selectedNodePath = node.path;
-        this.editorStatus = ContentStatusOnWorkspace.Loading;
+        this.contentStatus = ContentStatusOnWorkspace.Loading;
         let fileType = TextUtil.getFileType(node.name);
         this.selectedFileType = fileType;
         if (node.state.filter((v) => v == NodeStateAction.Created).length == 1) {
@@ -567,7 +589,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           } else {
             console.error(`The blob of ${node.path} must exist in monaco editor`);
           }
-          this.editorStatus = ContentStatusOnWorkspace.Done;
+          this.contentStatus = ContentStatusOnWorkspace.Done;
         } else {
           this.wrapper.getBlob(this.userId, this.repositoryName, node.sha).then(
             (blob: Blob) => {
@@ -585,7 +607,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
               console.error(node);
             }
           ).finally(() => {
-            this.editorStatus = ContentStatusOnWorkspace.Done;
+            this.contentStatus = ContentStatusOnWorkspace.Done;
           });
         }
       } else {
@@ -658,11 +680,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let promise = this.dispatchSaveAction(true);
     if (promise instanceof Promise) {
       try {
-        promise.then(async () => {
+        promise.then(() => {
           const branch = event.value;
           this.selectedNodePath = undefined;
           this.treeStatus = this.TreeStatus.BranchChanging;
-          this.router.navigate([], { queryParams: { branch: branch.name } });
+          this.router.navigate([], { queryParams: { branch: branch.name }});
         });
       } catch (e) {
         console.error(e);

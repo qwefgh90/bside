@@ -45,46 +45,9 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   selectedNode: TreeNode;
 
   constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer, private localUpload: LocalUploadService, private store: Store<{}>) {
-    let feature = createFeatureSelector(workspaceReducerKey);
-    let pathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
-    let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
-    let treeLoadedSelector = createSelector(feature, (state: WorkspaceState) => state.treeLoaded);
-    let saveRequestSelector = createSelector(feature, (state: WorkspaceState) => state.latestSnapshot.requestTime);
-    let selectedPath$ = this.store.pipe(select(createSelector(pathSelector, treeLoadedSelector, (path, treeLoaded) => ({path, treeLoaded}))));
-    selectedPath$.subscribe(({path, treeLoaded}) => {
-        if(treeLoaded){
-          if (!this.selectedNode || path != this.selectedNode.data.path) {
-            this.selectNode(path);
-          }
-        }
-    });
-
-    let s0 = this.store.select(saveRequestSelector).subscribe((requestTime) => {
-      if(requestTime){
-        const treeArr = this.root.reduce((acc, node, tree) => {
-          if (node.path != "")
-            acc.push(node.toGithubNode());
-          return acc;
-        }, [] as Array<GithubNode>, false);
-        this.store.dispatch(updateTreeSnapshot({snapshot: {nodes: treeArr}}));
-      }
-    });
-
-    let selectedNode$ = this.store.pipe(select(nodeSelector));
-    selectedNode$.subscribe(githubNode => {
-      if (githubNode) {
-        let treeNode = this.getTreeNode(githubNode?.path);
-        if (treeNode) {
-          this.selectedNode = treeNode;
-        }
-      }
-    });
-
     iconRegistry.addSvgIcon(
       'outline-note',
       sanitizer.bypassSecurityTrustResourceUrl('assets/outline-note-24px.svg'));
-
-      this.subscriptions.push(s0);
   }
 
   actionMapping: IActionMapping = {
@@ -186,6 +149,44 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     }
   }
 
+  ngrx(){
+    let feature = createFeatureSelector(workspaceReducerKey);
+    let pathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
+    let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
+    let treeLoadedSelector = createSelector(feature, (state: WorkspaceState) => state.treeLoaded);
+    let saveRequestSelector = createSelector(feature, (state: WorkspaceState) => state.latestSnapshot.requestTime);
+    let selectedPath$ = this.store.pipe(select(createSelector(pathSelector, treeLoadedSelector, (path, treeLoaded) => ({path, treeLoaded}))));
+    let s2 = selectedPath$.subscribe(({path, treeLoaded}) => {
+        if(treeLoaded){
+          if (!this.selectedNode || path != this.selectedNode.data.path) {
+            this.selectNode(path);
+          }
+        }
+    });
+
+    let s0 = this.store.select(saveRequestSelector).subscribe((requestTime) => {
+      if(requestTime){
+        const treeArr = this.root.reduce((acc, node, tree) => {
+          if (node.path != "")
+            acc.push(node.toGithubNode());
+          return acc;
+        }, [] as Array<GithubNode>, false);
+        this.store.dispatch(updateTreeSnapshot({snapshot: {nodes: treeArr}}));
+      }
+    });
+
+    let selectedNode$ = this.store.pipe(select(nodeSelector));
+    let s1 = selectedNode$.subscribe(githubNode => {
+      if (githubNode) {
+        let treeNode = this.getTreeNode(githubNode?.path);
+        if (treeNode) {
+          this.selectedNode = treeNode;
+        }
+      }
+    });
+    this.subscriptions.push(s0, s1, s2);
+  }
+
   onNodeFocus(node: TreeNode){
     this.scrollTo(node);
   }
@@ -251,6 +252,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
   };
 
   ngOnInit() {
+    this.ngrx();
     this.subscriptions.push(
       this.searchInputFormControl.valueChanges.subscribe((v: string) => {
         this.treeComponent.treeModel.filterNodes(v, false);

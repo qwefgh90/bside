@@ -25,7 +25,7 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
     let renamedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRenamingPath);
     let saveRequestSelector = createSelector(feature, (state: WorkspaceState) => state.latestSnapshot.requestTime);
     let selectedPathAndNode$ = this.store.pipe(select(createSelector(pathSelector, nodeSelector, (path, node) => ({path, node}) )));
-    selectedPathAndNode$.subscribe(({path, node}) => {
+    let s4 = selectedPathAndNode$.subscribe(({path, node}) => {
       if(node){
         let selectedPath = this._tabs[this.selectedIndex.value];
         if(selectedPath != path)
@@ -33,11 +33,11 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
       }
     });
     let removedPath$ = this.store.pipe(select(removedPathSelector));
-    removedPath$.subscribe(path => {
+    let s1 = removedPath$.subscribe(path => {
       this.removeTab(path);
     });
     let renamedPath$ = this.store.pipe(select(renamedPathSelector));
-    renamedPath$.subscribe((renameInfo) => {
+    let s2 = renamedPath$.subscribe((renameInfo) => {
       if(renameInfo)
         this.renameTab(renameInfo.oldPath, renameInfo.newPath);
     });
@@ -46,12 +46,12 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
       this.store.dispatch(updateTabSnapshot({snapshot: {tabs: Array.from(this.tabs)}}));
     });
 
-    this.selectedIndex.valueChanges.subscribe((value) => {
+    let s3 = this.selectedIndex.valueChanges.subscribe((value) => {
       let tab = this._tabs[value];
       this.dispatchSelectMessage(tab);
     });
 
-    this.subscriptions.push(s0);
+    this.subscriptions.push(s0, s1, s2, s3, s4);
   }
 
   // actionAfterTabInitialized: () => void;
@@ -59,8 +59,6 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
   _tabsSet: Set<string> = new Set<string>();
 
   subscriptions: Subscription[] = [];
-  // selectedTabindex: number;
-  selectedPath: string;
 
   @ViewChild(MatTabGroup, { static: true }) group: MatTabGroup;
 
@@ -118,7 +116,7 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
    */
   removeTab(path: string) {
     if (this._tabsSet.has(path)) {
-      let currentIndex = this._tabs.findIndex((v) => this.selectedPath == v);
+      let currentIndex = this._tabs.findIndex((v) => path == v);
       let index = this._tabs.findIndex((v) => path == v);
       let beforeSelectedIndex = currentIndex;
       if (index != -1) {
@@ -178,7 +176,6 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
   clear() {
     this._tabs.splice(0, this._tabs.length);
     this._tabsSet.clear();
-    this.selectedPath = undefined;
     this.selectedIndex.setValue(0);
   }
 }
