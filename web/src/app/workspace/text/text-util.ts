@@ -9,7 +9,7 @@ export enum FileType {
 
 export class TextUtil {
 
-    private constructor(){ }
+    private constructor() { }
 
     static decode(bytes, encoding: string = 'utf-8') {
         let decoder = new (TextDecoder != undefined ? TextDecoder : TextDecoderLite)(encoding.toLowerCase())
@@ -27,10 +27,10 @@ export class TextUtil {
         let arr = str.split("\n").map(v => {
             return v;
         });
-        try{
-           let bytes = toByteArray(arr.join(''));
-           return bytes;
-        }catch(e){
+        try {
+            let bytes = toByteArray(arr.join(''));
+            return bytes;
+        } catch (e) {
             console.error(e);
             return new Uint8Array();
         }
@@ -48,7 +48,7 @@ export class TextUtil {
     static base64ToString(base64: string, encoding: string = 'utf-8'): string {
         return this.decode(this.base64ToBytes(base64), encoding);
     }
-    
+
     static getFileType(name: string): FileType {
         const mimeName: string = mime.getType(name);
         const mimeInfo = mimeDb[mime.getType(name)]
@@ -63,7 +63,15 @@ export class TextUtil {
         }
     }
 
-    static getMime(fileName: string){
+    static getFileName(path: string): string {
+        let index = path.lastIndexOf('/');
+        if (index == -1) {
+            return path;
+        } else
+            return path.substring(index + 1);
+    }
+
+    static getMime(fileName: string) {
         return mime.getType(fileName);
     }
 }

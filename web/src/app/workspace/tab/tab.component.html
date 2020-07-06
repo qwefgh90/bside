@@ -1,7 +1,7 @@
-<mat-tab-group [selectedIndex]="selectedIndex.value" (selectedIndexChange)="selectedIndex.setValue($event)">
+<mat-tab-group [selectedIndex]="selectedIndex.value" (selectedIndexChange)="selectedIndex.setValue($event)" dynamicHeight>
   <mat-tab *ngFor="let path of _tabs; let index = index" [label]="path">
     <ng-template mat-tab-label>
-      <div style="width: 100%; flex-direction: row; display: flex" title="{{path}}">
+      <div class="tab" title="{{path}}">
         <span>{{getFileName(path)}}</span>
         <div style="flex:1">
         </div>

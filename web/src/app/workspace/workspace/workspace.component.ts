@@ -115,7 +115,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   get editor(): Editor {
     return this.isDesktop ? this.editor1 : this.editor2;
   }
-
+  getFileName = TextUtil.getFileName;
 
   editorStatusFsm = new TypeState.FiniteStateMachine<EditorStatusOnWorkspace>(EditorStatusOnWorkspace.Editor);
   isDesktop = false;
@@ -354,18 +354,19 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   initialize(userId, repositoryName, branchName): Promise<void> {
     this.treeStatus = TreeStatusOnWorkspace.Loading;
-    this.contentStatus = ContentStatusOnWorkspace.NotInitialized;
-    this.resetTab();
-    this.resetEditor();
-    this.resetWorkspace();
+    // this.contentStatus = ContentStatusOnWorkspace.NotInitialized;
+    // this.resetTab();
+    // this.resetEditor();
+    // this.resetWorkspace();
     let promise = this.initializeWorkspace(userId, repositoryName, branchName).then(() => {
       console.log('Your workspace have been initialized with latest saved data.');
       if (this.root == undefined)
         this.treeStatus = TreeStatusOnWorkspace.TreeEmpty;
       else
         this.treeStatus = TreeStatusOnWorkspace.Done;
-    }, () => {
+    }, (reason) => {
       this.treeStatus = TreeStatusOnWorkspace.Fail;
+      return Promise.reject(reason);
     });
     return promise;
   }
@@ -480,34 +481,23 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       this.editorStatusFsm.go(EditorStatusOnWorkspace.Editor);
   }
 
-  // private showPreview() {
-  //   this.editorStatusFsm.go(EditorStatusOnWorkspace.Md);
-  //   this.preview.setContent("preview", this.editor.getContent());
-  //   this.preview.select('preview');
-  //   setTimeout(() => this.preview.md(true), 0);
+  // resetTab() {
+  //   if (this.tab)
+  //     this.tab.clear();
+
+  // }
+  // resetEditor() {
+  //   if (this.editor)
+  //     this.editor.clear();
   // }
 
-  // private hidePreview(){
-  //   this.editorStatusFsm.go(EditorStatusOnWorkspace.Editor);
+  // resetWorkspace() {
+  //   this.selectedImagePath = undefined;
+  //   this.selectedFileType = undefined;
+  //   this.selectedNodePath = undefined;
+  //   this.errorDescription = undefined;
+  //   this.action.select(ActionState.Edit);
   // }
-
-  resetTab() {
-    if (this.tab)
-      this.tab.clear();
-
-  }
-  resetEditor() {
-    if (this.editor)
-      this.editor.clear();
-  }
-
-  resetWorkspace() {
-    this.selectedImagePath = undefined;
-    this.selectedFileType = undefined;
-    this.selectedNodePath = undefined;
-    this.errorDescription = undefined;
-    this.action.select(ActionState.Edit);
-  }
 
   ngAfterContentInit() {
     let ripples = this.autoSaveRef._elementRef.nativeElement.getElementsByClassName('mat-ripple')
@@ -540,15 +530,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return `https://raw.githubusercontent.com/${fullName}/${commitSha}/${path}`;
   }
 
-  private setContentAndFocusInEditor(path: string, content: string): void {
-    if (this.editor.exist(path))
-      this.editor.select(path);
-    else {
-      this.editor.setContent(path, content)
-      this.editor.select(path);
-    }
-  }
-
   setBranchByName(branchName: string): boolean {
     const branch = this.branches.find((v) => {
       if (v.name == branchName) {
@@ -575,19 +556,15 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.contentStatus = ContentStatusOnWorkspace.Loading;
         let fileType = TextUtil.getFileType(node.name);
         this.selectedFileType = fileType;
-        if (node.state.filter((v) => v == NodeStateAction.Created).length == 1) {
-          if (this.editor.exist(node.path)) {
-            let base64OrText = this.editor.getContent(node.path);
-            if (fileType == FileType.Image) {
-              let mime = TextUtil.getMime(node.name);
-              this.selectedImagePath = this.getImage(base64OrText, mime);
-            } else if (fileType == FileType.Text) {
-              let encoding = this.defaultEncoding;
-              this.encodingMap.set(node.sha, encoding);
-              this.setContentAndFocusInEditor(node.path, base64OrText);
-            }
-          } else {
-            console.error(`The blob of ${node.path} must exist in monaco editor`);
+        if (this.editor.exist(node.path)) {
+          let base64OrText = this.editor.getContent(node.path);
+          if (fileType == FileType.Image) {
+            let mime = TextUtil.getMime(node.name);
+            this.selectedImagePath = this.getImage(base64OrText, mime);
+          } else if (fileType == FileType.Text) {
+            let encoding = this.defaultEncoding;
+            this.encodingMap.set(node.sha, encoding);
+            this.editor.select(node.path);
           }
           this.contentStatus = ContentStatusOnWorkspace.Done;
         } else {
@@ -599,7 +576,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
                 let bytes = TextUtil.base64ToBytes(blob.content);
                 let encoding = this.defaultEncoding;
                 this.encodingMap.set(node.sha, encoding);
-                this.setContentAndFocusInEditor(node.path, TextUtil.decode(bytes, encoding));
+                if(this.selectedNodePath == node.path){ // other asynchronous changes can happen during getBlob()
+                  this.editor.setContent(node.path, TextUtil.decode(bytes, encoding))
+                  this.editor.select(node.path);
+                }else{
+                  this.editor.setContent(node.path, TextUtil.decode(bytes, encoding))
+                }
               }
               this.selectedRawPath = this.getRawUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, node.syncedNode.path);
             }, (reason) => {

@@ -10,8 +10,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { UserBoardComponent } from './user-board/user-board.component';
+import { HistoryComponent } from './history/history.component';
 @NgModule({
-  declarations: [RepositoriesComponent],
+  declarations: [RepositoriesComponent, UserBoardComponent, HistoryComponent],
   imports: [
     CommonModule,
     ProjectsRoutingModule,

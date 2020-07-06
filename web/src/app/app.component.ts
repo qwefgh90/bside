@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 import { Route, ActivatedRoute, Router, ActivationEnd, NavigationEnd } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { AnalyticsService } from './analytics/analytics.service';
@@ -6,7 +6,8 @@ import { AnalyticsService } from './analytics/analytics.service';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class AppComponent {
   title = 'web';

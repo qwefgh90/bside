@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, AfterContentInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, AfterContentInit, ViewEncapsulation } from '@angular/core';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -8,7 +8,9 @@ import { OAuthService } from 'src/app/oauth/service/o-auth.service';
 @Component({
   selector: 'app-repositories',
   templateUrl: './repositories.component.html',
-  styleUrls: ['./repositories.component.scss']
+  styleUrls: ['./repositories.component.scss'],
+  // encapsulation: ViewEncapsulation.None,
+  host: {'class': 'app-repositories'}
 })
 export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
 

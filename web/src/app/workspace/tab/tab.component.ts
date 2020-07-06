@@ -7,6 +7,7 @@ import { Store, createFeatureSelector, createSelector, select } from '@ngrx/stor
 import { clickTab, updateTabSnapshot, tabLoaded } from '../workspace.actions';
 import { workspaceReducerKey, WorkspaceState } from '../workspace.reducer';
 import { FormControl } from '@angular/forms';
+import { TextUtil } from '../text/text-util';
 
 @Component({
   selector: 'app-tab',
@@ -14,7 +15,7 @@ import { FormControl } from '@angular/forms';
   styleUrls: ['./tab.component.css']
 })
 export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, OnDestroy {
-
+  getFileName = TextUtil.getFileName;
   selectedIndex = new FormControl(0);
 
   constructor(private store: Store<{}>) {
@@ -164,15 +165,6 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
   get tabs(): string[] {
     return this._tabs;
   }
-
-  getFileName(path: string): string {
-    let index = path.lastIndexOf('/');
-    if (index == -1) {
-      return path;
-    } else
-      return path.substring(index + 1);
-  }
-
   clear() {
     this._tabs.splice(0, this._tabs.length);
     this._tabsSet.clear();

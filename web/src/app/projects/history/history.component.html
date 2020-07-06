@@ -2,15 +2,7 @@
   <div class="repos" [ngStyle.xs]="{'width': 'unset'}" [ngStyle.sm]="{'width': 'unset'}">
     <mat-nav-list color="primary">
       <div class="custom-sub-header">
-        <h2>Projects<span *ngIf="repositories != undefined">({{repositories.length}})</span></h2>
-        <div class="spacer"></div>
-        <div class="filter">
-          <mat-form-field legacy="legacy">
-            <input matInput placeholder="" [formControl]="searchInputFormControl" />
-            <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
-
-        </div>
+        <h2>Activities<span *ngIf="repositories != undefined"></span></h2>
       </div>
       <mat-divider color=""></mat-divider>
       <div class="items" *ngIf="repositories">
@@ -35,13 +27,6 @@
           <span>Repositories...</span>
         </div>
       </div>
-      <!-- <mat-divider></mat-divider>
-  <h3 mat-subheader>Notes</h3>
-  <mat-list-item *ngFor="let note of notes">
-    <mat-icon mat-list-icon>note</mat-icon>
-    <h4 mat-line>{{note.name}}</h4>
-    <p mat-line> {{note.updated | date}} </p>
-  </mat-list-item> -->
     </mat-nav-list>
   </div>
 </div>
