@@ -12,8 +12,9 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { UserBoardComponent } from './user-board/user-board.component';
 import { HistoryComponent } from './history/history.component';
+import { UserProfileComponent } from './user-profile/user-profile.component';
 @NgModule({
-  declarations: [RepositoriesComponent, UserBoardComponent, HistoryComponent],
+  declarations: [RepositoriesComponent, UserBoardComponent, HistoryComponent, UserProfileComponent],
   imports: [
     CommonModule,
     ProjectsRoutingModule,

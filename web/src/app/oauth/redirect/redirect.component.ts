@@ -5,6 +5,7 @@ import { TextUtil } from 'src/app/workspace/text/text-util';
 import { createFeatureSelector, select, Store } from '@ngrx/store';
 import { AuthState, authReducerKey } from '../auth.reducer';
 import { redirectUrlChanged } from '../auth.actions';
+import { WrapperService } from 'src/app/github/wrapper.service';
 
 @Component({
   selector: 'app-redirect',

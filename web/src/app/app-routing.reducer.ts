@@ -1,6 +1,7 @@
 import * as fromRouter from '@ngrx/router-store';
 import { createSelector, createFeatureSelector, ActionReducer, MetaReducer } from '@ngrx/store';
 import { environment } from 'src/environments/environment';
+import { AppState } from './app.reducer';
 
 export interface State {
     router: fromRouter.RouterReducerState<any>;
@@ -21,8 +22,8 @@ export const {
     selectUrl,            // select the current url
 } = fromRouter.getSelectors(selectRouter);
 
-export function logger(reducer: ActionReducer<State>): ActionReducer<State> {
-    return (state: State, action: any): any => {
+export function logger(reducer: ActionReducer<any>): ActionReducer<any> {
+    return (state: any, action: any): any => {
       const result = reducer(state, action);
       console.groupCollapsed(action.type);
       console.log('prev state', state);
@@ -39,6 +40,6 @@ export function logger(reducer: ActionReducer<State>): ActionReducer<State> {
    * the root meta-reducer. To add more meta-reducers, provide an array of meta-reducers
    * that will be composed to form the root meta-reducer.
    */
-  export const metaReducers: MetaReducer<State>[] = !environment.production
+  export const metaReducers: MetaReducer<any>[] = !environment.production
     ? [logger]
     : [];

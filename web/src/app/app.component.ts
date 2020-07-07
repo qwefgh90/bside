@@ -2,6 +2,11 @@ import { Component, ViewEncapsulation } from '@angular/core';
 import { Route, ActivatedRoute, Router, ActivationEnd, NavigationEnd } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { AnalyticsService } from './analytics/analytics.service';
+import { WrapperService } from './github/wrapper.service';
+import { createFeatureSelector, select, Store } from '@ngrx/store';
+import { authReducerKey, AuthState } from './oauth/auth.reducer';
+import { updateUserInformation } from './app.actions';
+import { AppState } from './app.reducer';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +18,17 @@ export class AppComponent {
   title = 'web';
   inWorkspace = false;
   cookieDisabled = false;
-  constructor(private route: ActivatedRoute, private router: Router, private analytics: AnalyticsService) {
+  constructor(private route: ActivatedRoute, private router: Router, private analytics: AnalyticsService, private wrapper: WrapperService
+    , private store: Store<{app: AppState}>) {
+    let selector = createFeatureSelector<any, AuthState>(authReducerKey);
+    let accessToken$ = this.store.select(selector);
+    accessToken$.subscribe(({isLogin, accessToken}: AuthState) => {
+      if(isLogin && accessToken){
+        this.wrapper.user().then((user) => {
+          this.store.dispatch(updateUserInformation({user}));
+        });
+      }
+    });
     if(localStorage.getItem('cookieDisabled') == "1"){
       this.cookieDisabled = true;
     }

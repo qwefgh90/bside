@@ -5,28 +5,26 @@
         <h2>Activities<span *ngIf="repositories != undefined"></span></h2>
       </div>
       <mat-divider color=""></mat-divider>
-      <div class="items" *ngIf="repositories">
-        <a mat-list-item routerLink="/repos/{{repo.full_name}}" (click)="startLoading(repo.name)"
-          *ngFor="let repo of getRepositories()">
-          <mat-icon mat-list-icon>folder</mat-icon>
+      <div class="items">
+        <a mat-list-item routerLink="/repos/" (click)="startLoading(repo.name)">
           <div mat-line style="display: flex;">
-            <h4 style="margin: 0px;font-weight: unset;">{{repo.name}}</h4>
+            <h4 style="margin: 0px;font-weight: unset;">Activity name</h4>
             <div *ngIf="repo?.private"><span
                 style="font-size: 0.7em;margin: 0px; vertical-align: middle; margin-left: 0.4em; font-weight: bold;">private</span>
             </div>
           </div>
-          <p mat-line>{{repo.updated_at | date:'short'}}</p>
-          <div style="text-align: center;" *ngIf="repo.name == repositoryToLoad">
+          <p mat-line>Repository {{repo?.updated_at | date:'short'}}</p>
+          <!-- <div style="text-align: center;" *ngIf="repo.name == repositoryToLoad">
             <mat-spinner style="display: inline-block" [diameter]="25"></mat-spinner>
-          </div>
+          </div> -->
         </a>
       </div>
-      <div class="progress-box" *ngIf="!repositories">
+      <!-- <div class="progress-box" *ngIf="!repositories">
         <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
           <mat-spinner style="display: inline-block" [strokeWidth]="10"></mat-spinner>
           <span>Repositories...</span>
         </div>
-      </div>
+      </div> -->
     </mat-nav-list>
   </div>
 </div>

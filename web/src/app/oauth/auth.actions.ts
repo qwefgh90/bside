@@ -1,4 +1,5 @@
 import { createAction, props } from '@ngrx/store';
+import { UserType } from '../github/wrapper.service';
 
 export const navigateHere = createAction(
   '[Login Component] Navigate here',

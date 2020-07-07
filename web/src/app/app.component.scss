@@ -55,6 +55,20 @@ app-user-board {
   min-height: 0px;
 }
 
+app-login{
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  min-height: 0px;
+}
+
+app-redirect{
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  min-height: 0px;
+}
+
 .cookie-outer {
     position: absolute; 
     bottom: 40px; 

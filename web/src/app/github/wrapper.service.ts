@@ -2204,7 +2204,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
   "updated_at": "2019-05-03T16:32:28Z"
 }
    */
-  user(login?: string): Promise<any> {
+  user(login?: string): Promise<UserType> {
     if (this.hasToken()) {
       const gh = new Github({
         token: this.token
@@ -2216,3 +2216,5 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
     }
   }
 }
+
+export type UserType = {"login", "id", "node_id", "avatar_url", "gravatar_id", "url", "html_url", "followers_url", "following_url", "gists_url", "starred_url", "subscriptions_url", "organizations_url", "repos_url", "events_url", "received_events_url", "type", "site_admin", "name", "company", "blog", "location", "email", "hireable", "bio", "twitter_username", "public_repos", "public_gists", "followers", "following", "created_at", "updated_at"};

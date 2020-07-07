@@ -23,6 +23,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { StoreModule } from '@ngrx/store';
 import { StoreRouterConnectingModule, routerReducer } from '@ngrx/router-store';
 import { metaReducers } from './app-routing.reducer';
+import { appReducer } from './app.reducer';
 
 export function initAuth(oauthService: OAuthService){
   return () => oauthService.initAccessTokenOnSession();
@@ -35,7 +36,8 @@ export function initAuth(oauthService: OAuthService){
   ],
   imports: [
     StoreModule.forRoot({
-      router: routerReducer
+      router: routerReducer,
+      app: appReducer
     }, {metaReducers}),
     ProjectsModule,
     TemplatesModule,

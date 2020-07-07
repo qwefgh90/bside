@@ -1,10 +1,13 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, AfterContentInit, ViewEncapsulation } from '@angular/core';
-import { WrapperService } from 'src/app/github/wrapper.service';
+import { WrapperService, UserType } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { OAuthService } from 'src/app/oauth/service/o-auth.service';
-
+import { Store, createSelector } from '@ngrx/store';
+import { AppState } from 'src/app/app.reducer';
+import { selectQueryParam, State, selectRouteParam } from 'src/app/app-routing.reducer';
+import * as fromRouter from '@ngrx/router-store';
 @Component({
   selector: 'app-repositories',
   templateUrl: './repositories.component.html',
@@ -14,18 +17,24 @@ import { OAuthService } from 'src/app/oauth/service/o-auth.service';
 })
 export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
 
-  constructor(private wrapper: WrapperService, private route: ActivatedRoute, private router: Router) { }
+  constructor(private wrapper: WrapperService, private router: Router, private store: Store<{}>) { }
 
   repositories: Array<any>;
   userId;
   searchInputFormControl = new FormControl();
   subscribtions: Array<Subscription> = []; 
   keyword;
+  //synced
+  user: UserType;
 
   ngOnInit() {
-    let s = this.route.paramMap.subscribe((p) => {
-      if(p.has('userId')){
-        this.userId = p.get('userId');
+    let userSelector = (state: {app: AppState, router: fromRouter.RouterReducerState<any>}) => state.app.user;
+    let userIdSelector = selectRouteParam('userId');
+    let user$ = this.store.select(createSelector(userSelector, userIdSelector, (user, userId) => ({user, userId})));
+    let s0 = user$.subscribe(({user, userId}) => {
+      this.user = user;
+      this.userId = userId;
+      if(userId){
         this.wrapper.repositories(this.userId).then((result) => {
           this.repositories = result;
         }, () =>{
@@ -33,14 +42,14 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
         });
       }else{
         this.wrapper.user().then(user => {
-          this.router.navigate(["repos",user.login]);
+          this.router.navigate(["repos", user.login]);
         });
       }
     });
     this.searchInputFormControl.valueChanges.subscribe(v => {
       this.keyword = v;
     })
-    this.subscribtions.push(s);
+    this.subscribtions.push(s0);
   }
 
   ngAfterViewInit(){
