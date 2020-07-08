@@ -31,6 +31,7 @@
   @include custom-style($my-theme);
 
 .repos-outer{
+    width: 100%;
     top: 72px;
     bottom: 64px;
     left: 0;
@@ -58,11 +59,11 @@
 .mat-list-base{
     padding-top: 0;
 }
-.spacer{
-    flex-grow: 1;
-}
+// .spacer{
+//     flex-grow: 1;
+// }
 .filter{
-    flex: 0.8;
+    flex: 1;
 }
 
 .mat-form-field{

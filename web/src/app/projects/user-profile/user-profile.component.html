@@ -1,3 +1,10 @@
-<p>
-  user-profile works!
-</p>
+<div fxLayout="column" fxFlex="100">
+  <div fxFlex="100" class="image-box">
+    <img style="max-height: 100%" src="{{user.avatar_url}}" alt="{{user.name}}" />
+  </div>
+  <div class="profile">
+    <div><span class="name">{{user.name}}</span></div>
+    <div><span>{{user.company}}</span></div>
+    <div><span>{{user.bio}}</span></div>
+  </div>
+</div>

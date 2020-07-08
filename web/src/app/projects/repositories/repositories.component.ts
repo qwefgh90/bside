@@ -40,11 +40,8 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
         }, () =>{
           console.error("Repositories can't be loaded.")
         });
-      }else{
-        this.wrapper.user().then(user => {
-          this.router.navigate(["repos", user.login]);
-        });
-      }
+      }else
+        this.router.navigate(["repos", this.user.login]);
     });
     this.searchInputFormControl.valueChanges.subscribe(v => {
       this.keyword = v;
