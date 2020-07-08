@@ -4,19 +4,15 @@
 .app-repositories{
     display: flex;
     flex: 1;
-    max-width: 50%;
+    max-width: 60%;
 }
 .app-user-profile{
-    max-height: 35%;
-    flex: 1;
 }
 .app-history{
-    flex: 1;
-    max-height: 65%;
 }
 .left{
     flex: 1;
-    max-width: 50%;
+    max-width: 40%;
 }
 .outer-gt-md{
     width: 1080px;

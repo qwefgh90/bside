@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, AfterContentInit, ViewEncapsulation } from '@angular/core';
-import { WrapperService, UserType } from 'src/app/github/wrapper.service';
+import { WrapperService, UserType, RepositoriesType } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { FormControl } from '@angular/forms';
@@ -19,7 +19,7 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(private wrapper: WrapperService, private router: Router, private store: Store<{}>) { }
 
-  repositories: Array<any>;
+  repositories: RepositoriesType;
   userId;
   searchInputFormControl = new FormControl();
   subscribtions: Array<Subscription> = []; 
@@ -32,16 +32,18 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
     let userIdSelector = selectRouteParam('userId');
     let user$ = this.store.select(createSelector(userSelector, userIdSelector, (user, userId) => ({user, userId})));
     let s0 = user$.subscribe(({user, userId}) => {
-      this.user = user;
-      this.userId = userId;
-      if(userId){
-        this.wrapper.repositories(this.userId).then((result) => {
-          this.repositories = result;
-        }, () =>{
-          console.error("Repositories can't be loaded.")
-        });
-      }else
-        this.router.navigate(["repos", this.user.login]);
+      if (user && userId) {
+        this.user = user;
+        this.userId = userId;
+        if (userId) {
+          this.wrapper.repositories(this.userId).then((result) => {
+            this.repositories = result;
+          }, () => {
+            console.error("Repositories can't be loaded.")
+          });
+        } else
+          this.router.navigate(["repos", this.user.login]);
+      }
     });
     this.searchInputFormControl.valueChanges.subscribe(v => {
       this.keyword = v;

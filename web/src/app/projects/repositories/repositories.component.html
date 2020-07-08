@@ -2,31 +2,43 @@
   <div class="repos" [ngStyle.xs]="{'width': 'unset'}" [ngStyle.sm]="{'width': 'unset'}">
     <mat-nav-list color="primary">
       <div class="custom-sub-header">
+        <div class="repo-label"><mat-icon>notes</mat-icon>&nbsp;Your Repositories</div>
         <div class="spacer"></div>
         <div class="filter">
           <mat-form-field legacy="legacy">
             <input matInput placeholder="" [formControl]="searchInputFormControl" />
             <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
-
         </div>
       </div>
-      <mat-divider color=""></mat-divider>
       <div class="items" *ngIf="repositories">
-        <a mat-list-item routerLink="/repos/{{repo.full_name}}" (click)="startLoading(repo.name)"
-          *ngFor="let repo of getRepositories()">
-          <mat-icon mat-list-icon>folder</mat-icon>
-          <div mat-line style="display: flex;">
-            <h4 style="margin: 0px;font-weight: unset;">{{repo.name}}</h4>
-            <div *ngIf="repo?.private"><span
-                style="font-size: 0.7em;margin: 0px; vertical-align: middle; margin-left: 0.4em; font-weight: bold;">private</span>
-            </div>
+        <div mat-list-item class="item" *ngFor="let repo of getRepositories()" fxLayout fxLayoutGap="1em">
+          <div fxLayout fxLayoutAlign="center center" class="left-icon">
+            <mat-icon *ngIf="repo.homepage != '' && repo.homepage != undefined" class="pageview">
+              <a target="_blank" href="{{repo.homepage}}">pageview</a>
+            </mat-icon>
+            <mat-icon *ngIf="repo.homepage == undefined || repo.homepage == ''">
+              <a>folder</a>
+            </mat-icon>
           </div>
-          <p mat-line>{{repo.updated_at | date:'short'}}</p>
-          <div style="text-align: center;" *ngIf="repo.name == repositoryToLoad">
+          <div fxLayout="column" fxFlex="100">
+            <a routerLink="/repos/{{repo.full_name}}" (click)="startLoading(repo.name)">
+              <div class="repo-link">
+                <div class="repository-name-box">
+                  <div class="repository-name">{{repo.name}}</div>
+                  <div *ngIf="repo?.private"><span
+                      style="font-size: 0.7em;margin: 0px; vertical-align: middle; margin-left: 0.4em; font-weight: bold;">private</span>
+                  </div>
+                </div>
+                <div class="repo-info"><mat-icon *ngIf="repo.language">language</mat-icon><span *ngIf="repo.language">{{repo.language}}&nbsp;</span>
+                  <mat-icon>access_time</mat-icon>{{repo.updated_at | date:'short'}}</div>
+              </div>
+            </a>
+          </div>
+          <div fxLayout fxLayoutAlign="center center" class="spinner-box" *ngIf="repo.name == repositoryToLoad">
             <mat-spinner style="display: inline-block" [diameter]="25"></mat-spinner>
           </div>
-        </a>
+        </div>
       </div>
       <div class="progress-box" *ngIf="!repositories">
         <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">

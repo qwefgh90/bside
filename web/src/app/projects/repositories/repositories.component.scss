@@ -22,10 +22,14 @@
 
     .custom-sub-header{
         display:flex;
-        padding: 0 16px;
+        padding: 0 0px;
     }
     .mat-list-base .mat-subheader:first-child{
         background-color:  mat-color($primary, default-contrast);
+    }
+
+    .repository-name{
+        color:  mat-color($primary, default);
     }
   }
   
@@ -60,9 +64,7 @@
 .mat-list-base{
     padding-top: 0;
 }
-// .spacer{
-//     flex-grow: 1;
-// }
+
 .filter{
     flex: 1;
 }
@@ -79,4 +81,64 @@
 }
 ::ng-deep .mat-form-field-infix{
     width: 100% !important; 
+}
+.repository-name{
+    margin: 0px;
+    font-weight: unset;
+    font-size: 1.4em;
+}
+
+.repo-info{
+    display: flex;
+    align-items: flex-end;
+    font-size: 0.8em;
+    color: darkslategray;
+}
+
+.repo-info > mat-icon{
+    width:unset;
+    height: unset;
+    font-size: 1.2em;
+}
+
+.repository-name-box{
+    padding-bottom: 0.5em;
+    display: flex;
+}
+
+.item{
+    border-top: 1px #ecebeb solid;
+    margin-bottom: 0.6em;
+}
+
+.left-icon > mat-icon > a{
+    padding: 0.2em;
+}
+
+.pageview :hover{
+    background-color: #f0f0f0;
+    border-radius: 2em;
+}
+
+.spinner-box{
+    margin-right: 1em;
+}
+
+.repo-link:hover{
+    background-color: #f0f0f0;
+}
+
+
+.repo-link:hover .repository-name{
+    text-decoration: underline;
+}
+
+.spacer{
+    flex:1;
+}
+
+.repo-label{
+    display: flex;
+    align-items: center;
+    font-size: 1.2em;
 }

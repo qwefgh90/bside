@@ -141,7 +141,7 @@ export class WrapperService {
     }
   },
    */
-  async repositories(login: string): Promise<Array<any>> {
+  async repositories(login: string): Promise<RepositoriesType> {
     if (this.hasToken()) {
       const gh = new Github({
         token: this.token
@@ -160,6 +160,7 @@ export class WrapperService {
     }
   }
 
+  
   private repositoriesOfCurrentUserWithHttp() {
     const url = `https://api.github.com/user/repos?per_page=100`;
     let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}` } })
@@ -968,7 +969,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
    * @param owner 
    * @param repositoryName 
    */
-  async getPageBranch(owner: string, repositoryName: string) {
+  async getPageBranch(owner: string, repositoryName: string): Promise<{"url", "status", "cname", "custom_404", "html_url", "source": { "path","branch","directory"}}> {
     const url = `https://api.github.com/repos/${owner}/${repositoryName}/pages`;
     let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}`, Accept: 'application/vnd.github.mister-fantastic-preview+json' } })
     return reposResponse.toPromise();
@@ -2216,5 +2217,6 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
     }
   }
 }
+export type RepositoriesType = [{"id","node_id","name","full_name","private","owner":{"login","id","node_id","avatar_url","gravatar_id","url","html_url","followers_url","following_url","gists_url","starred_url","subscriptions_url","organizations_url","repos_url","events_url","received_events_url","type","site_admin"},"html_url","description","fork","url","forks_url","keys_url","collaborators_url","teams_url","hooks_url","issue_events_url","events_url","assignees_url","branches_url","tags_url","blobs_url","git_tags_url","git_refs_url","trees_url","statuses_url","languages_url","stargazers_url","contributors_url","subscribers_url","subscription_url","commits_url","git_commits_url","comments_url","issue_comment_url","contents_url","compare_url","merges_url","archive_url","downloads_url","issues_url","pulls_url","milestones_url","notifications_url","labels_url","releases_url","deployments_url","created_at","updated_at","pushed_at","git_url","ssh_url","clone_url","svn_url","homepage","size","stargazers_count","watchers_count","language","has_issues","has_projects","has_downloads","has_wiki","has_pages","forks_count","mirror_url","archived","disabled","open_issues_count","license","forks","open_issues","watchers","default_branch","permissions":{"admin","push","pull",}}];
 
 export type UserType = {"login", "id", "node_id", "avatar_url", "gravatar_id", "url", "html_url", "followers_url", "following_url", "gists_url", "starred_url", "subscriptions_url", "organizations_url", "repos_url", "events_url", "received_events_url", "type", "site_admin", "name", "company", "blog", "location", "email", "hireable", "bio", "twitter_username", "public_repos", "public_gists", "followers", "following", "created_at", "updated_at"};
