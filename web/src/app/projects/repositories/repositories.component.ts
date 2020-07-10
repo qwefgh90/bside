@@ -46,6 +46,7 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.userId = userId;
           this.wrapper.repositories(this.userId).then((result) => {
             this.repositories = result;
+            this.repositories = this.getSortedRepositories();
           }, () => {
             console.error("Repositories can't be loaded.")
           });
@@ -55,6 +56,7 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
     });
     let s1 = this.store.select(bookmarkListSelector).subscribe(bookmarkList => {
       this.bookmarkList = new Set(bookmarkList);
+      this.repositories = this.getSortedRepositories();
     });
     this.searchInputFormControl.valueChanges.subscribe(v => {
       this.keyword = v;
@@ -69,22 +71,29 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscribtions.forEach(s => s.unsubscribe());
   }
 
-  getRepositories(){
-    return this.repositories.filter(repo => {
-      if(this.keyword == undefined)
-        return true;
-      if(this.keyword != undefined && (repo.name as string).toLocaleLowerCase().startsWith(this.keyword.toLocaleLowerCase())){
-        return true;
-      }
-      return false;
-    }).sort((a,b) => {
-      if(a.updated_at < b.updated_at)
-        return 1;
-      else if(a.updated_at == b.updated_at)
-        return 0;
-      else
-        return -1;
-    });
+  getSortedRepositories(): Array<RepositoryType>{
+    if(!this.repositories)
+      return [];
+    let bookmarkList = this.repositories.filter(repo => this.bookmarkList.has(repo.full_name));
+    let otherList = this.repositories.filter(repo => !this.bookmarkList.has(repo.full_name));
+    let sortAlgorithm1 = (arr: Array<RepositoryType>) => {
+      return arr.filter(repo => {
+        if(this.keyword == undefined)
+          return true;
+        if(this.keyword != undefined && (repo.name as string).toLocaleLowerCase().startsWith(this.keyword.toLocaleLowerCase())){
+          return true;
+        }
+        return false;
+      }).sort((a,b) => {
+        if(a.updated_at < b.updated_at)
+          return 1;
+        else if(a.updated_at == b.updated_at)
+          return 0;
+        else
+          return -1;
+      })
+    };
+    return [...sortAlgorithm1(bookmarkList), ...sortAlgorithm1(otherList)];
   }
 
   repositoryToLoad = '';

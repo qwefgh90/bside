@@ -14,7 +14,7 @@
         </div>
       </div>
       <div class="items" *ngIf="repositories">
-        <div mat-list-item class="item" *ngFor="let repo of getRepositories()" fxLayout fxLayoutGap="1em">
+        <div mat-list-item class="item" *ngFor="let repo of repositories" fxLayout fxLayoutGap="1em">
           <div fxLayout fxLayoutAlign="center center" class="left-icon">
             <mat-icon *ngIf="repo.homepage != '' && repo.homepage != undefined" class="pageview">
               <a target="_blank" href="{{repo.homepage}}">pageview</a>
@@ -33,19 +33,19 @@
                         style="font-size: 0.7em;margin: 0px; vertical-align: middle; margin-left: 0.4em; font-weight: bold;">private</span>
                     </div>
                     <div style="flex:1"></div>
-                    <div>
-                      <mat-icon *ngIf="bookmarkList.has(repo.full_name)" (click)="addBookmark($event, repo)">bookmark</mat-icon>
-                      <mat-icon *ngIf="!bookmarkList.has(repo.full_name)" (click)="removeBookmark($event, repo)">bookmark_border</mat-icon>
+                    <div fxLayout fxLayoutAlign="center center" class="spinner-box" *ngIf="repo.name == repositoryToLoad">
+                      <mat-spinner style="display: inline-block" [diameter]="18"></mat-spinner>
+                    </div>
+                    <div fxLayout fxLayoutAlign="center center" class="bookmark-box">
+                      <mat-icon *ngIf="bookmarkList.has(repo.full_name)" (click)="addBookmark($event, repo)" class="bookmark">bookmark</mat-icon>
+                      <mat-icon *ngIf="!bookmarkList.has(repo.full_name)" (click)="removeBookmark($event, repo)" class="bookmark">bookmark_border</mat-icon>
                     </div>
                   </div>
                   <div class="repo-info">
-                    <mat-icon *ngIf="repo.language">language</mat-icon><span
-                      *ngIf="repo.language">{{repo.language}}&nbsp;</span>
-                    <mat-icon>access_time</mat-icon>{{repo.updated_at | date:'short'}}
+                    <mat-icon>access_time</mat-icon>Updated {{repo.updated_at | timeAgo}}&nbsp;
+                    <mat-icon *ngIf="repo.language">language</mat-icon>
+                    <span *ngIf="repo.language">{{repo.language}}</span>
                   </div>
-                </div>
-                <div fxLayout fxLayoutAlign="center center" class="spinner-box" *ngIf="repo.name == repositoryToLoad">
-                  <mat-spinner style="display: inline-block" [diameter]="25"></mat-spinner>
                 </div>
               </div>
             </a>

@@ -85,14 +85,14 @@
 .repository-name{
     margin: 0px;
     font-weight: unset;
-    font-size: 1.4em;
+    font-size: 1.5em;
 }
 
 .repo-info{
     display: flex;
     align-items: flex-end;
-    font-size: 0.8em;
-    color: darkslategray;
+    font-size: 0.75em;
+    color: #000000;
 }
 
 .repo-info > mat-icon{
@@ -102,7 +102,7 @@
 }
 
 .repository-name-box{
-    padding-bottom: 0.5em;
+    padding-bottom: 0.6em;
     display: flex;
 }
 
@@ -114,17 +114,28 @@
     padding: 0.2em;
 }
 
-.pageview :hover{
+.pageview > a:hover{
     background-color: #f0f0f0;
     border-radius: 2em;
 }
 
+.bookmark:hover{
+    background-color: #d4d2d2;
+    padding: 0.1em;
+    border-radius: 2em;
+}
+
+.bookmark{
+    padding: 0.1em;
+}
+
 .spinner-box{
-    margin-right: 1em;
+    margin-right: 0.5em;
 }
 
 .repo-link{
-    padding-bottom: 0.6em;
+    padding-bottom: 0.8em;
+    padding-top: 0.3em;
 }
 
 .repo-link:hover{
@@ -144,4 +155,14 @@
     display: flex;
     align-items: center;
     font-size: 1.2em;
+}
+
+.bookmark-box{
+    margin-right: 0.5em;
+}
+
+.bookmark-box > mat-icon{
+    font-size: 1.6em;
+    width: unset;
+    height: unset;
 }

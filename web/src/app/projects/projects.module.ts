@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
+import {TimeAgoPipe} from 'time-ago-pipe';
 import { ProjectsRoutingModule } from './projects-routing.module';
 import { RepositoriesComponent } from './repositories/repositories.component';
 import { MatListModule } from '@angular/material/list';
@@ -16,7 +16,7 @@ import { UserProfileComponent } from './user-profile/user-profile.component';
 import { StoreModule } from '@ngrx/store';
 import { projectsReducerKey, projectsReducer } from './projects.reducer';
 @NgModule({
-  declarations: [RepositoriesComponent, UserBoardComponent, HistoryComponent, UserProfileComponent],
+  declarations: [RepositoriesComponent, UserBoardComponent, HistoryComponent, UserProfileComponent, TimeAgoPipe],
   imports: [
     StoreModule.forFeature(projectsReducerKey, projectsReducer),
     CommonModule,
