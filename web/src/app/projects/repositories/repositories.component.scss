@@ -28,9 +28,9 @@
         background-color:  mat-color($primary, default-contrast);
     }
 
-    .repository-name{
-        color:  mat-color($primary, default);
-    }
+    // .repository-name{
+    //     color:  mat-color($primary, default);
+    // }
   }
   
   @include custom-style($my-theme);
@@ -108,7 +108,6 @@
 
 .item{
     border-top: 1px #ecebeb solid;
-    margin-bottom: 0.6em;
 }
 
 .left-icon > mat-icon > a{
@@ -122,6 +121,10 @@
 
 .spinner-box{
     margin-right: 1em;
+}
+
+.repo-link{
+    padding-bottom: 0.6em;
 }
 
 .repo-link:hover{

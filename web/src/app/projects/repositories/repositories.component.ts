@@ -1,13 +1,16 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, AfterContentInit, ViewEncapsulation } from '@angular/core';
-import { WrapperService, UserType, RepositoriesType } from 'src/app/github/wrapper.service';
+import { WrapperService, UserType, RepositoriesType, RepositoryType } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { OAuthService } from 'src/app/oauth/service/o-auth.service';
-import { Store, createSelector } from '@ngrx/store';
+import { Store, createSelector, createFeatureSelector } from '@ngrx/store';
 import { AppState } from 'src/app/app.reducer';
-import { selectQueryParam, State, selectRouteParam } from 'src/app/app-routing.reducer';
+import { selectQueryParam, State, selectRouteParam, selectCurrentRoute } from 'src/app/app-routing.reducer';
 import * as fromRouter from '@ngrx/router-store';
+import { projectsRoutes } from '../projects-routing.module'
+import { projectsReducerKey, ProjectsState } from '../projects.reducer';
+import { addBookmark, removeBookmark } from '../projects.actions';
 @Component({
   selector: 'app-repositories',
   templateUrl: './repositories.component.html',
@@ -26,16 +29,21 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
   keyword;
   //synced
   user: UserType;
+  bookmarkMap = new Map<string, boolean>();
+  bookmarkList: Set<string>;
 
   ngOnInit() {
     let userSelector = (state: {app: AppState, router: fromRouter.RouterReducerState<any>}) => state.app.user;
+    let featureKey = createFeatureSelector(projectsReducerKey)
+    let bookmarkListSelector = createSelector(featureKey, (state: ProjectsState) => state.bookmarkList);
     let userIdSelector = selectRouteParam('userId');
-    let user$ = this.store.select(createSelector(userSelector, userIdSelector, (user, userId) => ({user, userId})));
-    let s0 = user$.subscribe(({user, userId}) => {
-      if (user && userId) {
+    let user$ = this.store.select(createSelector(userSelector, userIdSelector, selectCurrentRoute, (user, userId, route: {children,data,firstChild,fragment,outlet,params,queryParams,routeConfig: {path, pathMatch, redirectTo},url: []}) => ({user, userId, route})));
+    let s0 = user$.subscribe(({user, userId, route}) => {
+      if (projectsRoutes.find(r => r.path == route.routeConfig.path) 
+            && user) {
         this.user = user;
-        this.userId = userId;
         if (userId) {
+          this.userId = userId;
           this.wrapper.repositories(this.userId).then((result) => {
             this.repositories = result;
           }, () => {
@@ -45,10 +53,13 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.router.navigate(["repos", this.user.login]);
       }
     });
+    let s1 = this.store.select(bookmarkListSelector).subscribe(bookmarkList => {
+      this.bookmarkList = new Set(bookmarkList);
+    });
     this.searchInputFormControl.valueChanges.subscribe(v => {
       this.keyword = v;
     })
-    this.subscribtions.push(s0);
+    this.subscribtions.push(s0, s1);
   }
 
   ngAfterViewInit(){
@@ -79,5 +90,15 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
   repositoryToLoad = '';
   startLoading(repoName: string){
     this.repositoryToLoad = repoName;
+  }
+  addBookmark(event:MouseEvent, repository :RepositoryType){
+    event.preventDefault();
+    event.stopPropagation();
+    this.store.dispatch(removeBookmark({path: repository.full_name}));
+  }
+  removeBookmark(event:MouseEvent, repository :RepositoryType){
+    event.preventDefault();
+    event.stopPropagation();
+    this.store.dispatch(addBookmark({path: repository.full_name}));
   }
 }

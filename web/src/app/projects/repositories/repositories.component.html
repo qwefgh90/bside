@@ -2,7 +2,9 @@
   <div class="repos" [ngStyle.xs]="{'width': 'unset'}" [ngStyle.sm]="{'width': 'unset'}">
     <mat-nav-list color="primary">
       <div class="custom-sub-header">
-        <div class="repo-label"><mat-icon>notes</mat-icon>&nbsp;Your Repositories</div>
+        <div class="repo-label">
+          <mat-icon>notes</mat-icon>&nbsp;Your Repositories
+        </div>
         <div class="spacer"></div>
         <div class="filter">
           <mat-form-field legacy="legacy">
@@ -21,22 +23,32 @@
               <a>folder</a>
             </mat-icon>
           </div>
-          <div fxLayout="column" fxFlex="100">
+          <div fxFlex="100">
             <a routerLink="/repos/{{repo.full_name}}" (click)="startLoading(repo.name)">
-              <div class="repo-link">
-                <div class="repository-name-box">
-                  <div class="repository-name">{{repo.name}}</div>
-                  <div *ngIf="repo?.private"><span
-                      style="font-size: 0.7em;margin: 0px; vertical-align: middle; margin-left: 0.4em; font-weight: bold;">private</span>
+              <div class="repo-link" fxLayout>
+                <div fxLayout="column" fxFlex="100">
+                  <div class="repository-name-box">
+                    <div class="repository-name">{{repo.name}}</div>
+                    <div *ngIf="repo?.private"><span
+                        style="font-size: 0.7em;margin: 0px; vertical-align: middle; margin-left: 0.4em; font-weight: bold;">private</span>
+                    </div>
+                    <div style="flex:1"></div>
+                    <div>
+                      <mat-icon *ngIf="bookmarkList.has(repo.full_name)" (click)="addBookmark($event, repo)">bookmark</mat-icon>
+                      <mat-icon *ngIf="!bookmarkList.has(repo.full_name)" (click)="removeBookmark($event, repo)">bookmark_border</mat-icon>
+                    </div>
+                  </div>
+                  <div class="repo-info">
+                    <mat-icon *ngIf="repo.language">language</mat-icon><span
+                      *ngIf="repo.language">{{repo.language}}&nbsp;</span>
+                    <mat-icon>access_time</mat-icon>{{repo.updated_at | date:'short'}}
                   </div>
                 </div>
-                <div class="repo-info"><mat-icon *ngIf="repo.language">language</mat-icon><span *ngIf="repo.language">{{repo.language}}&nbsp;</span>
-                  <mat-icon>access_time</mat-icon>{{repo.updated_at | date:'short'}}</div>
+                <div fxLayout fxLayoutAlign="center center" class="spinner-box" *ngIf="repo.name == repositoryToLoad">
+                  <mat-spinner style="display: inline-block" [diameter]="25"></mat-spinner>
+                </div>
               </div>
             </a>
-          </div>
-          <div fxLayout fxLayoutAlign="center center" class="spinner-box" *ngIf="repo.name == repositoryToLoad">
-            <mat-spinner style="display: inline-block" [diameter]="25"></mat-spinner>
           </div>
         </div>
       </div>

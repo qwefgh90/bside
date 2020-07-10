@@ -13,9 +13,12 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { UserBoardComponent } from './user-board/user-board.component';
 import { HistoryComponent } from './history/history.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
+import { StoreModule } from '@ngrx/store';
+import { projectsReducerKey, projectsReducer } from './projects.reducer';
 @NgModule({
   declarations: [RepositoriesComponent, UserBoardComponent, HistoryComponent, UserProfileComponent],
   imports: [
+    StoreModule.forFeature(projectsReducerKey, projectsReducer),
     CommonModule,
     ProjectsRoutingModule,
     MatListModule,
