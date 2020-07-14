@@ -70,7 +70,7 @@
 }
 
 .mat-form-field{
-    width: 100%;
+    width: 8em;
 }
 .progress-box{
     width: 100%;
@@ -166,4 +166,9 @@
     font-size: 1.6em;
     width: unset;
     height: unset;
+}
+
+.filter mat-form-field + mat-form-field{
+    margin-left: 8px;
+
 }

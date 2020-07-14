@@ -31,7 +31,7 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
   user: UserType;
   bookmarkMap = new Map<string, boolean>();
   bookmarkList: Set<string>;
-  selectedOptionForSorting = "Updated";
+  selectedOptionForSorting = new FormControl("Updated");
   Updated ="Updated";
   Edited ="Edited"
 

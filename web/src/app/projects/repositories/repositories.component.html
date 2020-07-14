@@ -2,28 +2,28 @@
   <div class="repos" [ngStyle.xs]="{'width': 'unset'}" [ngStyle.sm]="{'width': 'unset'}">
     <mat-nav-list color="primary">
       <div class="custom-sub-header">
-        <div class="repo-label">
+        <div class="repo-label" >
           <mat-icon>notes</mat-icon>&nbsp;Your Repositories
         </div>
-        <!-- <div class="spacer"></div> -->
+        <div class="spacer"></div>
         <div class="filter">
-          <mat-form-field legacy="legacy">
-            <input matInput placeholder="" [formControl]="searchInputFormControl" />
-            <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
-        </div>
-        <div>
-          <mat-form-field appearance="fill">
-            <mat-label>Sorted by</mat-label>
-            <mat-select [(value)]="selectedOptionForSorting">
-              <mat-option [value]="Updated">
-                Updated
-              </mat-option>
-              <mat-option [value]="Edited">
-                Edited
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <form>
+            <mat-form-field>
+              <input matInput placeholder="" [formControl]="searchInputFormControl" />
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Sorted by</mat-label>
+              <mat-select [formControl]="selectedOptionForSorting">
+                <mat-option [value]="Updated">
+                  Updated
+                </mat-option>
+                <mat-option [value]="Edited">
+                  Edited
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </form>
         </div>
       </div>
       <div class="items" *ngIf="repositories">
@@ -46,12 +46,15 @@
                         style="font-size: 0.7em;margin: 0px; vertical-align: middle; margin-left: 0.4em; font-weight: bold;">private</span>
                     </div>
                     <div style="flex:1"></div>
-                    <div fxLayout fxLayoutAlign="center center" class="spinner-box" *ngIf="repo.name == repositoryToLoad">
+                    <div fxLayout fxLayoutAlign="center center" class="spinner-box"
+                      *ngIf="repo.name == repositoryToLoad">
                       <mat-spinner style="display: inline-block" [diameter]="18"></mat-spinner>
                     </div>
                     <div fxLayout fxLayoutAlign="center center" class="bookmark-box">
-                      <mat-icon *ngIf="bookmarkList.has(repo.full_name)" (click)="addBookmark($event, repo)" class="bookmark">bookmark</mat-icon>
-                      <mat-icon *ngIf="!bookmarkList.has(repo.full_name)" (click)="removeBookmark($event, repo)" class="bookmark">bookmark_border</mat-icon>
+                      <mat-icon *ngIf="bookmarkList.has(repo.full_name)" (click)="addBookmark($event, repo)"
+                        class="bookmark">bookmark</mat-icon>
+                      <mat-icon *ngIf="!bookmarkList.has(repo.full_name)" (click)="removeBookmark($event, repo)"
+                        class="bookmark">bookmark_border</mat-icon>
                     </div>
                   </div>
                   <div class="repo-info" fxLayout>
