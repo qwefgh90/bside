@@ -5,11 +5,24 @@
         <div class="repo-label">
           <mat-icon>notes</mat-icon>&nbsp;Your Repositories
         </div>
-        <div class="spacer"></div>
+        <!-- <div class="spacer"></div> -->
         <div class="filter">
           <mat-form-field legacy="legacy">
             <input matInput placeholder="" [formControl]="searchInputFormControl" />
             <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        </div>
+        <div>
+          <mat-form-field appearance="fill">
+            <mat-label>Sorted by</mat-label>
+            <mat-select [(value)]="selectedOptionForSorting">
+              <mat-option [value]="Updated">
+                Updated
+              </mat-option>
+              <mat-option [value]="Edited">
+                Edited
+              </mat-option>
+            </mat-select>
           </mat-form-field>
         </div>
       </div>
@@ -41,8 +54,10 @@
                       <mat-icon *ngIf="!bookmarkList.has(repo.full_name)" (click)="removeBookmark($event, repo)" class="bookmark">bookmark_border</mat-icon>
                     </div>
                   </div>
-                  <div class="repo-info">
-                    <mat-icon>access_time</mat-icon>Updated {{repo.updated_at | timeAgo}}&nbsp;
+                  <div class="repo-info" fxLayout>
+                    <div fxFlex="100" fxLayout fxLayoutAlign="flex-start flex-end">
+                      <mat-icon>access_time</mat-icon>Updated {{repo.updated_at | timeAgo}}&nbsp;
+                    </div>
                     <mat-icon *ngIf="repo.language">language</mat-icon>
                     <span *ngIf="repo.language">{{repo.language}}</span>
                   </div>

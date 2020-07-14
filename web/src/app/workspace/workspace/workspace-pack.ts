@@ -18,11 +18,8 @@ export class WorkspacePack {
         p.tree_sha = tree_sha;
         p.selectedNodePath = selectedNodePath;
         p.autoSave = autoSave;
-        p.optimizeTree();
+        p.date = new Date();
         return p;
-    }
-
-    private optimizeTree(){
     }
 
     selectedNodePath: string;
@@ -35,4 +32,5 @@ export class WorkspacePack {
     tabs: string[];
     tree_sha: string;
     autoSave: boolean;
+    date: Date;
 }

@@ -15,6 +15,7 @@ import { HistoryComponent } from './history/history.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
 import { StoreModule } from '@ngrx/store';
 import { projectsReducerKey, projectsReducer } from './projects.reducer';
+import { MatSelectModule } from '@angular/material/select';
 @NgModule({
   declarations: [RepositoriesComponent, UserBoardComponent, HistoryComponent, UserProfileComponent, TimeAgoPipe],
   imports: [
@@ -28,7 +29,8 @@ import { projectsReducerKey, projectsReducer } from './projects.reducer';
     MatInputModule,
     FormsModule,
     ReactiveFormsModule,
-    FlexLayoutModule
+    FlexLayoutModule,
+    MatSelectModule
   ]
 })
 export class ProjectsModule { }

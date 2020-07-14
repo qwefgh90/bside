@@ -31,6 +31,9 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
   user: UserType;
   bookmarkMap = new Map<string, boolean>();
   bookmarkList: Set<string>;
+  selectedOptionForSorting = "Updated";
+  Updated ="Updated";
+  Edited ="Edited"
 
   ngOnInit() {
     let userSelector = (state: {app: AppState, router: fromRouter.RouterReducerState<any>}) => state.app.user;

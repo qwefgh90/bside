@@ -66,7 +66,7 @@
 }
 
 .filter{
-    flex: 1;
+    // flex: 1;
 }
 
 .mat-form-field{
@@ -93,9 +93,10 @@
     align-items: flex-end;
     font-size: 0.75em;
     color: #000000;
+    margin-right: 1em;
 }
 
-.repo-info > mat-icon{
+.repo-info mat-icon{
     width:unset;
     height: unset;
     font-size: 1.2em;
