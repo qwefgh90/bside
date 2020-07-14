@@ -56,19 +56,25 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
         console.debug(`${rest.from.data.name} is dropped`);
         let foundIndex = (rest.to.parent.data as GithubTreeNode).children.findIndex((v) => v.name == rest.from.data.name)
         let newParent = rest.to.parent;
-        let nodeToMove = rest.from;
         if(foundIndex == -1){
-          const githubNode = rest.from.data as GithubTreeNode;
-          const oldName = githubNode.name;
-          const oldPath = githubNode.path;
+          let afterRefresh: Array<() => void> = [];
           (rest.from.data as GithubTreeNode).move(newParent.parent == null ? this.root : newParent.data,
-              (node, parent, pre, newPath) => {         
-                this.store.dispatch(renamingNode({oldPath: pre, oldName: GithubTreeNode.getNameFromPath(pre), newPath: node.path, newName: node.name}));
-                if(node.path == this.selectedNode.data.path){
-                  this.store.dispatch(nodeSelected({node: this.selectedNode.data.toGithubNode()}));
+            (node, parent, oldPath) => {
+              const oldName = GithubTreeNode.getNameFromPath(oldPath);
+              const newPath = node.path;
+              const newName = node.name;
+              const selectedPath = this.selectedNode.data.path;
+              const githubNode = this.selectedNode.data.toGithubNode();
+              afterRefresh.push(() => {
+                this.store.dispatch(renamingNode({ oldPath, oldName, newPath, newName }));
+                if (newPath == selectedPath) {
+                  this.store.dispatch(nodeSelected({ node: githubNode }));
                 }
               });
+            });
           TREE_ACTIONS.MOVE_NODE(m, n, event, rest);
+          this.refreshTree();
+          afterRefresh.forEach(func => func());
         }else{
           console.log(`${rest.from.data.name} already exists in the folder.`)
         }

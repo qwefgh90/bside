@@ -144,13 +144,15 @@ export class GithubTreeNode {
   move(newParent: GithubTreeNode, postAction?: (node: GithubTreeNode, parent: GithubTreeNode, prePath: string, newPath: string) => void) {
     if (!this.isMyDescendant(newParent)) {
       if (newParent != undefined && newParent.type.toLocaleLowerCase() == 'tree') {
-        const prePath = this.path;
+        const prePath = this.path
         this._path = newParent.isRoot ? this.name : `${newParent.path}/${this.name}`
         this.state.push(NodeStateAction.Moved)
         console.debug(`Change of path: from ${prePath} to ${this.path}`);
         this.changeAllParents(this.parentNode);
         if (newParent != this.parentNode) {
           this.parentNode = newParent;
+          // preParent.children
+          // newParent.children.push(this);
           this.changeAllParents(this.parentNode);
         }
         if (postAction)

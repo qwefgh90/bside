@@ -21,7 +21,12 @@ export const signOut = createAction(
   props<{}>()
 );
 
-export const redirectUrlChanged = createAction(
-  '[Login Guard] url changed',
+export const apiConnectionProblem = createAction(
+  '[Login Component] Failed to connect to the API Server',
+  props<{}>()
+);
+
+export const keepRedirectionUrl = createAction(
+  '[Login Guard] keep a redirection url',
   props<{ redirectUrl: string }>()
 );

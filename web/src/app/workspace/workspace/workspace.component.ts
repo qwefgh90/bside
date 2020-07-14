@@ -179,8 +179,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       }
     });
     this.editorStatusFsm.on(EditorStatusOnWorkspace.Editor, (from) => {
-      if(from != EditorStatusOnWorkspace.Editor)
+      if(from != EditorStatusOnWorkspace.Editor){
+        this.preview.setContent("preview", "");
+        this.preview.select('preview');
         this.editor.select(this.selectedNodePath);
+      }
     });
     
     this.editorStatusFsm.on(EditorStatusOnWorkspace.Md, (from) => {
@@ -229,7 +232,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       if (renameInfo) {
         let { oldPath, newPath } = renameInfo;
         this.nodeMoved(oldPath, newPath);
-        this.invalidateDirtyCount();
+        this.invalidateDirtyCount();  
         this.dispatchSaveAction(this.autoSaveRef.checked);
       }
     });

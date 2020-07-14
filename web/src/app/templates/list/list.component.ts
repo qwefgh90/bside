@@ -77,7 +77,7 @@ export class ListComponent implements OnInit, OnChanges {
     if (page != undefined)
       queryParams['page'] = page;
     let tree = this.router.createUrlTree(this.route.snapshot.url, {queryParams: queryParams, fragment: view});
-    if(this.guard.checkLogin(tree.toString())){
+    if(this.guard.isLogin){
       // let arr = repo.full_name.split('/');
       const dialogRef = this.dialog.open(ForkComponent, {
         width: '350px',

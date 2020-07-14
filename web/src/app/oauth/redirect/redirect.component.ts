@@ -4,7 +4,7 @@ import { OAuthService } from '../service/o-auth.service';
 import { TextUtil } from 'src/app/workspace/text/text-util';
 import { createFeatureSelector, select, Store } from '@ngrx/store';
 import { AuthState, authReducerKey } from '../auth.reducer';
-import { redirectUrlChanged } from '../auth.actions';
+import { keepRedirectionUrl } from '../auth.actions';
 import { WrapperService } from 'src/app/github/wrapper.service';
 
 @Component({
@@ -34,7 +34,7 @@ export class RedirectComponent implements OnInit {
       if (map.has("route")) {
         let url = map.get("route");
         console.log("RedirectUrl : " + url);
-        this.store.dispatch(redirectUrlChanged({redirectUrl: TextUtil.base64ToString(url)}));
+        this.store.dispatch(keepRedirectionUrl({redirectUrl: TextUtil.base64ToString(url)}));
       }
       this.state = map.get("state");
       this.code = map.get("code");

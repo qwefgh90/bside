@@ -1,10 +1,10 @@
 import { Injectable, Inject } from '@angular/core';
 import { ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate, Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, from } from 'rxjs';
 import { OAuthService } from '../service/o-auth.service';
 import { CookieToken, Cookie } from 'src/app/db/cookie';
 import { Store, select, createFeatureSelector, createSelector } from '@ngrx/store';
-import { redirectUrlChanged } from '../auth.actions';
+import { keepRedirectionUrl } from '../auth.actions';
 import { environment } from 'src/environments/environment';
 import { TextUtil } from 'src/app/workspace/text/text-util';
 import { authReducerKey, AuthState } from '../auth.reducer';
@@ -26,26 +26,29 @@ export class LoginGuard implements CanActivate {
   isLogin = false;
   canActivate(
     next: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot): boolean {
+    state: RouterStateSnapshot): Observable<boolean> {
     console.log('LoginGuard#CanActivate called');
     let url: string = state.url;
-    this.oauthService.checkSession().then(() => { // if session is invalid, execute checkLogin()
-      this.checkLogin(url);
+    let success = this.oauthService.checkConnectionWithAPIServer().then((success) => { // if session is invalid, execute checkLogin()
+      if(!success){
+        this.checkLogin(url);
+        return false;
+      }else
+        return true;
     });
-    return this.checkLogin(url);  // It doesn't wait for checkSession()
+    return from(success);
+    // return this.checkLogin(url);  // It doesn't wait for checkSession()
   }
   
-
   redirectURL(routeUrl: string) {
     return `${environment.redirect_url}?route=${routeUrl ? TextUtil.stringToBase64(routeUrl) : ''}`;
   }
 
-  checkLogin(url: string): boolean {
-    if (this.isLogin) { return true; }
+  checkLogin(url: string) {
+    // if (this.isLogin) { return true; }
 
     // Store the attempted URL for redirecting
-    // this.oauthService.redirectUrl = url;
-    this.store.dispatch(redirectUrlChanged({redirectUrl: this.redirectURL(url)}));
+    this.store.dispatch(keepRedirectionUrl({redirectUrl: this.redirectURL(url)}));
     let params = new Object();
     if(this.cookie.autoLogin){
       params['autoLogin'] = true;
@@ -55,6 +58,6 @@ export class LoginGuard implements CanActivate {
     }
     // Navigate to the login page with extras
     this.router.navigate(['/login'], {queryParams : params});
-    return false;
+    // return false;
   }
 }
