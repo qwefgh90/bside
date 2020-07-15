@@ -24,6 +24,9 @@ import { StoreModule } from '@ngrx/store';
 import { StoreRouterConnectingModule, routerReducer } from '@ngrx/router-store';
 import { metaReducers } from './app-routing.reducer';
 import { appReducer } from './app.reducer';
+import { indexedDBReducer } from './db/indexed-db.reducer';
+import { DatabaseToken } from './db/database';
+import { LocalDbService } from './db/local-db.service';
 
 export function initAuth(oauthService: OAuthService){
   return () => oauthService.initAccessTokenOnSession();
@@ -37,7 +40,8 @@ export function initAuth(oauthService: OAuthService){
   imports: [
     StoreModule.forRoot({
       router: routerReducer,
-      app: appReducer
+      app: appReducer,
+      indexedDB: indexedDBReducer
     }, {metaReducers}),
     ProjectsModule,
     TemplatesModule,
@@ -57,7 +61,8 @@ export function initAuth(oauthService: OAuthService){
     MatBadgeModule,
     FlexLayoutModule,
   ],
-  providers: [{ provide: APP_INITIALIZER, useFactory: initAuth, deps: [OAuthService], multi: true }],
+  providers: [{ provide: APP_INITIALIZER, useFactory: initAuth, deps: [OAuthService], multi: true },
+              {provide: DatabaseToken, useClass: LocalDbService}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

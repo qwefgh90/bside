@@ -48,6 +48,8 @@ import { MarkdownEditorComponent } from '../markdown-editor/markdown-editor.comp
 import { RepositoryInformation } from '../workspace-initializer/workspace-initializer.component';
 import { routerRequestAction } from '@ngrx/router-store';
 import { TypeState } from 'typestate';
+import { IndexedDbService } from 'src/app/db/indexed-db.service';
+import { IndexedDBState } from 'src/app/db/indexed-db.reducer';
 
 declare const monaco;
 
@@ -98,10 +100,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     , private router: Router, private sanitizer: DomSanitizer, @Inject(DatabaseToken) private database: Database
     , public detector: DeviceDetectorService
     , public dialog: MatDialog, private store: Store<{}>,
-    @Inject(DOCUMENT) private document: Document) {
+    @Inject(DOCUMENT) private document: Document
+    , private indexedDBService: IndexedDbService) {
     this.isDesktop = this.detector.isDesktop();
   }
-
   @ViewChild("tree", { static: true }) tree: GithubTreeComponent;
   @ViewChild("editor1") editor1: Editor;
   @ViewChild("editor2") editor2: Editor;
@@ -206,7 +208,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let removedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRemovedPath);
     let latestResetTimeSelector = createSelector(feature, (state: WorkspaceState) => state.latestResetTime);
     let latestPathForChangesInContentSelector = createSelector(feature, (state: WorkspaceState) => state.latestPathForChangesInContent);
-    
+    let databaseReadySelector = createSelector((state: {indexedDB: IndexedDBState}) => state.indexedDB, (state) => state.ready);
     let selectedNode$ = this.store.pipe(select(createSelector(nodeSelector, editorSelector, (node, loaded) => ({node, loaded}))));
     let s0 = selectedNode$.subscribe(({node, loaded}) => {
       if (loaded) {
@@ -291,21 +293,19 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
     let queryPathSelector = selectQueryParam('path');
 
-    let tuple = createSelector(editorSelector, (editorLoaded) => ({editorLoaded, userId: this.parameter.userId, 
+    let tuple = createSelector(editorSelector, databaseReadySelector, (editorLoaded, dbReady) => ({editorLoaded, dbReady, userId: this.parameter.userId, 
       repositoryName: this.parameter.repositoryName, branchName: this.parameter.branchName}));
       
-    let s4 = this.store.select(tuple).subscribe(({editorLoaded, userId, repositoryName, branchName}) => {
-      if (editorLoaded && userId && repositoryName) {
+    let s4 = this.store.select(tuple).subscribe(({editorLoaded, dbReady, userId, repositoryName, branchName}) => {
+      if (editorLoaded && dbReady && userId && repositoryName) {
         let promise = this.initialize(userId, repositoryName, branchName);
         promise.then(async() => {
           this.invalidateDirtyCount();
-          let loadedPack = await this.database.get(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha)
+          let loadedPack = await this.indexedDBService.getByRepositoryIDAndBranchAndSha(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha)
             .then(v => {
-              console.log(`${v.commit_sha} have been loaded completely.`)
               return v;
             })
-            .catch(r => {
-              console.error(r);
+            .catch((r: Error) => {
               return undefined;
             }) as WorkspacePack;
 
@@ -396,13 +396,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           this.setBranchByName(defaultBranchName);
 
         // if it has already loaded packs, do nothing.
-        let loadedPack = await this.database.get(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha)
+        let loadedPack = await this.indexedDBService.getByRepositoryIDAndBranchAndSha(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha)
           .then(v => {
-            console.log(`${v.commit_sha} have been loaded completely.`)
+            console.debug(`${v.commit_sha} have been loaded completely.`)
             return v;
           })
           .catch(r => {
-            console.log(r);
+            console.debug(r.message);
             return undefined;
           }) as WorkspacePack
         
@@ -833,15 +833,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         v.setSynced(response.sha, 'blob', '100644');
         return { node: v, response: response }
       });
-    });
-  }
-
-  private clearCommits() {
-    this.database.list(this.repositoryDetails.id).then((arr) => {
-      arr.forEach(p => {
-        if (this.selectedBranch.name == p.branchName)
-          this.database.delete(p.repositoryId, p.branchName, p.commit_sha);
-      })
     });
   }
 

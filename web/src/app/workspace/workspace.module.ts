@@ -41,6 +41,7 @@ import { workspaceReducerKey, workspaceReducer } from './workspace.reducer';
 import { StoreModule } from '@ngrx/store';
 import { WorkspaceInitializerComponent } from './workspace-initializer/workspace-initializer.component';
 import { WorkspaceHostDirective } from './workspace-initializer/workspace-host.directive';
+import { IndexedDbService } from '../db/indexed-db.service';
 
 @NgModule({
   declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent, UploadComponent, DiffEditorComponent, CommitProgressComponent, TabComponent, MarkdownEditorComponent, InfoComponent, BuildHistoryComponent, WorkspaceInitializerComponent, WorkspaceHostDirective],
@@ -71,7 +72,8 @@ import { WorkspaceHostDirective } from './workspace-initializer/workspace-host.d
     MatCheckboxModule,
     MatTooltipModule,
   ],
-  providers: [{provide: DatabaseToken, useClass: LocalDbService}],
+  providers: [{provide: DatabaseToken, useClass: LocalDbService},
+    {provide: IndexedDbService, useClass: IndexedDbService}],
   entryComponents: [
     InfoComponent,
     BuildHistoryComponent,
