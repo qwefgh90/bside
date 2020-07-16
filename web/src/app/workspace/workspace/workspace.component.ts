@@ -258,7 +258,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let latestResetTime$ = this.store.pipe(select(latestResetTimeSelector));
     let s5 = latestResetTime$.subscribe((date) => {
       if (date) {
-        this.database.delete(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
+        this.indexedDBService.deleteByRepositoryIDAndBranchAndSha(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
         this.document.location.reload();
       }
     });
@@ -317,8 +317,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
             }
           });
           s.unsubscribe();
-        }, () => {
-          console.error(`An initialization of ${userId}/${repositoryName} failed`);
+        }, (r) => {
+          console.error(`An initialization of ${userId}/${repositoryName} failed. ${r}`);
+          this.errorDescription = r;
         });
       }
     });
@@ -331,7 +332,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let s7 = this.store.select(latestSnapshotSelector).subscribe((snapshotInfo) => {
       if(snapshotInfo?.doneTime){
         let pack = WorkspacePack.of(snapshotInfo.workspaceSnapshot.repositoryId, snapshotInfo.workspaceSnapshot.repositoryName, snapshotInfo.workspaceSnapshot.commitSha, snapshotInfo.workspaceSnapshot.treeSha, snapshotInfo.workspaceSnapshot.name, snapshotInfo.workspaceSnapshot.packs, snapshotInfo.treeSnapshot.nodes, snapshotInfo.tabSnapshot.tabs, snapshotInfo.workspaceSnapshot.selectedNodePath, snapshotInfo.workspaceSnapshot.autoSave);
-        this.database.save(pack);
+        // this.database.save(pack);
+        this.indexedDBService.savePack(pack);
       }
     });
     
@@ -387,7 +389,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       }, () => Promise.reject("Branches can't be loaded."));
 
       if (this.branches.length == 0) {
-        return Promise.reject("It seems that this repository is empty.");
+        return Promise.reject("There are no branches here.");
       } else {
         const defaultBranchName = this.repositoryDetails.default_branch;
         if (branchName)
@@ -629,6 +631,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     } else {
       this.editor.setContent(event.node.path, event.base64);
     }
+    this.dispatchSaveAction(this.autoSaveRef.checked);
   }
 
   async nodeContentChanged(path: string) {

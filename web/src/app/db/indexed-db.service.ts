@@ -54,22 +54,42 @@ export class IndexedDbService {
       return Promise.reject("The database is not ready.");
   }
 
-  private getStore(){
-    let tran = this.db.transaction(latestVersionInfo.storeName)
-    let store = tran.objectStore(latestVersionInfo.storeName);
+  /**
+   * It returns the store whose name is a storeName variable.
+   * transaction live shortly
+   * @param storeName 
+   */
+  private getStore(storeName: string){
+    let tran = this.db.transaction(storeName, "readwrite");
+    let store = tran.objectStore(storeName);
     return {tran, store};
   }
 
-  private getIndex(indexName: string){
-    let {tran, store} = this.getStore();
-    let index = store.index("repositoryId");
+  private getIndex(storeName: string, indexName: string){
+    let {tran, store} = this.getStore(storeName);
+    let index = store.index(indexName);
     return {tran, store, index};
   }
 
-  async getByRepositoryID(id: number){
+  async getRepositories(){
+    await this.checkStatus();
+    let {store, tran} = this.getStore(latestVersionInfo.workspacePackStoreName);
+    let req = store.getAll();
+    return new Promise<Array<WorkspacePack>>((res, rej) => {
+      req.onsuccess = (ev) => {
+        let arr = (req.result) as Array<WorkspacePack>;
+        res(arr);
+      };
+      req.onerror = (ev) => {
+        rej(ev);
+      }
+    });
+  }
+
+  private async getByRepositoryID(id: number){
     await this.checkStatus();
     const indexName = "repositoryId";
-    let {tran, store, index} = this.getIndex(indexName);
+    let {tran, store, index} = this.getIndex(latestVersionInfo.workspacePackStoreName, indexName);
     let request = index.getAll(id);
     return new Promise<Array<WorkspacePack>>((resolve, rej) => {
       request.onsuccess = (ev) => {
@@ -95,7 +115,7 @@ export class IndexedDbService {
   async deleteByRepositoryIDAndBranchAndSha(id: number, branchName: string, sha: string){
     let repo = await this.getByRepositoryIDAndBranchAndSha(id, branchName, sha);
     let key: number = repo[latestVersionInfo.keyPropertyName];
-    let {tran, store} = this.getStore();
+    let {tran, store} = this.getStore(latestVersionInfo.workspacePackStoreName);
     return new Promise<WorkspacePack>((res, rej) => {
       let req = store.delete(key);
       req.onsuccess = (ev) => {
@@ -107,4 +127,20 @@ export class IndexedDbService {
     });
   }
 
+  async savePack(pack: WorkspacePack){
+    await this.checkStatus();
+    await this.deleteByRepositoryIDAndBranchAndSha(pack.repositoryId, pack.branchName, pack.commit_sha).catch(reason => {
+      console.debug(`There is no repository which is ${pack.repositoryId}, ${pack.branchName}, ${pack.commit_sha}`);
+    });
+    let {store, tran} = this.getStore(latestVersionInfo.workspacePackStoreName);
+    let req = store.add(pack);
+    return new Promise<number>((res, rej) => {
+      req.onsuccess = ev => {
+        res(Number.parseInt(req.result.toString()));
+      }
+      req.onerror = ev => {
+        rej(ev);
+      }
+    });
+  }
 }

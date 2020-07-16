@@ -59,7 +59,8 @@
                   </div>
                   <div class="repo-info" fxLayout>
                     <div fxFlex="100" fxLayout fxLayoutAlign="flex-start flex-end">
-                      <mat-icon>access_time</mat-icon>Updated {{repo.updated_at | timeAgo}}&nbsp;
+                      <div fxLayout fxLayoutAlign="flex-start center"><mat-icon>access_time</mat-icon>Updated {{repo.updated_at | timeAgo}}&nbsp;</div>
+                      <div fxLayout fxLayoutAlign="flex-start center" *ngIf="latestEditTimes.has(repo?.id)"><mat-icon>access_time</mat-icon>Edited {{latestEditTimes.get(repo.id) | timeAgo}}&nbsp;</div>
                     </div>
                     <mat-icon *ngIf="repo.language">language</mat-icon>
                     <span *ngIf="repo.language">{{repo.language}}</span>
@@ -73,7 +74,7 @@
       <div class="progress-box" *ngIf="!repositories">
         <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
           <mat-spinner style="display: inline-block" [strokeWidth]="10"></mat-spinner>
-          <span>Repositories...</span>
+          <span>Fetching...</span>
         </div>
       </div>
     </mat-nav-list>

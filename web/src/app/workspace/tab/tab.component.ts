@@ -44,7 +44,8 @@ export class TabComponent implements OnInit, Tab, OnChanges, AfterContentInit, O
     });
     
     let s0 = this.store.select(saveRequestSelector).subscribe((requestTime) => {
-      this.store.dispatch(updateTabSnapshot({snapshot: {tabs: Array.from(this.tabs)}}));
+      if(requestTime)
+        this.store.dispatch(updateTabSnapshot({snapshot: {tabs: Array.from(this.tabs)}}));
     });
 
     let s3 = this.selectedIndex.valueChanges.subscribe((value) => {

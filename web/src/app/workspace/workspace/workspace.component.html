@@ -83,15 +83,14 @@
           <div style="flex:1; display: block" *ngIf="contentStatus == ContentStatus.NotInitialized">
             <div style="display: flex; justify-content: center; width: 100%; height: 100%; align-items: center;">
               <div style="text-align: center;">
-                <div>Welcome to BSide</div>
                 <div *ngIf="treeStatus == TreeStatus.TreeEmpty">
                   <div>Your repository is <b>empty</b> now.</div>
                   <div>Please create one file at least in <a href="{{repositoryDetails?.html_url}}"
                       target="_blank">{{repositoryDetails?.html_url}}</a> and refresh here.</div>
                 </div>
                 <div *ngIf="treeStatus == TreeStatus.Fail">
-                  <div>Some problems have been found.</div>
                   <div>{{errorDescription}}</div>
+                  <div>Check out <a href="{{repositoryDetails?.html_url}}" target="_blank">{{repositoryDetails?.html_url}}</a> and refresh here.</div>
                 </div>
 
               </div>
