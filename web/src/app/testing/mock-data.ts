@@ -558,7 +558,7 @@ export let blob1 = {
   "encoding": "base64"
 }
 
-export let mockWorkspacePack: WorkspacePack = WorkspacePack.of(1,'mockrepo','commitsha1111', 'tresha1111', 'gh-pages', [BlobPack.of('blobsha1111', GithubTreeNode.githubTreeNodeFactory.of(tree.tree[0]), 'aGVsbG8gd29ybGQh')], tree.tree, ['.buildinfo'], '.buildinfo' , false);
+export let mockWorkspacePack: WorkspacePack = WorkspacePack.of(1,'mockrepo','commitsha1111', 'tresha1111', 'gh-pages', [BlobPack.of('blobsha1111', GithubTreeNode.githubTreeNodeFactory.of(tree.tree[0]), 'aGVsbG8gd29ybGQh')], tree.tree, ['.buildinfo'], '.buildinfo' , false, 0);
 
 export let commit1 = {
   "sha": "ceb341b21a418709d1819560c23fc7dea9e6155e",

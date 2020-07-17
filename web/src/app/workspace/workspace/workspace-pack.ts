@@ -1,10 +1,9 @@
 import { BlobPack } from './pack';
 import { GithubNode } from '../tree/github-tree-node';
-import { nodeCreated } from '../workspace.actions';
 
 export class WorkspacePack {
     public static of(repositoryId: number, repositoryName: string, commit_sha: string, tree_sha: string, branchName: string, editorPacks: BlobPack[], treePacks: GithubNode[]
-        , tabs: string[], selectedNodePath: string, autoSave: boolean){
+        , tabs: string[], selectedNodePath: string, autoSave: boolean, dirtyCount: number){
         const p = new WorkspacePack();
         p.repositoryId = repositoryId;
         p.repositoryName = repositoryName;
@@ -19,6 +18,7 @@ export class WorkspacePack {
         p.selectedNodePath = selectedNodePath;
         p.autoSave = autoSave;
         p.date = new Date();
+        p.dirtyCount = dirtyCount;
         return p;
     }
 
@@ -33,4 +33,5 @@ export class WorkspacePack {
     tree_sha: string;
     autoSave: boolean;
     date: Date;
+    dirtyCount: number;
 }

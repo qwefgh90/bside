@@ -62,7 +62,7 @@ export class OAuthService {
       }).catch(() => Promise.resolve());
   }
 
-  checkConnectionWithAPIServer() {
+  checkConnectionWithBackend() {
     return this.httpClient
       .get<HttpResponse<void>>(`${environment.apiServer}/login/github/ping`, { observe: 'response' })
       .toPromise().then((res) => {

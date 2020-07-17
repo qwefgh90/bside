@@ -331,7 +331,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
     let s7 = this.store.select(latestSnapshotSelector).subscribe((snapshotInfo) => {
       if(snapshotInfo?.doneTime){
-        let pack = WorkspacePack.of(snapshotInfo.workspaceSnapshot.repositoryId, snapshotInfo.workspaceSnapshot.repositoryName, snapshotInfo.workspaceSnapshot.commitSha, snapshotInfo.workspaceSnapshot.treeSha, snapshotInfo.workspaceSnapshot.name, snapshotInfo.workspaceSnapshot.packs, snapshotInfo.treeSnapshot.nodes, snapshotInfo.tabSnapshot.tabs, snapshotInfo.workspaceSnapshot.selectedNodePath, snapshotInfo.workspaceSnapshot.autoSave);
+        let pack = WorkspacePack.of(snapshotInfo.workspaceSnapshot.repositoryId, snapshotInfo.workspaceSnapshot.repositoryName, snapshotInfo.workspaceSnapshot.commitSha, snapshotInfo.workspaceSnapshot.treeSha, snapshotInfo.workspaceSnapshot.name, snapshotInfo.workspaceSnapshot.packs, snapshotInfo.treeSnapshot.nodes, snapshotInfo.tabSnapshot.tabs, snapshotInfo.workspaceSnapshot.selectedNodePath, snapshotInfo.workspaceSnapshot.autoSave, snapshotInfo.workspaceSnapshot.dirtyCount);
         // this.database.save(pack);
         this.indexedDBService.savePack(pack);
       }
@@ -839,7 +839,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     });
   }
 
-  private getSnapshot(containgTree: boolean = true): WorkspaceSnapshot {
+  private getSnapshot(): WorkspaceSnapshot {
     const autoSave = this.autoSaveRef.checked;
     const repositoryId: number = this.repositoryDetails.id;
     const repositoryName: string = this.repositoryDetails.full_name;
@@ -861,40 +861,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         return BlobPack.of(commitSha, node, base64);
       });
     return {
-      repositoryId: repositoryId, repositoryName: repositoryName, commitSha: commitSha,
-      treeSha: treeSha, name: name, packs: packs, selectedNodePath: this.selectedNodePath, 
-      autoSave: autoSave
+      repositoryId, repositoryName, commitSha,
+      treeSha, name, packs, selectedNodePath: this.selectedNodePath, 
+      autoSave, dirtyCount: this.dirtyCount
     };
-  }
-
-  private pack(containgTree: boolean = true): WorkspacePack {
-    const autoSave = this.autoSaveRef.checked;
-    const repositoryId: number = this.repositoryDetails.id;
-    const repositoryName: string = this.repositoryDetails.full_name;
-    const commitSha = this.selectedBranch.commit.sha;
-    const treeSha = this.root.sha;
-    const name = this.selectedBranch.name;
-    const tabs = Array.from(this.tab.tabs);
-    const packs = Array.from(this.editor.getPathList())
-      .map((path) => this.root.find(path))
-      .filter((node) => node != undefined)
-      .map((node) => {
-        let path = node.path;
-        const c = this.editor.getContent(path);
-        let base64;
-        let type = TextUtil.getFileType(path);
-        if (type == FileType.Text)
-          base64 = TextUtil.stringToBase64(c);
-        else
-          base64 = c;
-        return BlobPack.of(commitSha, node, base64);
-      });
-    const treeArr = this.root.reduce((acc, node, tree) => {
-      if (node.path != "")
-        acc.push(node.toGithubNode());
-      return acc;
-    }, [] as Array<GithubNode>, false);
-    return WorkspacePack.of(repositoryId, repositoryName, commitSha, treeSha, name, packs, treeArr, tabs, this.selectedNodePath, autoSave);
   }
 
   private htmlBlobUrl(path: string) {

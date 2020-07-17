@@ -20,5 +20,6 @@ export interface WorkspaceSnapshot {
     packs: BlobPack[],
     selectedNodePath: string,
     // database: Database,
-    autoSave: boolean
+    autoSave: boolean,
+    dirtyCount: number
 }

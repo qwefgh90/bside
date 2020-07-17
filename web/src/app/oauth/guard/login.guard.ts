@@ -27,11 +27,11 @@ export class LoginGuard implements CanActivate {
   canActivate(
     next: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): Observable<boolean> {
-    console.log('LoginGuard#CanActivate called');
+    console.debug('LoginGuard#CanActivate called');
     let url: string = state.url;
-    let success = this.oauthService.checkConnectionWithAPIServer().then((success) => { // if session is invalid, execute checkLogin()
+    let success = this.oauthService.checkConnectionWithBackend().then((success) => { // if session is invalid, execute checkLogin()
       if(!success){
-        this.checkLogin(url);
+        this.goLogin(url);
         return false;
       }else
         return true;
@@ -39,12 +39,8 @@ export class LoginGuard implements CanActivate {
     return from(success);
     // return this.checkLogin(url);  // It doesn't wait for checkSession()
   }
-  
-  redirectURL(routeUrl: string) {
-    return `${environment.redirect_url}?route=${routeUrl ? TextUtil.stringToBase64(routeUrl) : ''}`;
-  }
 
-  checkLogin(url: string) {
+  goLogin(url: string) {
     // if (this.isLogin) { return true; }
 
     // Store the attempted URL for redirecting
@@ -59,5 +55,9 @@ export class LoginGuard implements CanActivate {
     // Navigate to the login page with extras
     this.router.navigate(['/login'], {queryParams : params});
     // return false;
+  }
+
+  private redirectURL(routeUrl: string) {
+    return `${environment.redirect_url}?route=${routeUrl ? TextUtil.stringToBase64(routeUrl) : ''}`;
   }
 }

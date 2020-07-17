@@ -26,18 +26,19 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(private wrapper: WrapperService, private router: Router, private store: Store<{}>, private indexedDBService: IndexedDbService) { }
 
   repositories: RepositoriesType;
+  initialRepositories: RepositoriesType;
   userId;
   searchInputFormControl = new FormControl();
   subscribtions: Array<Subscription> = []; 
   keyword;
-  latestEditTimes: Map<number, Date> = new Map();
+  latestEditTimesAndDirtyCount: Map<number, {date: Date, dirtyCount: number}> = new Map();
   //synced
   user: UserType;
   bookmarkMap = new Map<string, boolean>();
   bookmarkList: Set<string>;
   Updated ="Updated";
   Edited ="Edited";
-  selectedOptionForSorting = new FormControl(this.Updated);
+  selectedOptionForSorting = new FormControl(this.Edited);
 
   async ngOnInit() {
     let databaseReadySelector = (state: {app: AppState, router: fromRouter.RouterReducerState<any>, indexedDB: IndexedDBState}) => state.indexedDB.ready;
@@ -47,7 +48,7 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
     let userIdSelector = selectRouteParam('userId');
     let s4 = this.store.select(databaseReadySelector).subscribe(async (dbready) => {
       if(dbready){
-        this.latestEditTimes = await this.getLatestEditTimes();
+        this.latestEditTimesAndDirtyCount = await this.getLatestEditTimes();
       }
     });
     let user$ = this.store.select(createSelector(databaseReadySelector, userSelector, userIdSelector, selectCurrentRoute, (dbready, user, userId, route: {children,data,firstChild,fragment,outlet,params,queryParams,routeConfig: {path, pathMatch, redirectTo},url: []}) => ({dbready, user, userId, route})));
@@ -58,7 +59,7 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
         if (userId) {
           this.userId = userId;
           this.wrapper.repositories(this.userId).then((result) => {
-            this.repositories = result;
+            this.initialRepositories = result;
             this.repositories = this.getSortedRepositories();
           }, () => {
             console.error("Repositories can't be loaded.")
@@ -80,22 +81,29 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
         if(dbready)
           this.repositories = this.getSortedRepositories();
     });
-    let s3 = this.searchInputFormControl.valueChanges.subscribe(v => {
-      this.keyword = v;
-    })
+    let s3 = combineLatest(this.searchInputFormControl.valueChanges, this.store.select(databaseReadySelector))
+      .subscribe(([v, dbready]) => {
+        if (dbready) {
+          this.keyword = v;
+          this.repositories = this.getSortedRepositories();
+        }
+      });
+    // let s3 = this.searchInputFormControl.valueChanges.subscribe(v => {
+    //   this.keyword = v;
+    // })
     this.subscribtions.push(s0, s1, s2, s3, s4);
   }
   
   async getLatestEditTimes(){
     let arr = await this.indexedDBService.getRepositories();
-    arr = arr.filter(pack => pack.date != undefined);
-    let editTimes = new Map<number, Date>();
+    arr = arr.filter(pack => pack.date != undefined && pack.dirtyCount > 0);
+    let editTimes = new Map<number, {date: Date, dirtyCount: number}>();
     arr.forEach(pack => {
-      let editTime = editTimes.get(pack.repositoryId);
-      if(!editTime)
-        editTimes.set(pack.repositoryId, pack.date);
-      else if(editTime < pack.date)
-        editTimes.set(pack.repositoryId, pack.date);
+      let {date, dirtyCount} = editTimes.get(pack.repositoryId) ? editTimes.get(pack.repositoryId) : {date: undefined, dirtyCount: undefined};
+      if(!date)
+        editTimes.set(pack.repositoryId, {date: pack.date, dirtyCount: pack.dirtyCount});
+      else if(date < pack.date)
+        editTimes.set(pack.repositoryId, {date: pack.date, dirtyCount: pack.dirtyCount});
     });
     return editTimes;
   }
@@ -108,10 +116,10 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   getSortedRepositories(): Array<RepositoryType>{
-    if(!this.repositories)
+    if(!this.initialRepositories)
       return undefined;
-    let bookmarkList = this.repositories.filter(repo => this.bookmarkList.has(repo.full_name));
-    let otherList = this.repositories.filter(repo => !this.bookmarkList.has(repo.full_name));
+    let bookmarkList = this.initialRepositories.filter(repo => this.bookmarkList.has(repo.full_name));
+    let otherList = this.initialRepositories.filter(repo => !this.bookmarkList.has(repo.full_name));
     let sortAlgorithm1 = (arr: Array<RepositoryType>) => {
       return arr.filter(repo => {
         if(this.keyword == undefined)
@@ -131,8 +139,8 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
     };
     let sort2 = (arr: Array<RepositoryType>) => {
       let sorted = sortAlgorithm1(arr).sort((a,b) => {
-        let atime = this.latestEditTimes.get(a.id);
-        let btime = this.latestEditTimes.get(b.id);
+        let {date: atime} = this.latestEditTimesAndDirtyCount.get(a.id) ? this.latestEditTimesAndDirtyCount.get(a.id) : {date: undefined};
+        let {date: btime} = this.latestEditTimesAndDirtyCount.get(b.id) ? this.latestEditTimesAndDirtyCount.get(b.id) : {date: undefined};
         if(!atime && !btime){
           return 0;
         }else if(!atime && btime){

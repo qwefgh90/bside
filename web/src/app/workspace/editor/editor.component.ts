@@ -12,7 +12,7 @@ import { Store } from '@ngrx/store';
 import { notifyChangesInContent, editorLoaded } from '../workspace.actions';
 
 const prefix: string = 'X'.repeat(100);
-enum EditorMode{
+enum EditorMode {
   None,
   Diff,
   Md
@@ -37,11 +37,11 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   monaco: any;
   option: monacoNameSpace.editor.IEditorConstructionOptions = {
     automaticLayout: true
-  };  
+  };
 
   private fsm = new TypeState.FiniteStateMachine<EditorMode>(EditorMode.None);
 
-  private initFsm(){
+  private initFsm() {
     this.fsm.fromAny(EditorMode).toAny(EditorMode);
     this.fsm.onExit(EditorMode.Diff, (to: EditorMode) => {
       this.removeContent(this.diffTargetPath);
@@ -53,46 +53,46 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   }
 
   private set _isDiffOn(diff: boolean) {
-    if(diff)
+    if (diff)
       this.fsm.go(EditorMode.Diff);
     else
       this.fsm.go(EditorMode.None);
   }
 
-  private get _isDiffOn(){
+  private get _isDiffOn() {
     return this.fsm.currentState == EditorMode.Diff
   }
 
-  get isDiffOn(){
+  get isDiffOn() {
     return this._isDiffOn;
   }
 
   private set _isMdOn(md: boolean) {
-    if(md)
+    if (md)
       this.fsm.go(EditorMode.Md);
     else
       this.fsm.go(EditorMode.None);
   }
 
-  private get _isMdOn(){
+  private get _isMdOn() {
     return this.fsm.currentState == EditorMode.Md
   }
 
-  get isMdOn(){
+  get isMdOn() {
     return this._isMdOn;
   }
 
-  constructor(private monacoService: MonacoService, private deviceService: DeviceDetectorService, private store: Store) {  
+  constructor(private monacoService: MonacoService, private deviceService: DeviceDetectorService, private store: Store) {
     this.initFsm();
   }
 
   private _readonly: boolean;
-  set readonly(v: boolean){
+  set readonly(v: boolean) {
     this._readonly;
     this.option.readOnly = v;
-    this.editor.updateOptions(this.option);
+    this.editor.updateOptions(this.option); //TODO bug
   }
-  get readonly(){
+  get readonly() {
     return this._readonly;
   }
 
@@ -105,7 +105,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
     this.subscriptions.push(this.notifyContentChangeSubject.pipe(
       debounceTime(2000)
     ).subscribe((path) => {
-      this.store.dispatch(notifyChangesInContent({path}));
+      this.store.dispatch(notifyChangesInContent({ path }));
       // new NotifyContentChangeAction(path, this, this.dispatcher).start();
     }));
   }
@@ -146,7 +146,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   /**
    * it triggers recalculate dimension
    */
-  public shrinkExpand(){
+  public shrinkExpand() {
     this.shrink = true;
     setTimeout(() => {
       this.shrink = false;
@@ -180,7 +180,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
     this.diffEditor = undefined;
   }
 
-  private releaseGlobalResource(){
+  private releaseGlobalResource() {
     if (this.editor != undefined) {
       let models: Array<monacoNameSpace.editor.ITextModel> = this.monaco.editor.getModels()
       models.forEach(m => m.dispose());
@@ -196,21 +196,21 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   setContent(path: string, content: string) {
     if (this.monaco != undefined) {
       let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
-      if (existsModel){
+      if (existsModel) {
         existsModel.setValue(content);
-      }else {
+      } else {
         this.model = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(path));
         this.model.onDidChangeContent((e) => {
           this.notifyContentChangeSubject.next(path);
         })
       }
-    }else
+    } else
       this.throwWhenNotInitialized();
   }
 
   select(path: string): boolean {
     if (this.monaco != undefined) {
-      
+
       if (this._isDiffOn || this.isMdOn) {
         this.createMonacoEditor(this.monaco);
         this.fsm.go(EditorMode.None);
@@ -218,60 +218,60 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
       if (existsModel) {
         this.editor.setModel(existsModel);
-        // this.modelChanged.emit(path);
+        this.shrinkExpand();
         return true;
       }
       return false;
-    }else
+    } else
       this.throwWhenNotInitialized();
   }
 
-  exist(path: string): boolean{
+  exist(path: string): boolean {
     if (this.monaco != undefined) {
       let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
       if (existsModel) {
         return true;
       }
       return false;
-    }else
+    } else
       this.throwWhenNotInitialized();
   }
 
   getContent(path?: string): string {
     if (this.monaco != undefined) {
-      if(path == undefined){
+      if (path == undefined) {
         let v = this.editor.getModel().getValue();
         return v;
-      }else{
+      } else {
         const uri = monacoNameSpace.Uri.file(path)
         let m: monacoNameSpace.editor.ITextModel = this.monaco.editor.getModel(uri);
-        if(m == undefined)
+        if (m == undefined)
           return undefined
         else
           return m.getValue();
       }
-    }else
+    } else
       this.throwWhenNotInitialized();
   }
 
   private getModel(path?: string): monacoNameSpace.editor.ITextModel {
     if (this.monaco != undefined) {
-      if(path == undefined){
+      if (path == undefined) {
         let v = this.editor.getModel();
         return v;
-      }else{
+      } else {
         const uri = monacoNameSpace.Uri.file(path)
         let m: monacoNameSpace.editor.ITextModel = this.monaco.editor.getModel(uri);
-        if(m == undefined)
+        if (m == undefined)
           return undefined
         else
           return m;
       }
-    }else
+    } else
       this.throwWhenNotInitialized();
   }
 
-  removeContent(path: string): boolean{
+  removeContent(path: string): boolean {
     if (this.monaco != undefined) {
       let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
       if (existsModel) {
@@ -279,29 +279,25 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
         return true;
       }
       return false;
-    }else
+    } else
       this.throwWhenNotInitialized();
   }
 
-  diffWith(path: string, content: string, originalPath?: string){
+  diffWith(path: string, content: string, originalPath?: string) {
     if (this._isDiffOn == false) {
       let targetModel = this.getModel(originalPath);
       this.createDiffEditor(this.monaco);
       this.diffTargetPath = prefix + path;
       let originalModel = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(this.diffTargetPath));
-      // this.diffEditor.setContent(originalModel, targetModel);
-      // var originalModel = this.monaco.editor.createModel("heLLo world!", "text/plain");
-      // var modifiedModel = this.monaco.editor.createModel("hello orlando!", "text/plain");
-      this.diffEditor.setModel({original: originalModel, modified: targetModel});
-        this.fsm.go(EditorMode.Diff);
-        // this._isDiffOn = true;
+      this.diffEditor.setModel({ original: originalModel, modified: targetModel });
+      this.fsm.go(EditorMode.Diff);
     }
   }
-  
-  md(){
+
+  md() {
   }
 
-  getPathList(){
+  getPathList() {
     if (this.monaco != undefined) {
       let models: Array<monacoNameSpace.editor.ITextModel> = this.monaco.editor.getModels();
       return models.map(m => m.uri.path.substr(1));
@@ -309,16 +305,16 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       this.throwWhenNotInitialized();
   }
 
-  clear(){
+  clear() {
     if (this.monaco != undefined) {
       this.getPathList().forEach(path => {
         this.removeContent(path);
       });
-    }else
-      this.throwWhenNotInitialized();    
+    } else
+      this.throwWhenNotInitialized();
   }
 
-  throwWhenNotInitialized(){
+  throwWhenNotInitialized() {
     throw new Error("A monaco is not initalized");
   }
 }
