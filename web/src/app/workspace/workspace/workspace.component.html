@@ -68,7 +68,7 @@
                 <mat-icon>visibility</mat-icon>
               </button>
               <button mat-stroked-button title="Compare with original" (click)="toggleDiff()" *ngIf="isDesktop"
-                [ngClass]="{'mat-button-toggle-checked':(!(editorStatusFsm.currentState == editorType.Md) && editor.isDiffOn)}">
+                [ngClass]="{'mat-button-toggle-checked':(!(editorStatusFsm.currentState == editorType.Md) && editor?.isDiffOn)}">
                 <mat-icon>compare</mat-icon>
               </button>
               <a href="https://github.com/{{userId}}/{{repositoryName}}/blob/{{selectedBranch?.name}}/{{selectedNodePath}}" target="_blank"
@@ -96,18 +96,20 @@
               </div>
             </div>
           </div>
-          <app-editor #editor1 style="flex:1; min-height: 0px;"
+          
+          <ng-template editor-host></ng-template>
+          <!-- <app-editor #editor1 style="flex:1; min-height: 0px;"
             [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done) && (editorStatusFsm.currentState == editorType.Editor)"
             [class.none]="((selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)) || (editorStatusFsm.currentState == editorType.Md)"
-            *ngIf="isDesktop"></app-editor>
-          <app-markdown-editor #preview style="flex:1; min-height: 0px;" [preview]="true"
+            *ngIf="isDesktop"></app-editor> -->
+          <!-- <app-markdown-editor #preview [preview]="true"
             [class.block]="(editorStatusFsm.currentState == editorType.Md)"
             [class.none]="!(editorStatusFsm.currentState == editorType.Md)"
-            *ngIf="isDesktop"></app-markdown-editor>
-          <app-markdown-editor #editor2 style="margin-bottom: 2em; flex:1; min-height: 0px;"
+            *ngIf="isDesktop"></app-markdown-editor> -->
+          <!-- <app-markdown-editor #editor2 style="margin-bottom: 2em; flex:1; min-height: 0px;"
             [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
             [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"
-            *ngIf="!isDesktop"></app-markdown-editor>
+            *ngIf="!isDesktop"></app-markdown-editor> -->
           <div style="flex:1; display: block; height: 100px "
             *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">
             <div style="overflow-y: scroll; height: 100%;"><img [src]="selectedImagePath" /></div>

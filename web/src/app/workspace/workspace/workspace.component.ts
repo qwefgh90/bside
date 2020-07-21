@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, Inject, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, Inject, Input, ComponentFactoryResolver, ViewEncapsulation, ViewRef, ComponentRef } from '@angular/core';
 import { WrapperService } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, Subject, combineLatest, from, ReplaySubject, empty, of, timer, interval, Observable } from 'rxjs';
@@ -50,6 +50,9 @@ import { routerRequestAction } from '@ngrx/router-store';
 import { TypeState } from 'typestate';
 import { IndexedDbService } from 'src/app/db/indexed-db.service';
 import { IndexedDBState } from 'src/app/db/indexed-db.reducer';
+import { EditorDirective } from './editor.directive';
+import { EditorComponent } from '../editor/editor.component';
+import { DiffEditorComponent } from '../diff-editor/diff-editor.component';
 
 declare const monaco;
 
@@ -88,6 +91,7 @@ export enum WorkspaceStatus {
       transition('in => out', [animate('800ms ease-in')])
     ])
   ]
+
 })
 export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   @Input() parameter: RepositoryInformation;
@@ -101,22 +105,78 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     , public detector: DeviceDetectorService
     , public dialog: MatDialog, private store: Store<{}>,
     @Inject(DOCUMENT) private document: Document
-    , private indexedDBService: IndexedDbService) {
+    , private indexedDBService: IndexedDbService
+    , private componentFactoryResolver: ComponentFactoryResolver) {
     this.isDesktop = this.detector.isDesktop();
   }
   @ViewChild("tree", { static: true }) tree: GithubTreeComponent;
   @ViewChild("editor1") editor1: Editor;
   @ViewChild("editor2") editor2: Editor;
-  @ViewChild("preview") preview: MarkdownEditorComponent;
+  // @ViewChild("preview") preview: MarkdownEditorComponent;
   @ViewChild("stage", { static: true }) stage: Stage;
   @ViewChild("action", { static: true }) action: ActionComponent;
   @ViewChild(CommitProgressComponent, { static: true }) commitProgress: CommitProgressComponent;
   @ViewChild(TabComponent, { static: true }) tab: Tab;
   @ViewChild("autoSaveRef", { static: true }) autoSaveRef: MatCheckbox;
 
-  get editor(): Editor {
-    return this.isDesktop ? this.editor1 : this.editor2;
+  @ViewChild(EditorDirective, {static: true}) editorHost: EditorDirective;
+  // get editor(): Editor {
+  //   return this.isDesktop ? this.editor1 : this.editor2;
+  // }
+
+  EditorRef: ComponentRef<EditorComponent>;
+  DiffEditorRef: ComponentRef<DiffEditorComponent>;
+  MarkdownEditorRef: ComponentRef<MarkdownEditorComponent>;
+  PreviewRef: ComponentRef<MarkdownEditorComponent>;
+  visibleEditor: MarkdownEditorComponent | EditorComponent;
+  preview: MarkdownEditorComponent;
+  loadEditor() {
+    const viewContainerRef = this.editorHost.viewContainerRef;
+    viewContainerRef.clear();
+    const componentFactory = this.componentFactoryResolver.resolveComponentFactory(EditorComponent);
+    const componentRef = viewContainerRef.createComponent(componentFactory);
+    const componentFactory2 = this.componentFactoryResolver.resolveComponentFactory(MarkdownEditorComponent);
+    const componentRef2 = viewContainerRef.createComponent(componentFactory2);
+    const componentFactory3 = this.componentFactoryResolver.resolveComponentFactory(MarkdownEditorComponent);
+    const componentRef3 = viewContainerRef.createComponent(componentFactory3);
+    const componentFactory4 = this.componentFactoryResolver.resolveComponentFactory(DiffEditorComponent);
+    const componentRef4 = viewContainerRef.createComponent(componentFactory4);
+    this.EditorRef = componentRef;
+    this.MarkdownEditorRef = componentRef2;
+    this.PreviewRef = componentRef3;
+    this.DiffEditorRef = componentRef4;
+    this.visibleEditor = componentRef.instance;
+    this.preview = componentRef3.instance;
+    this.preview.preview = true;
+
+    (this.EditorRef.location.nativeElement as HTMLElement).style.display="none";
+    (this.MarkdownEditorRef.location.nativeElement as HTMLElement).style.display="none";
+    (this.PreviewRef.location.nativeElement as HTMLElement).style.display="none";
+    (this.DiffEditorRef.location.nativeElement as HTMLElement).style.display="none";
+    setTimeout(() => { // initializing components takes some time.
+      this.detachAllFromEditorHost();
+      this.insertComponentIntoEditorHost(this.EditorRef.hostView);
+      (this.EditorRef.location.nativeElement as HTMLElement).style.display="block";
+      (this.MarkdownEditorRef.location.nativeElement as HTMLElement).style.display="block";
+      (this.PreviewRef.location.nativeElement as HTMLElement).style.display="block";
+      (this.DiffEditorRef.location.nativeElement as HTMLElement).style.display="block";
+    }, 1000);
   }
+
+  private detachComponentFromEditorHost(viewRef: ViewRef){
+    this.editorHost.viewContainerRef.detach(this.editorHost.viewContainerRef.indexOf(viewRef));
+  }
+
+  private insertComponentIntoEditorHost(viewRef: ViewRef){
+    this.editorHost.viewContainerRef.insert(viewRef);
+  }
+
+  private detachAllFromEditorHost(){
+    for(let i=0; i<this.editorHost.viewContainerRef.length; i++){
+      this.editorHost.viewContainerRef.detach(i);
+    }
+  }
+
   getFileName = TextUtil.getFileName;
 
   editorStatusFsm = new TypeState.FiniteStateMachine<EditorStatusOnWorkspace>(EditorStatusOnWorkspace.Editor);
@@ -164,6 +224,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   fsm(){
     this.editorStatusFsm.fromAny(EditorStatusOnWorkspace).toAny(EditorStatusOnWorkspace);
     this.editorStatusFsm.on(EditorStatusOnWorkspace.Diff, (from) => {
+      this.detachAllFromEditorHost();
       let nodes = this.root.getBlobNodes();
       const filteredNodes = nodes.filter((v) => {
         return v.path == this.selectedNodePath && !v.state.includes(NodeStateAction.Created);
@@ -172,8 +233,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         let node = filteredNodes[0];
         let type = TextUtil.getFileType(node.name);
         if (type == FileType.Text) {
+          let editedContent = this.visibleEditor.getContent(this.selectedNodePath);
           this.getOriginalText(node.sha).then((content: string) => {
-            setTimeout(() => this.editor.diffWith(this.selectedNodePath, content), 0);
+            setTimeout(() => {
+              this.insertComponentIntoEditorHost(this.DiffEditorRef.hostView);
+              this.DiffEditorRef.instance.diffWith(this.selectedNodePath, content, this.selectedNodePath, editedContent)
+            }, 0);
           });
         }
       } else {
@@ -181,15 +246,16 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       }
     });
     this.editorStatusFsm.on(EditorStatusOnWorkspace.Editor, (from) => {
-      if(from != EditorStatusOnWorkspace.Editor){
-        this.preview.setContent("preview", "");
-        this.preview.select('preview');
-        this.editor.select(this.selectedNodePath);
-      }
+      this.detachAllFromEditorHost();
+      this.insertComponentIntoEditorHost(this.EditorRef.hostView);
+      this.preview.setContent("preview", "");
+      this.preview.select('preview');
+      this.visibleEditor.select(this.selectedNodePath);
     });
-    
     this.editorStatusFsm.on(EditorStatusOnWorkspace.Md, (from) => {
-      this.preview.setContent("preview", this.editor.getContent());
+      this.detachAllFromEditorHost();
+      this.insertComponentIntoEditorHost(this.PreviewRef.hostView);
+      this.preview.setContent("preview", this.visibleEditor.getContent());
       this.preview.select('preview');
       setTimeout(() => this.preview.md(true), 0);
     });
@@ -279,7 +345,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         if (node != undefined) {
           const asyncText = this.getOriginalText(node.sha)
           asyncText.then(async (text) => {
-            this.editor.setContent(path, text);
+            this.visibleEditor.setContent(path, text);
             await this.nodeContentChanged(path);
             this.dispatchSaveAction(this.autoSaveRef.checked);
           }, () => {
@@ -341,6 +407,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   ngOnInit() {
+    this.loadEditor();
     this.fsm();
     let loadPromise = this.initalizeVSLoader();
     loadPromise.then(() => {
@@ -411,11 +478,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         if(loadedPack){
           await this.initializeTree(Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha }));
           this.autoSaveRef.checked = loadedPack.autoSave;
-          await this.editor.load(loadedPack);
+          await this.visibleEditor.load(loadedPack);
           await this.tab.load(loadedPack);
         }else{
           await this.initializeTree(this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha));
-          await this.editor.load(undefined);
+          await this.visibleEditor.load(undefined);
           await this.tab.load(undefined);
         }
         return Promise.resolve();
@@ -493,7 +560,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   // }
   // resetEditor() {
   //   if (this.editor)
-  //     this.editor.clear();
+  //     this.visibleEditor.clear();
   // }
 
   // resetWorkspace() {
@@ -523,8 +590,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   toggleSidenav() {
     this.leftPaneOpened = !this.leftPaneOpened;
-    if (this.leftPaneOpened && this.editor != undefined)
-      this.editor.shrinkExpand();
+    if (this.leftPaneOpened){
+      this.visibleEditor?.shrinkExpand();
+      this.DiffEditorRef.instance.shrinkExpand();
+    }
   }
 
   getImage(base64: string, mediaType: string): SafeResourceUrl {
@@ -561,15 +630,15 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         this.contentStatus = ContentStatusOnWorkspace.Loading;
         let fileType = TextUtil.getFileType(node.name);
         this.selectedFileType = fileType;
-        if (this.editor.exist(node.path)) {
-          let base64OrText = this.editor.getContent(node.path);
+        if (this.visibleEditor.exist(node.path)) {
+          let base64OrText = this.visibleEditor.getContent(node.path);
           if (fileType == FileType.Image) {
             let mime = TextUtil.getMime(node.name);
             this.selectedImagePath = this.getImage(base64OrText, mime);
           } else if (fileType == FileType.Text) {
             let encoding = this.defaultEncoding;
             this.encodingMap.set(node.sha, encoding);
-            this.editor.select(node.path);
+            this.visibleEditor.select(node.path);
           }
           this.contentStatus = ContentStatusOnWorkspace.Done;
         } else {
@@ -582,10 +651,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
                 let encoding = this.defaultEncoding;
                 this.encodingMap.set(node.sha, encoding);
                 if(this.selectedNodePath == node.path){ // other asynchronous changes can happen during getBlob()
-                  this.editor.setContent(node.path, TextUtil.decode(bytes, encoding))
-                  this.editor.select(node.path);
+                  this.visibleEditor.setContent(node.path, TextUtil.decode(bytes, encoding))
+                  this.visibleEditor.select(node.path);
                 }else{
-                  this.editor.setContent(node.path, TextUtil.decode(bytes, encoding))
+                  this.visibleEditor.setContent(node.path, TextUtil.decode(bytes, encoding))
                 }
               }
               this.selectedRawPath = this.getRawUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, node.syncedNode.path);
@@ -604,20 +673,20 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   nodeCreated(path: string) {
-    this.editor.setContent(path, '');
+    this.visibleEditor.setContent(path, '');
   }
 
   nodeRemoved(path: string) {
-    this.editor.removeContent(path);
+    this.visibleEditor.removeContent(path);
   }
 
   nodeMoved(fromPath: string, toPath: string) {
     let target = this.root.find(toPath);
     if (target.type == 'blob') {
-      if (this.editor.exist(fromPath)) {
-        let content = this.editor.getContent(fromPath);
-        this.editor.removeContent(fromPath);
-        this.editor.setContent(toPath, content);
+      if (this.visibleEditor.exist(fromPath)) {
+        let content = this.visibleEditor.getContent(fromPath);
+        this.visibleEditor.removeContent(fromPath);
+        this.visibleEditor.setContent(toPath, content);
       }
     }
   }
@@ -627,9 +696,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     if (type == FileType.Text) {
       let bytes = TextUtil.base64ToBytes(event.base64.toString());
       let encoding = this.defaultEncoding;
-      this.editor.setContent(event.node.path, TextUtil.decode(bytes, encoding));
+      this.visibleEditor.setContent(event.node.path, TextUtil.decode(bytes, encoding));
     } else {
-      this.editor.setContent(event.node.path, event.base64);
+      this.visibleEditor.setContent(event.node.path, event.base64);
     }
     this.dispatchSaveAction(this.autoSaveRef.checked);
   }
@@ -639,7 +708,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     if (node != undefined && node.type == 'blob') {
       const asyncText = this.getOriginalText(node.sha)
       await asyncText.then((originalText) => {
-        if (this.editor.getContent(path) == originalText)
+        if (this.visibleEditor.getContent(path) == originalText)
           node.setContentModifiedFlag(false);
         else
           node.setContentModifiedFlag(true);
@@ -683,14 +752,16 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   onStage() {
     this.workspaceStatus = WorkspaceStatus.Stage;
     this.invalidateDirtyCount()
-    this.editor.readonly = true;
-    this.editor.shrinkExpand();
+    this.visibleEditor.readonly = true;
+    this.visibleEditor.shrinkExpand();
+    this.DiffEditorRef.instance.shrinkExpand();
   }
 
   onEdit() {
     this.workspaceStatus = WorkspaceStatus.View;
-    this.editor.readonly = false;
-    this.editor.shrinkExpand();
+    this.visibleEditor.readonly = false;
+    this.visibleEditor.shrinkExpand();
+    this.DiffEditorRef.instance.shrinkExpand();
   }
 
   onSave() {
@@ -698,10 +769,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   getBase64(path: string): string {
-    if (this.editor.exist(path)) {
+    if (this.visibleEditor.exist(path)) {
       let type = TextUtil.getFileType(path);
       let base64;
-      let base64OrText = this.editor.getContent(path);
+      let base64OrText = this.visibleEditor.getContent(path);
       if (type == FileType.Image || type == FileType.Other) {
         base64 = base64OrText;
       } else {
@@ -812,8 +883,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       let promise: Promise<{ sha: string, url: string }>;
       if (v.state.includes(NodeStateAction.ContentModified) ||
         v.state.includes(NodeStateAction.Created)) {
-        if (this.editor.exist(v.path)) {
-          let base64OrText = this.editor.getContent(v.path);
+        if (this.visibleEditor.exist(v.path)) {
+          let base64OrText = this.visibleEditor.getContent(v.path);
           if (type == FileType.Image || type == FileType.Other) {
             promise = this.wrapper.createBlob(this.userId, this.repositoryName, base64OrText);
           } else {
@@ -846,12 +917,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     const commitSha = this.selectedBranch.commit.sha;
     const treeSha = this.root.sha;
     const name = this.selectedBranch.name;
-    const packs = Array.from(this.editor.getPathList())
+    const packs = Array.from(this.visibleEditor.getPathList())
       .map((path) => this.root.find(path))
       .filter((node) => node != undefined)
       .map((node) => {
         let path = node.path;
-        const c = this.editor.getContent(path);
+        const c = this.visibleEditor.getContent(path);
         let base64;
         let type = TextUtil.getFileType(path);
         if (type == FileType.Text)
@@ -889,7 +960,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let mime = TextUtil.getMime(node.name);
     let size = node.size;
     if (this.selectedFileType == FileType.Text) {
-      size = TextUtil.encode(this.editor.getContent()).length;
+      size = TextUtil.encode(this.visibleEditor.getContent()).length;
     }
     const dialogRef = this.dialog.open(InfoComponent, {
       width: '350px',

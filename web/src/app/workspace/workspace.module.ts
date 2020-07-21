@@ -42,9 +42,10 @@ import { StoreModule } from '@ngrx/store';
 import { WorkspaceInitializerComponent } from './workspace-initializer/workspace-initializer.component';
 import { WorkspaceHostDirective } from './workspace-initializer/workspace-host.directive';
 import { IndexedDbService } from '../db/indexed-db.service';
+import { EditorDirective } from './workspace/editor.directive';
 
 @NgModule({
-  declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent, UploadComponent, DiffEditorComponent, CommitProgressComponent, TabComponent, MarkdownEditorComponent, InfoComponent, BuildHistoryComponent, WorkspaceInitializerComponent, WorkspaceHostDirective],
+  declarations: [GithubTreeComponent, WorkspaceComponent, EditorComponent, ActionComponent, StageComponent, UploadComponent, DiffEditorComponent, CommitProgressComponent, TabComponent, MarkdownEditorComponent, InfoComponent, BuildHistoryComponent, WorkspaceInitializerComponent, WorkspaceHostDirective, EditorDirective],
   imports: [
     StoreModule.forFeature(workspaceReducerKey, workspaceReducer),
     CommonModule,

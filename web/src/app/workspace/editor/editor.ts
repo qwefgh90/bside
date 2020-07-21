@@ -37,8 +37,6 @@ export interface Editor extends WorkspaceChild{
      */
     clear();
 
-    diffWith(path: string, content: string, originalPath?: string)
-
     /**
      * go to markdown view
      */

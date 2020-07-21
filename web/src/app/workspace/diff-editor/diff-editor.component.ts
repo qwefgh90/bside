@@ -3,51 +3,33 @@ import * as monacoNameSpace from 'monaco-editor';
 import { MonacoService } from '../editor/monaco.service';
 import { Subscription, Observable } from 'rxjs';
 import { DiffEditor } from './diff-editor';
+import { DeviceDetectorService } from 'ngx-device-detector';
 
 @Component({
   selector: 'app-diff-editor',
   templateUrl: './diff-editor.component.html',
   styleUrls: ['./diff-editor.component.css']
 })
-export class DiffEditorComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy, DiffEditor{
-  @Output("changeContent") changeContent: EventEmitter<string> = new EventEmitter<string>();
+export class DiffEditorComponent implements OnInit, OnDestroy {
+  @ViewChild("editor", { static: true }) editorElement: ElementRef;
 
-  editor: monacoNameSpace.editor.IStandaloneDiffEditor;
-  model: monacoNameSpace.editor.ITextModel
-
-  @ViewChild("editor", { static: true }) editorContent: ElementRef;
-
+  diffEditor: monacoNameSpace.editor.IDiffEditor;
   subscription: Subscription;
   monaco: any;
   option: monacoNameSpace.editor.IDiffEditorConstructionOptions = {
-    readOnly: true,
     automaticLayout: true
   };
 
-  constructor(private monacoService: MonacoService) { }
+  constructor(private monacoService: MonacoService,  private deviceService: DeviceDetectorService) { }
 
-  private _readonly: boolean;
-  set readonly(v: boolean){
-    this._readonly;
-    this.option.readOnly = v;
-    this.editor.updateOptions(this.option);
-  }
-  get readonly(){
-    return this._readonly;
-  }
+  subscriptions: Subscription[] = [];
 
   ngOnInit() {
-    this.subscription = this.monacoService.monaco.subscribe((monaco) => {
-      console.log("monacoService loaded");
+    this.subscriptions.push(this.monacoService.monaco.subscribe((monaco) => {
+      console.log("diff component loaded");
       this.monaco = monaco;
-      this.createMonacoEditor(monaco);
-    })
-  }
-
-  ngOnChanges() {
-  }
-
-  ngAfterViewInit() {
+      this.createDiffEditor(monaco);
+    }));
   }
 
   /**
@@ -55,70 +37,61 @@ export class DiffEditorComponent implements OnInit, AfterViewInit, OnChanges, On
    * @param event 
    */
   onResize(event) {
-    if (window.innerHeight <= this.beforeHeight) {
-      console.log('shrink and expand!');
+    if (window.innerWidth < this.beforeWidth && this.deviceService.isDesktop()) {
       this.shrinkExpand();
     }
-    this.beforeHeight = window.innerHeight;
+    // this.beforeHeight = window.innerHeight;
+    this.beforeWidth = window.innerWidth;
   }
-  beforeHeight = 0;
+  beforeWidth = 0;
   shrink = false;
 
   /**
    * it triggers recalculate dimension
    */
-  public shrinkExpand(){
+  public shrinkExpand() {
     this.shrink = true;
     setTimeout(() => {
       this.shrink = false;
     }, 400);
   }
 
-  // https://ngohungphuc.wordpress.com/2019/01/08/integrate-monaco-editor-with-angular/
-  // Will be called once monaco library is available
-  private createMonacoEditor(monaco) {
+  private createDiffEditor(monaco) {
     if (monaco != undefined) {
-      const myDiv: HTMLDivElement = this.editorContent.nativeElement;
-      if (this.editor != undefined) {
-        this.editor.dispose();
-        myDiv.childNodes.forEach((c) => c.remove());
-      }
-      this.editor = monaco.editor.createDiffEditor(myDiv, this.option);
+      this.releaseEditors();
+      const myDiv: HTMLDivElement = this.editorElement.nativeElement;
+      this.diffEditor = monaco.editor.createDiffEditor(myDiv, this.option);
     }
   }
 
-  private releaseEditor(){
-    if (this.editor != undefined) {
-      console.debug("release resources of monaco editor");
-      this.editor.dispose();
-    }
-  }
-
-  private releaseGlobalResource(){
-    if (this.editor != undefined) {
-      let models: Array<monacoNameSpace.editor.ITextModel> = this.monaco.editor.getModels()
-      models.forEach(m => m.dispose());
-    }
-  }
 
   ngOnDestroy() {
-    this.releaseEditor();
-    this.releaseGlobalResource();
-    if(this.subscription)
-      this.subscription.unsubscribe();
+    this.subscriptions.forEach(s => s.unsubscribe());
+    this.releaseEditors();
+    this.releaseModels();
   }
 
-  setContent(original: monacoNameSpace.editor.ITextModel, changes: monacoNameSpace.editor.ITextModel){
-    if (this.monaco != undefined) {
-      var originalModel = this.monaco.editor.createModel("heLLo world!", "text/plain");
-      var modifiedModel = this.monaco.editor.createModel("hello orlando!", "text/plain");
-      this.editor.setModel({original: originalModel, modified: modifiedModel});
-    }else
-      this.throwWhenNotInitialized();
+  private releaseModels(){
+    this.models.forEach(m => m.dispose());
   }
 
-  throwWhenNotInitialized(){
-    throw new Error("A monaco is not initalized");
+  private releaseEditors() {
+    console.debug("release resources of monaco editor");
+    this.diffEditor?.dispose();
+    this.diffEditor = undefined;
+  }
+
+  models: Array<monacoNameSpace.editor.ITextModel> = [];
+
+  diffWith(path: string, content: string, originalPath: string, originalContent: string) {
+    if(this.monaco)
+      this.createDiffEditor(this.monaco);
+    let originalModel: monacoNameSpace.editor.ITextModel = this.monaco.editor.createModel(originalContent, '', monacoNameSpace.Uri.file(`/diff${Date.now()}/${originalPath}`));
+    let targetModel: monacoNameSpace.editor.ITextModel = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(`/diff${Date.now()+1}/${path}`));
+    this.diffEditor.setModel({ original: originalModel, modified: targetModel });
+    this.models.push(originalModel);
+    this.models.push(targetModel);
+    this.shrinkExpand();
   }
 
 }
