@@ -12,6 +12,7 @@ import { DeviceDetectorService } from 'ngx-device-detector';
 })
 export class DiffEditorComponent implements OnInit, OnDestroy {
   @ViewChild("editor", { static: true }) editorElement: ElementRef;
+  @ViewChild("loading", { static: true }) loadingElement: ElementRef;
 
   diffEditor: monacoNameSpace.editor.IDiffEditor;
   subscription: Subscription;
@@ -44,16 +45,31 @@ export class DiffEditorComponent implements OnInit, OnDestroy {
     this.beforeWidth = window.innerWidth;
   }
   beforeWidth = 0;
-  shrink = false;
+
+  private shrink(){
+    if(this.editorElement && this.loadingElement){
+      (this.editorElement.nativeElement as HTMLElement).style.display = "none";
+      (this.loadingElement.nativeElement as HTMLElement).style.display = "flex";
+    }
+  }
+
+  private expand(){
+    if(this.editorElement && this.loadingElement){
+      (this.editorElement.nativeElement as HTMLElement).style.display = "block";
+      (this.loadingElement.nativeElement as HTMLElement).style.display = "none";
+    } 
+  }
 
   /**
    * it triggers recalculate dimension
    */
   public shrinkExpand() {
-    this.shrink = true;
+    this.shrink();
     setTimeout(() => {
-      this.shrink = false;
-    }, 400);
+      this.expand();
+      if (this.latestSnapshot)
+        this.diffWith(this.latestSnapshot.path, this.latestSnapshot.content, this.latestSnapshot.originalPath, this.latestSnapshot.originalContent);
+    }, 0);
   }
 
   private createDiffEditor(monaco) {
@@ -82,7 +98,7 @@ export class DiffEditorComponent implements OnInit, OnDestroy {
   }
 
   models: Array<monacoNameSpace.editor.ITextModel> = [];
-
+  latestSnapshot: {path: string, content: string, originalPath: string, originalContent: string};
   diffWith(path: string, content: string, originalPath: string, originalContent: string) {
     if(this.monaco)
       this.createDiffEditor(this.monaco);
@@ -91,7 +107,7 @@ export class DiffEditorComponent implements OnInit, OnDestroy {
     this.diffEditor.setModel({ original: originalModel, modified: targetModel });
     this.models.push(originalModel);
     this.models.push(targetModel);
-    this.shrinkExpand();
+    this.latestSnapshot = {path, content, originalContent, originalPath};
   }
 
 }

@@ -1,7 +1,6 @@
 <div style="height: 100%;" (window:resize)="onResize($event)" class="flex">
-  <div #editor class="monaco-editor" style="width:100%;height: 100%;" [class.shrink]="shrink"></div>
-  <div style="align-items: center; display: flex; justify-content: center;width: 100%; height: 100%; flex-direction: column"
-    *ngIf="shrink">
+  <div #editor class="monaco-editor" style="width:100%;height: 100%;"></div>
+  <div #loading style="align-items: center; display: flex; justify-content: center;width: 100%; height: 100%; flex-direction: column">
 
     <mat-spinner [strokeWidth]="3"></mat-spinner>
     <div>Coordinating...</div>

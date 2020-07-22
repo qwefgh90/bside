@@ -125,7 +125,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   // }
 
   EditorRef: ComponentRef<EditorComponent>;
-  DiffEditorRef: ComponentRef<DiffEditorComponent>;
+  diffEditorRef: ComponentRef<DiffEditorComponent>;
   MarkdownEditorRef: ComponentRef<MarkdownEditorComponent>;
   PreviewRef: ComponentRef<MarkdownEditorComponent>;
   visibleEditor: MarkdownEditorComponent | EditorComponent;
@@ -144,7 +144,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.EditorRef = componentRef;
     this.MarkdownEditorRef = componentRef2;
     this.PreviewRef = componentRef3;
-    this.DiffEditorRef = componentRef4;
+    this.diffEditorRef = componentRef4;
     this.visibleEditor = componentRef.instance;
     this.preview = componentRef3.instance;
     this.preview.preview = true;
@@ -152,14 +152,14 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     (this.EditorRef.location.nativeElement as HTMLElement).style.display="none";
     (this.MarkdownEditorRef.location.nativeElement as HTMLElement).style.display="none";
     (this.PreviewRef.location.nativeElement as HTMLElement).style.display="none";
-    (this.DiffEditorRef.location.nativeElement as HTMLElement).style.display="none";
+    (this.diffEditorRef.location.nativeElement as HTMLElement).style.display="none";
     setTimeout(() => { // initializing components takes some time.
-      this.detachAllFromEditorHost();
-      this.insertComponentIntoEditorHost(this.EditorRef.hostView);
       (this.EditorRef.location.nativeElement as HTMLElement).style.display="block";
       (this.MarkdownEditorRef.location.nativeElement as HTMLElement).style.display="block";
       (this.PreviewRef.location.nativeElement as HTMLElement).style.display="block";
-      (this.DiffEditorRef.location.nativeElement as HTMLElement).style.display="block";
+      (this.diffEditorRef.location.nativeElement as HTMLElement).style.display="block";
+      this.detachAllFromEditorHost();
+      this.insertComponentIntoEditorHost(this.EditorRef.hostView);
     }, 1000);
   }
 
@@ -223,7 +223,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   fsm(){
     this.editorStatusFsm.fromAny(EditorStatusOnWorkspace).toAny(EditorStatusOnWorkspace);
-    this.editorStatusFsm.on(EditorStatusOnWorkspace.Diff, (from) => {
+    this.editorStatusFsm.onEnter(EditorStatusOnWorkspace.Diff, (from) => {
       this.detachAllFromEditorHost();
       let nodes = this.root.getBlobNodes();
       const filteredNodes = nodes.filter((v) => {
@@ -236,28 +236,33 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           let editedContent = this.visibleEditor.getContent(this.selectedNodePath);
           this.getOriginalText(node.sha).then((content: string) => {
             setTimeout(() => {
-              this.insertComponentIntoEditorHost(this.DiffEditorRef.hostView);
-              this.DiffEditorRef.instance.diffWith(this.selectedNodePath, content, this.selectedNodePath, editedContent)
+              this.insertComponentIntoEditorHost(this.diffEditorRef.hostView);
+              this.diffEditorRef.instance.diffWith(this.selectedNodePath, content, this.selectedNodePath, editedContent)
             }, 0);
           });
         }
       } else {
         console.warn(`${filteredNodes[0].path} are ${filteredNodes.length}. it's expected to be one`)
       }
+      return true;
     });
-    this.editorStatusFsm.on(EditorStatusOnWorkspace.Editor, (from) => {
+    this.editorStatusFsm.onEnter(EditorStatusOnWorkspace.Editor, (from) => {
       this.detachAllFromEditorHost();
-      this.insertComponentIntoEditorHost(this.EditorRef.hostView);
-      this.preview.setContent("preview", "");
-      this.preview.select('preview');
-      this.visibleEditor.select(this.selectedNodePath);
+      if(this.selectedFileType == FileType.Text){
+        this.insertComponentIntoEditorHost(this.EditorRef.hostView);
+        this.preview.setContent("preview", "");
+        this.preview.select('preview');
+        this.visibleEditor.select(this.selectedNodePath);
+      }
+      return true;
     });
-    this.editorStatusFsm.on(EditorStatusOnWorkspace.Md, (from) => {
+    this.editorStatusFsm.onEnter(EditorStatusOnWorkspace.Md, (from) => {
       this.detachAllFromEditorHost();
       this.insertComponentIntoEditorHost(this.PreviewRef.hostView);
       this.preview.setContent("preview", this.visibleEditor.getContent());
       this.preview.select('preview');
       setTimeout(() => this.preview.md(true), 0);
+      return true;
     });
   }
 
@@ -339,7 +344,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     });
 
     let pathToUndo$ = this.store.pipe(select(pathToUndoSelector));
-    let s10 = pathToUndo$.subscribe((path) => {
+    let s10 = pathToUndo$.subscribe(({path, time}) => {
       if (path) {
         const node = this.root.find(path);
         if (node != undefined) {
@@ -553,24 +558,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       this.editorStatusFsm.go(EditorStatusOnWorkspace.Editor);
   }
 
-  // resetTab() {
-  //   if (this.tab)
-  //     this.tab.clear();
-
-  // }
-  // resetEditor() {
-  //   if (this.editor)
-  //     this.visibleEditor.clear();
-  // }
-
-  // resetWorkspace() {
-  //   this.selectedImagePath = undefined;
-  //   this.selectedFileType = undefined;
-  //   this.selectedNodePath = undefined;
-  //   this.errorDescription = undefined;
-  //   this.action.select(ActionState.Edit);
-  // }
-
   ngAfterContentInit() {
     let ripples = this.autoSaveRef._elementRef.nativeElement.getElementsByClassName('mat-ripple')
     if (ripples.length > 0)
@@ -590,9 +577,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   toggleSidenav() {
     this.leftPaneOpened = !this.leftPaneOpened;
+    this.visibleEditor?.shrinkExpand();
+    this.diffEditorRef?.instance?.shrinkExpand();
     if (this.leftPaneOpened){
-      this.visibleEditor?.shrinkExpand();
-      this.DiffEditorRef.instance.shrinkExpand();
+      
     }
   }
 
@@ -754,14 +742,14 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.invalidateDirtyCount()
     this.visibleEditor.readonly = true;
     this.visibleEditor.shrinkExpand();
-    this.DiffEditorRef.instance.shrinkExpand();
+    this.diffEditorRef.instance.shrinkExpand();
   }
 
   onEdit() {
     this.workspaceStatus = WorkspaceStatus.View;
     this.visibleEditor.readonly = false;
     this.visibleEditor.shrinkExpand();
-    this.DiffEditorRef.instance.shrinkExpand();
+    this.diffEditorRef.instance.shrinkExpand();
   }
 
   onSave() {

@@ -11,13 +11,6 @@ import { debounceTime } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { notifyChangesInContent, editorLoaded } from '../workspace.actions';
 
-const prefix: string = 'X'.repeat(100);
-enum EditorMode {
-  None,
-  Diff,
-  Md
-}
-
 @Component({
   selector: 'app-editor',
   templateUrl: './editor.component.html',
@@ -30,6 +23,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   notifyContentChangeSubject: Subject<string> = new Subject();
 
   @ViewChild("editor", { static: true }) editorElement: ElementRef;
+  @ViewChild("loading", { static: true }) loadingElement: ElementRef;
 
   diffTargetPath: string;
   subscriptions: Subscription[] = [];
@@ -38,52 +32,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
     automaticLayout: true
   };
 
-  private fsm = new TypeState.FiniteStateMachine<EditorMode>(EditorMode.None);
-
-  private initFsm() {
-    this.fsm.fromAny(EditorMode).toAny(EditorMode);
-    this.fsm.onExit(EditorMode.Diff, (to: EditorMode) => {
-      this.removeContent(this.diffTargetPath);
-      return true;
-    });
-    this.fsm.onExit(EditorMode.Md, (to: EditorMode) => {
-      return true;
-    });
-  }
-
-  private set _isDiffOn(diff: boolean) {
-    if (diff)
-      this.fsm.go(EditorMode.Diff);
-    else
-      this.fsm.go(EditorMode.None);
-  }
-
-  private get _isDiffOn() {
-    return this.fsm.currentState == EditorMode.Diff
-  }
-
-  get isDiffOn() {
-    return this._isDiffOn;
-  }
-
-  private set _isMdOn(md: boolean) {
-    if (md)
-      this.fsm.go(EditorMode.Md);
-    else
-      this.fsm.go(EditorMode.None);
-  }
-
-  private get _isMdOn() {
-    return this.fsm.currentState == EditorMode.Md
-  }
-
-  get isMdOn() {
-    return this._isMdOn;
-  }
-
   constructor(private monacoService: MonacoService, private deviceService: DeviceDetectorService, private store: Store) {
-    this.initFsm();
-    
+   
   }
 
   private _readonly: boolean;
@@ -138,19 +88,29 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
     // this.beforeHeight = window.innerHeight;
     this.beforeWidth = window.innerWidth;
   }
-  // beforeHeight = 0;
   beforeWidth = 0;
-  shrink = false;
+
+
+  private shrink(){
+    (this.editorElement.nativeElement as HTMLElement).style.display = "none";
+    (this.loadingElement.nativeElement as HTMLElement).style.display = "flex";
+  }
+
+  private expand(){
+    (this.editorElement.nativeElement as HTMLElement).style.display = "block";
+    (this.loadingElement.nativeElement as HTMLElement).style.display = "none";
+  }
 
   /**
    * it triggers recalculate dimension
    */
   public shrinkExpand() {
-    this.shrink = true;
+    this.shrink();
     setTimeout(() => {
-      this.shrink = false;
-
-    }, 400);
+      this.expand();
+      if(this.latestPath)
+        this.select(this.latestPath);
+    }, 0);
   }
 
   // https://ngohungphuc.wordpress.com/2019/01/08/integrate-monaco-editor-with-angular/
@@ -198,16 +158,15 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       this.throwWhenNotInitialized();
   }
 
+  latestPath: string;
+
   select(path: string): boolean {
+    this.latestPath = path;
     if (this.monaco != undefined) {
-      if (this._isDiffOn || this.isMdOn) {
-        this.createMonacoEditor(this.monaco);
-        this.fsm.go(EditorMode.None);
-      }
+      this.createMonacoEditor(this.monaco);
       let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
       if (existsModel) {
         this.editor.setModel(existsModel);
-        this.shrinkExpand();
         return true;
       }
       return false;

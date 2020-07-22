@@ -53,12 +53,4 @@ export interface Editor extends WorkspaceChild{
      * force a editor to resize by shrinking and expanding
      */
     shrinkExpand()
-    /**
-     * return whether editor is diff view
-     */
-    readonly isDiffOn: boolean;
-    /**
-     * return whether editor is md view
-     */
-    readonly isMdOn: boolean;
 }
