@@ -6,11 +6,9 @@ import { TreeNode } from 'angular-tree-component';
 import { FormControl } from '@angular/forms';
 import { labelTable, getLabel } from '../info/info.component';
 import { SelectAction } from '../core/action/user/select-action';
-import { UndoAction } from '../core/action/user/undo-action';
-import { ClearAction } from '../core/action/user/clear-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { Store } from '@ngrx/store';
-import { undo, resetWorkspace } from '../workspace.actions';
+import { undo, resetWorkspace, nodeSelectedInChangesTree } from '../workspace.actions';
 
 @Component({
   selector: 'app-stage',
@@ -32,11 +30,18 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   constructor(private dispatcher: UserActionDispatcher, private wrapper: WrapperService, private store: Store) { }
 
   ngOnInit() {
+    console.debug("stage init");
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if(this.repository != undefined && this.branch != undefined)
       this.checkoutLastestCommit()
+    if(this.modifiedNodes != undefined){
+      let index = this.modifiedNodes.findIndex((v, idx) => (v.state as NodeStateAction[]).findIndex(v => v == NodeStateAction.Deleted) == -1)
+      if(index != -1){
+        this.store.dispatch(nodeSelectedInChangesTree({node: this.modifiedNodes[index].toGithubNode()}));
+      }
+    }
   }
 
   getLabels(node: GithubTreeNode) {
@@ -66,7 +71,8 @@ export class StageComponent implements OnInit, OnChanges, Stage {
   
   selectNode(node: TreeNode){
     if((node.data.state as NodeStateAction[]).findIndex(v => v == NodeStateAction.Deleted) == -1)
-      new SelectAction(node.data.path, this, this.dispatcher).start();
+      this.store.dispatch(nodeSelectedInChangesTree({node: node.data.toGithubNode()}));
+      // new SelectAction(node.data.path, this, this.dispatcher).start();
   }
 
   undoAll(){

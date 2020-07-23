@@ -86,6 +86,12 @@ const _workspaceReducer = createReducer(initialState, ...componentLoadingStatus,
     on(workspaceActions.clickTab, (state, { path }) => {
         return (state.selectedPath == path ? state : { ...state, selectedPath: path }) 
     }),
+    on(workspaceActions.nodeSelectedInChangesTree, (state, { node }) => {
+        return { ...state, selectedNode: node, selectedPath: node?.path };
+    }),
+    on(workspaceActions.removedNodeAddedToTree, (state, {}) => {
+        return { ...state };
+    }),
     on(workspaceActions.nodeSelected, (state, { node }) => {
         return { ...state, selectedNode: node, selectedPath: node?.path };
     }),

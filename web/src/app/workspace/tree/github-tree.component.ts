@@ -177,7 +177,7 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
             acc.push(node.toGithubNode());
           return acc;
         }, [] as Array<GithubNode>, false);
-        this.store.dispatch(updateTreeSnapshot({snapshot: {nodes: treeArr}}));
+        this.store.dispatch(updateTreeSnapshot({snapshot: {nodes: treeArr, removedChildren: this.root.removedChildren.map(v => v.toGithubNode())}}));
       }
     });
 

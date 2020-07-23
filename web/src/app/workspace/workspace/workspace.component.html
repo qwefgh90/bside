@@ -23,7 +23,7 @@
             </app-tree>
             <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="root" [branch]="selectedBranch"
               [modifiedNodes]="nodesToStage"
-              [class.none]="(workspaceStatus == WorkspaceStatus.View) || (treeStatus != TreeStatus.Done)"
+              *ngIf="!((workspaceStatus == WorkspaceStatus.View) || (treeStatus != TreeStatus.Done))"
               (commit)="onCommit($event)" [placeholder]="placeholderForCommit">
             </app-stage>
             <mat-form-field class="branches" [class.none]="(workspaceStatus == WorkspaceStatus.Stage)"
@@ -48,38 +48,33 @@
       [ngStyle.sm]="{'min-height.vh': 100, 'max-height.vh': 100, 'margin-left.em': '1', 'margin-right.em': '0.2'}">
       <div class="content-pane">
         <div style="display: flex; flex-direction: column; flex:1; height: 100%; width: 100%;">
-          <div class="toolbar" *ngIf="selectedNodePath != undefined" [class.none]="treeStatus != TreeStatus.Done"
-            [class.flex]="treeStatus == TreeStatus.Done">
-            <div style="margin-left: 1em;">
-              <button mat-icon-button title="info" class="button-with-toggle-style"
-                (click)="showInfo(selectedNodePath)">
+          <div class="toolbar" fxLayout="row" fxLayoutAlign="start center" style="position: relative">
+            <div class="fileName" [class.none]="!((workspaceStatus == WorkspaceStatus.Stage) || (treeStatus != TreeStatus.Done))">
+              <span>{{selectedNodePath != undefined ? selectedNodePath : ''}}
+                <span style="color: slategrey;" *ngIf="editor?.isDiffOn">(diff)</span></span></div>
+            <app-tab fxFlex="100" [class.none]="(workspaceStatus == WorkspaceStatus.Stage) || (treeStatus != TreeStatus.Done)">
+            </app-tab>
+            <div class="buttons" fxLayout="row" fxLayoutAlign="center cneter"
+              *ngIf="selectedNodePath != undefined && selectedFileType == FileType.Text">
+              <button mat-icon-button title="info" class="button-with-toggle-style" (click)="showInfo(selectedNodePath)">
                 <mat-icon aria-label="info">info</mat-icon>
               </button>
-            </div>
-            <span class="fileName">{{selectedNodePath != undefined ? selectedNodePath : ''}}
-              <span style="color: slategrey;" *ngIf="editor?.isDiffOn">(diff)</span>
-              <span
-                [@savingChanged]="saving ? 'in' : 'out'" style="color: #673ab7; font-size: 0.7em">
-                Saving...</span></span>
-            <div class="spacer"></div>
-            <div *ngIf="selectedNodePath != undefined && selectedFileType == FileType.Text">
-              <button mat-stroked-button title="Preview" (click)="togglePreview()" *ngIf="isDesktop"
+              <button mat-icon-button title="Preview" (click)="togglePreview()" *ngIf="isDesktop"
                 [ngClass]="{'mat-button-toggle-checked':(editorStatusFsm.currentState == editorType.Md)}">
                 <mat-icon>visibility</mat-icon>
               </button>
-              <button mat-stroked-button title="Compare with original" (click)="toggleDiff()" *ngIf="isDesktop"
+              <button mat-icon-button title="Compare with original" (click)="toggleDiff()" *ngIf="isDesktop"
                 [ngClass]="{'mat-button-toggle-checked':(!(editorStatusFsm.currentState == editorType.Md) && editor?.isDiffOn)}">
                 <mat-icon>compare</mat-icon>
               </button>
-              <a href="https://github.com/{{userId}}/{{repositoryName}}/blob/{{selectedBranch?.name}}/{{selectedNodePath}}" target="_blank"
-                style="text-decoration: none;color: unset;margin-right: 1em"><button mat-stroked-button
-                  title="Open the content">
-                  <mat-icon>open_in_new</mat-icon>
-                </button></a>
+              <a mat-icon-button
+                href="https://github.com/{{userId}}/{{repositoryName}}/blob/{{selectedBranch?.name}}/{{selectedNodePath}}"
+                target="_blank" style="text-decoration: none;color: unset;margin-right: 1em">
+                <mat-icon>open_in_new</mat-icon>
+              </a>
               <!-- <a href="{{getRawUrl(repositoryDetails.full_name, selectedBranch.commit.sha, selectedNode.syncedNode.path)}}" style="text-decoration: none;color: unset" download><button mat-stroked-button style="margin-right: 1em"><mat-icon>cloud_download</mat-icon></button></a> -->
             </div>
           </div>
-          <app-tab></app-tab>
           <div style="flex:1; display: block" *ngIf="contentStatus == ContentStatus.NotInitialized">
             <div style="display: flex; justify-content: center; width: 100%; height: 100%; align-items: center;">
               <div style="text-align: center;">

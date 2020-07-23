@@ -9,19 +9,19 @@ export class GithubTreeToTree {
     // private rootChildren: Array<GithubTreeNode> = [];
     private root: GithubTreeNode;
 
-    constructor(private beforeTree: {sha: string, tree: Array<any>}){
-        this.root = GithubTreeNode.githubTreeNodeFactory.createRootNode(beforeTree.sha);
+    constructor(private beforeTree: {sha: string, tree: Array<GithubNode>, removedChildren?: Array<GithubNode>}){
+        this.root = GithubTreeNode.githubTreeNodeFactory.createRootNode(beforeTree.sha, beforeTree.removedChildren);
         this.traverse();
     }
 
     private traverse(){
-        this.beforeTree.tree.forEach((v, i, arr) => {
-            v = GithubTreeNode.githubTreeNodeFactory.of(v); //interface to class
+        this.beforeTree.tree.forEach((githubNode, i, arr) => {
+            let v = GithubTreeNode.githubTreeNodeFactory.of(githubNode); //interface to class
             // v.children = []; //assign empty array
             if(this.stack.length == 0){
                 //inital extra operation 
                 this.root.children.push(v);
-                v.parentNode = this.root;
+                v.setParentNode(this.root);
                 //push stack
                 this.stack.push(v);
             }else{
@@ -43,10 +43,10 @@ export class GithubTreeToTree {
                 //extra operation
                 if(top == undefined){
                     this.root.children.push(v);
-                    v.parentNode = this.root;
+                    v.setParentNode(this.root);
                 }else{
                     top.children.push(v);
-                    v.parentNode = top;
+                    v.setParentNode(top);
                 }
 
                 //push stack

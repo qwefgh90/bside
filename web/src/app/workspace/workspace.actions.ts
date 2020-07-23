@@ -9,6 +9,11 @@ export const clickTab = createAction(
     props<{path: string}>()
 );
 
+export const nodeSelectedInChangesTree = createAction(
+    '[Stage Component] Node selected',
+    props<{node: GithubNode | undefined}>()
+);
+
 export const nodeCreated = createAction(
     '[Github-Tree Component] Node created',
     props<{path: string}>()
@@ -36,6 +41,11 @@ export const monacoLoaded = createAction(
     '[Workspace Component] Monaco editor loaded',
     props<{}>()
 )
+
+export const removedNodeAddedToTree = createAction(
+    '[Workspace Component] Add the node to the tree',
+    props<{}>()
+);
 
 export const selectPath = createAction(
     '[Workspace Component] Select the node',

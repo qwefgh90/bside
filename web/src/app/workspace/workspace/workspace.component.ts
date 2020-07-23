@@ -348,6 +348,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       if (path) {
         const node = this.root.find(path);
         if (node != undefined) {
+          let index = node.state.findIndex(s => s == NodeStateAction.Deleted);
+          if(index != -1){
+            node.state.splice(index, 1);
+            node.getParentNode().children.push(node);
+          }
           const asyncText = this.getOriginalText(node.sha)
           asyncText.then(async (text) => {
             this.visibleEditor.setContent(path, text);
@@ -356,6 +361,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           }, () => {
             console.error(`The original content of ${path} couldn't be loaded.`);
           });
+        
         }else{
           console.warn(`${path} couldn't be found.`);
         }
@@ -402,7 +408,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
     let s7 = this.store.select(latestSnapshotSelector).subscribe((snapshotInfo) => {
       if(snapshotInfo?.doneTime){
-        let pack = WorkspacePack.of(snapshotInfo.workspaceSnapshot.repositoryId, snapshotInfo.workspaceSnapshot.repositoryName, snapshotInfo.workspaceSnapshot.commitSha, snapshotInfo.workspaceSnapshot.treeSha, snapshotInfo.workspaceSnapshot.name, snapshotInfo.workspaceSnapshot.packs, snapshotInfo.treeSnapshot.nodes, snapshotInfo.tabSnapshot.tabs, snapshotInfo.workspaceSnapshot.selectedNodePath, snapshotInfo.workspaceSnapshot.autoSave, snapshotInfo.workspaceSnapshot.dirtyCount);
+        let pack = WorkspacePack.of(snapshotInfo.workspaceSnapshot.repositoryId, snapshotInfo.workspaceSnapshot.repositoryName, snapshotInfo.workspaceSnapshot.commitSha, snapshotInfo.workspaceSnapshot.treeSha, snapshotInfo.workspaceSnapshot.name, snapshotInfo.workspaceSnapshot.packs, snapshotInfo.treeSnapshot.nodes, snapshotInfo.tabSnapshot.tabs, snapshotInfo.workspaceSnapshot.selectedNodePath, snapshotInfo.workspaceSnapshot.autoSave, snapshotInfo.workspaceSnapshot.dirtyCount, snapshotInfo.treeSnapshot.removedChildren);
         // this.database.save(pack);
         this.indexedDBService.savePack(pack);
       }
@@ -481,7 +487,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           }) as WorkspacePack
         
         if(loadedPack){
-          await this.initializeTree(Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha }));
+          await this.initializeTree(Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha,removedChildren: loadedPack.removedChildren }));
           this.autoSaveRef.checked = loadedPack.autoSave;
           await this.visibleEditor.load(loadedPack);
           await this.tab.load(loadedPack);
@@ -497,8 +503,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }
   }
 
-  async initializeTree(tree: Promise<{ sha: string, tree: Array<any> }>): Promise<void> {
-    return tree.then((tree: { sha: string, tree: Array<any> }) => {
+  async initializeTree(tree: Promise<{ sha: string, tree: Array<any>, removedChildren?: Array<GithubNode> }>): Promise<void> {
+    return tree.then((tree: { sha: string, tree: Array<any>, removedChildren?: Array<GithubNode> }) => {
       const nodeTransformer = new GithubTreeToTree(tree);
       const hiarachyTree = nodeTransformer.getTree();
       this.root = hiarachyTree;
