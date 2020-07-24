@@ -40,7 +40,7 @@ import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, times
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
 import { WorkspaceState, workspaceReducerKey } from '../workspace.reducer';
-import { selectPath as selectPathWithRouterOrSnapshot, monacoLoaded, workspaceDestoryed, requestToSave, updateWorkspaceSnapshot, createNewGithubTree } from '../workspace.actions';
+import { selectPath as selectPathWithRouterOrSnapshot, monacoLoaded, workspaceDestoryed, requestToSave, updateWorkspaceSnapshot, createNewGithubTree, removedNodeAddedToTree } from '../workspace.actions';
 import { selectQueryParam, selectRouteParam } from 'src/app/app-routing.reducer';
 import { DOCUMENT } from '@angular/common';
 import { WorkspaceSnapshot } from '../core/action/micro/workspace-snapshot-micro-action';
@@ -172,8 +172,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   private detachAllFromEditorHost(){
-    for(let i=0; i<this.editorHost.viewContainerRef.length; i++){
-      this.editorHost.viewContainerRef.detach(i);
+    const len = this.editorHost.viewContainerRef.length;
+    for(let i=0; i<len; i++){
+      this.editorHost.viewContainerRef.detach(0);
     }
   }
 
@@ -352,6 +353,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           if(index != -1){
             node.state.splice(index, 1);
             node.getParentNode().children.push(node);
+            this.store.dispatch(removedNodeAddedToTree({}));
           }
           const asyncText = this.getOriginalText(node.sha)
           asyncText.then(async (text) => {

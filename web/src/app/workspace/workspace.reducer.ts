@@ -38,7 +38,8 @@ export interface WorkspaceState {
     },
     latestPathToUndo: {path: string, time: Date},
     latestResetTime: Date,
-    latestTreeLoadedTime: Date
+    latestTreeLoadedTime: Date,
+    latestRemovedNodeAddedTime: Date
 }
 
 export const initialState: WorkspaceState = {
@@ -64,7 +65,8 @@ export const initialState: WorkspaceState = {
     },
     latestPathToUndo: {path: undefined, time: undefined},
     latestResetTime: undefined,
-    latestTreeLoadedTime: undefined
+    latestTreeLoadedTime: undefined,
+    latestRemovedNodeAddedTime: undefined
 }
 
 const componentLoadingStatus = [
@@ -90,7 +92,7 @@ const _workspaceReducer = createReducer(initialState, ...componentLoadingStatus,
         return { ...state, selectedNode: node, selectedPath: node?.path };
     }),
     on(workspaceActions.removedNodeAddedToTree, (state, {}) => {
-        return { ...state };
+        return { ...state, latestRemovedNodeAddedTime: new Date() };
     }),
     on(workspaceActions.nodeSelected, (state, { node }) => {
         return { ...state, selectedNode: node, selectedPath: node?.path };

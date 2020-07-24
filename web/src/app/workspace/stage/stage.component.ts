@@ -39,7 +39,9 @@ export class StageComponent implements OnInit, OnChanges, Stage {
     if(this.modifiedNodes != undefined){
       let index = this.modifiedNodes.findIndex((v, idx) => (v.state as NodeStateAction[]).findIndex(v => v == NodeStateAction.Deleted) == -1)
       if(index != -1){
-        this.store.dispatch(nodeSelectedInChangesTree({node: this.modifiedNodes[index].toGithubNode()}));
+        setTimeout(() => {
+          this.store.dispatch(nodeSelectedInChangesTree({node: this.modifiedNodes[index].toGithubNode()}));
+        }, 0);
       }
     }
   }

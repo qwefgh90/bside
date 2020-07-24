@@ -159,6 +159,8 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
     let feature = createFeatureSelector(workspaceReducerKey);
     let pathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
     let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
+    let latestRemovedNodeAddedTimeSelector = createSelector(feature, (state: WorkspaceState) => state.latestRemovedNodeAddedTime);
+    
     let treeLoadedSelector = createSelector(feature, (state: WorkspaceState) => state.treeLoaded);
     let saveRequestSelector = createSelector(feature, (state: WorkspaceState) => state.latestSnapshot.requestTime);
     let selectedPath$ = this.store.pipe(select(createSelector(pathSelector, treeLoadedSelector, (path, treeLoaded) => ({path, treeLoaded}))));
@@ -190,7 +192,13 @@ export class GithubTreeComponent implements OnChanges, OnDestroy, GithubTree, On
         }
       }
     });
-    this.subscriptions.push(s0, s1, s2);
+
+    let latestRemovedNodeAddedTime$ = this.store.pipe(select(latestRemovedNodeAddedTimeSelector));
+    let s3 = latestRemovedNodeAddedTime$.subscribe(date => {
+      this.refreshTree();
+    });
+
+    this.subscriptions.push(s0, s1, s2, s3);
   }
 
   onNodeFocus(node: TreeNode){
