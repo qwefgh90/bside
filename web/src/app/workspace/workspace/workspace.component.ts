@@ -36,7 +36,7 @@ import { WorkspaceClearMicroAction } from '../core/action/micro/workspace-clear-
 import { WorkspaceUndoMicroAction as WorkspaceUndoMicroAction } from '../core/action/micro/workspace-undo-micro-action';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { MatCheckbox } from '@angular/material/checkbox';
-import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, timestamp, map, filter, switchMap, takeUntil, takeWhile, skipWhile, retry, take } from 'rxjs/operators';
+import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, timestamp, map, filter, switchMap, takeUntil, takeWhile, skipWhile, retry, take, delay } from 'rxjs/operators';
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
 import { WorkspaceState, workspaceReducerKey } from '../workspace.reducer';
@@ -320,7 +320,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     });
 
     let latestPathForChanges$ = this.store.pipe(select(latestPathForChangesInContentSelector));
-    let s9 = latestPathForChanges$.subscribe(({path, time}) => {
+    let s9 = latestPathForChanges$.pipe(delay(1000)).subscribe(({path, time}) => {
       if (path) {
         this.nodeContentChanged(path);
         this.dispatchSaveAction(this.autoSaveRef.checked);
@@ -330,8 +330,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let latestResetTime$ = this.store.pipe(select(latestResetTimeSelector));
     let s5 = latestResetTime$.subscribe((date) => {
       if (date) {
-        this.indexedDBService.deleteByRepositoryIDAndBranchAndSha(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
-        this.document.location.reload();
+        this.indexedDBService.deleteByRepositoryIDAndBranchAndSha(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha).then(() => {
+          this.document.location.reload();
+        });
       }
     });
 

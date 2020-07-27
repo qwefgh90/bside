@@ -52,11 +52,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       this.monaco = monaco;
       this.createMonacoEditor(monaco);
     }));
-    this.subscriptions.push(this.notifyContentChangeSubject.pipe(
-      debounceTime(2000)
-    ).subscribe((path) => {
+    this.subscriptions.push(this.notifyContentChangeSubject.subscribe((path) => {
       this.store.dispatch(notifyChangesInContent({ path }));
-      // new NotifyContentChangeAction(path, this, this.dispatcher).start();
     }));
   }
 
@@ -148,6 +145,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
       if (existsModel) {
         existsModel.setValue(content);
+        this.editor.setModel(existsModel);
       } else {
         this.model = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(path));
         this.model.onDidChangeContent((e) => {
