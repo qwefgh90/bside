@@ -9,7 +9,7 @@
         arrow_drop_down</mat-icon>
       <mat-menu #appMenuForRoot="matMenu" xPosition="before">
         <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="undoAll()">
-          <mat-icon>undo</mat-icon>Clean all changes
+          <mat-icon>undo</mat-icon>Undo all changes
         </button>
       </mat-menu>
     </div>
@@ -32,7 +32,7 @@
               (dblclick)="node.mouseAction('dblClick', $event)" (contextmenu)="node.mouseAction('contextMenu', $event)"
               (treeDrop)="node.onDrop($event)" [treeAllowDrop]="node.allowDrop" [treeDrag]="node"
               [treeDragEnabled]="node.allowDrag()">
-              <div class="node-title" (click)="selectNode(node)">
+              <div class="node-title" (click)="onSelectNode(node)">
                 <mat-icon *ngIf="!(node.data.type == 'tree')">description</mat-icon>
                 <mat-icon *ngIf="node.data.type == 'tree'">
                   {{!node.isExpanded ? 'folder' : 'folder_open'}}

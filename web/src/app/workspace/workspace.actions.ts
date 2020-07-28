@@ -37,6 +37,14 @@ export const treeLoaded = createAction(
     '[Github-Tree Component] Tree loaded',
     props<{}>()
 )
+export const stageLoaded = createAction(
+    '[Stage Component] Tree loaded',
+    props<{}>()
+)
+export const stageUnloaded = createAction(
+    '[Stage Component] Tree unloaded',
+    props<{}>()
+)
 export const monacoLoaded = createAction(
     '[Workspace Component] Monaco editor loaded',
     props<{}>()

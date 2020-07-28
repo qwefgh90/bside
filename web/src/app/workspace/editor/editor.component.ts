@@ -3,11 +3,9 @@ import * as monacoNameSpace from 'monaco-editor';
 import { MonacoService } from './monaco.service';
 import { Subscription, Subject } from 'rxjs';
 import { Editor } from './editor';
-import { TypeState } from 'typestate';
 import { WorkspacePack } from '../workspace/workspace-pack';
 import { TextUtil, FileType } from '../text/text-util';
 import { DeviceDetectorService } from 'ngx-device-detector';
-import { debounceTime } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { notifyChangesInContent, editorLoaded } from '../workspace.actions';
 
@@ -20,7 +18,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
 
   editor: monacoNameSpace.editor.IStandaloneCodeEditor;
   model: monacoNameSpace.editor.ITextModel
-  notifyContentChangeSubject: Subject<string> = new Subject();
 
   @ViewChild("editor", { static: true }) editorElement: ElementRef;
   @ViewChild("loading", { static: true }) loadingElement: ElementRef;
@@ -51,9 +48,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       console.log("monacoService loaded");
       this.monaco = monaco;
       this.createMonacoEditor(monaco);
-    }));
-    this.subscriptions.push(this.notifyContentChangeSubject.subscribe((path) => {
-      this.store.dispatch(notifyChangesInContent({ path }));
     }));
   }
 
@@ -117,17 +111,19 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       this.releaseEditors();
       const myDiv: HTMLDivElement = this.editorElement.nativeElement;
       this.editor = monaco.editor.create(myDiv, this.option);
-    }
+      console.debug("A monaco editor is created newly");
+  }
   }
 
   private releaseEditors() {
-    console.debug("release resources of monaco editor");
+    console.debug("Release the monaco editor");
     this.editor?.dispose();
     this.editor = undefined;
   }
 
   private releaseGlobalResource() {
     if (this.editor != undefined) {
+      console.debug("Release the models");
       let models: Array<monacoNameSpace.editor.ITextModel> = this.monaco.editor.getModels()
       models.forEach(m => m.dispose());
     }
@@ -140,36 +136,46 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
   }
 
   setContent(path: string, content: string) {
-    if (this.monaco != undefined) {
-      this.createMonacoEditor(this.monaco);
-      let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
-      if (existsModel) {
-        existsModel.setValue(content);
-        this.editor.setModel(existsModel);
-      } else {
-        this.model = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(path));
-        this.model.onDidChangeContent((e) => {
-          this.notifyContentChangeSubject.next(path);
-        })
-      }
-    } else
-      this.throwWhenNotInitialized();
+    console.groupCollapsed(`[Editor Component] setContent ${path}`);
+    try {
+      if (this.monaco != undefined) {
+        this.createMonacoEditor(this.monaco);
+        let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
+        if (existsModel) {
+          existsModel.setValue(content);
+          this.editor.setModel(existsModel);
+        } else {
+          this.model = this.monaco.editor.createModel(content, '', monacoNameSpace.Uri.file(path));
+          this.model.onDidChangeContent((e) => {
+            this.store.dispatch(notifyChangesInContent({ path }));
+          });
+        }
+      } else
+        this.throwWhenNotInitialized();
+    } finally {
+      console.groupEnd();
+    }
   }
 
   latestPath: string;
 
   select(path: string): boolean {
-    this.latestPath = path;
-    if (this.monaco != undefined) {
-      this.createMonacoEditor(this.monaco);
-      let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
-      if (existsModel) {
-        this.editor.setModel(existsModel);
-        return true;
-      }
-      return false;
-    } else
-      this.throwWhenNotInitialized();
+    console.groupCollapsed(`[Editor Component] select ${path}`);
+    try {
+      this.latestPath = path;
+      if (this.monaco != undefined) {
+        this.createMonacoEditor(this.monaco);
+        let existsModel: monacoNameSpace.editor.ITextModel = (path != undefined) ? this.monaco.editor.getModel(monacoNameSpace.Uri.file(path)) : path;
+        if (existsModel) {
+          this.editor.setModel(existsModel);
+          return true;
+        }
+        return false;
+      } else
+        this.throwWhenNotInitialized();
+    } finally {
+      console.groupEnd();
+    }
   }
 
   exist(path: string): boolean {

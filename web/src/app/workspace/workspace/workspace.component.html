@@ -60,14 +60,14 @@
                 <mat-icon aria-label="info">info</mat-icon>
               </button>
               <button mat-icon-button title="Preview" (click)="togglePreview()" *ngIf="isDesktop"
-                [ngClass]="{'mat-button-toggle-checked':(editorStatusFsm.currentState == editorType.Md)}">
+                [ngClass]="{'mat-button-toggle-checked':(editorStatusFsm.currentState == EditorType.Md)}">
                 <mat-icon>visibility</mat-icon>
               </button>
               <button mat-icon-button title="Compare with original" (click)="toggleDiff()" *ngIf="isDesktop"
-                [ngClass]="{'mat-button-toggle-checked':(!(editorStatusFsm.currentState == editorType.Md) && editor?.isDiffOn)}">
+                [ngClass]="{'mat-button-toggle-checked':(!(editorStatusFsm.currentState == EditorType.Md) && editor?.isDiffOn)}">
                 <mat-icon>compare</mat-icon>
               </button>
-              <a mat-icon-button
+              <a mat-icon-button *ngIf="isDesktop"
                 href="https://github.com/{{userId}}/{{repositoryName}}/blob/{{selectedBranch?.name}}/{{selectedNodePath}}"
                 target="_blank" style="text-decoration: none;color: unset;margin-right: 1em">
                 <mat-icon>open_in_new</mat-icon>

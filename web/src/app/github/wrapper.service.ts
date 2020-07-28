@@ -514,7 +514,7 @@ export class WrapperService {
     "network_count": 0
   }
 }*/
-  repositoryDetails(login: string, repositoryName: string): Promise<any> {
+  repositoryDetails(login: string, repositoryName: string): Promise<RepositoryType> {
     if (this.hasToken()) {
       return this.repository(login, repositoryName);
     } else {
@@ -522,7 +522,7 @@ export class WrapperService {
     }
   }
 
-  repository(login: string, repositoryName: string) {
+  repository(login: string, repositoryName: string): Promise<RepositoryType> {
     const url = `https://api.github.com/repos/${login}/${repositoryName}`;
     let reposResponse = this.http.get<any>(url, { headers: { Authorization: `token ${this.token}` } });
     return reposResponse.toPromise().then(v => v == undefined ? Promise.reject() : Promise.resolve(v));
@@ -1689,7 +1689,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
       const repo = new Github({
         token: this.token
       });
-      let promise: Promise<any> = this.getBlob(login, repositoryName, sha)
+      let promise: Promise<any> = this.getBlobWithCache(login, repositoryName, sha)
       // let promise: Promise<any> = this.treeRecursive(login, repositoryName, sha);//repo.getRepo(login, repositoryName).getTree(sha);
       return promise.then(result => {
         return result
@@ -1713,7 +1713,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
     return treeResponse.toPromise();
   }
 
-  getBlob(login: string, repositoryName: string, sha: string) {
+  getBlobWithCache(login: string, repositoryName: string, sha: string) {
     const url = `https://api.github.com/repos/${login}/${repositoryName}/git/blobs/${sha}`;
     if (this.blobCache.has(url))
       return Promise.resolve(this.blobCache.get(url));
@@ -1907,7 +1907,7 @@ X-GitHub-Request-Id: FF72:4269:4C6E40:5BD85F:5D36CC91
       });
       let content = (await github.getRepo(login, repositoryName).getContents(commitSha, path, false));
       if (content.data != undefined) {
-        let c: Promise<Content> = this.getBlob(login, repositoryName, content.data.sha).then(b => {
+        let c: Promise<Content> = this.getBlobWithCache(login, repositoryName, content.data.sha).then(b => {
           content.data.content = b.content; // assign correct blob
           content.data.blob = b;
           return content.data;

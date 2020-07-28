@@ -23,6 +23,7 @@ export interface WorkspaceState {
         newName: string
     }
     treeLoaded: boolean;
+    stageLoaded: boolean;
     tabLoaded: boolean;
     editorLoaded: boolean;
     latestSnapshot: {
@@ -39,6 +40,7 @@ export interface WorkspaceState {
     latestPathToUndo: {path: string, time: Date},
     latestResetTime: Date,
     latestTreeLoadedTime: Date,
+    latestStageLoadedTime: Date,
     latestRemovedNodeAddedTime: Date
 }
 
@@ -50,6 +52,7 @@ export const initialState: WorkspaceState = {
     latestRenamingPath: undefined,
     latestCreatedPath: undefined,
     treeLoaded: false,
+    stageLoaded: false,
     tabLoaded: false,
     editorLoaded: false,
     latestSnapshot: {
@@ -66,6 +69,7 @@ export const initialState: WorkspaceState = {
     latestPathToUndo: {path: undefined, time: undefined},
     latestResetTime: undefined,
     latestTreeLoadedTime: undefined,
+    latestStageLoadedTime: undefined,
     latestRemovedNodeAddedTime: undefined
 }
 
@@ -75,6 +79,12 @@ const componentLoadingStatus = [
     }),
     on(workspaceActions.treeLoaded, (state: WorkspaceState, { }) => {
         return ({ ...state, treeLoaded: true }) 
+    }),
+    on(workspaceActions.stageLoaded, (state: WorkspaceState, { }) => {
+        return ({ ...state, stageLoaded: true }) 
+    }),
+    on(workspaceActions.stageUnloaded, (state: WorkspaceState, { }) => {
+        return ({ ...state, stageLoaded: false }) 
     }),
     on(workspaceActions.tabLoaded, (state: WorkspaceState, { }) => {
         return ({ ...state, tabLoaded: true })

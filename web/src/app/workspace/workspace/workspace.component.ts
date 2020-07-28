@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, Inject, Input, ComponentFactoryResolver, ViewEncapsulation, ViewRef, ComponentRef } from '@angular/core';
-import { WrapperService } from 'src/app/github/wrapper.service';
+import { WrapperService, RepositoryType } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, Subject, combineLatest, from, ReplaySubject, empty, of, timer, interval, Observable } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -97,7 +97,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   @Input() parameter: RepositoryInformation;
   FileType = FileType;
   TreeStatus = TreeStatusOnWorkspace;
-  editorType = EditorStatusOnWorkspace;
+  EditorType = EditorStatusOnWorkspace;
   ContentStatus = ContentStatusOnWorkspace;
   WorkspaceStatus = WorkspaceStatus;
   constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute
@@ -120,15 +120,18 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   @ViewChild("autoSaveRef", { static: true }) autoSaveRef: MatCheckbox;
 
   @ViewChild(EditorDirective, {static: true}) editorHost: EditorDirective;
-  // get editor(): Editor {
-  //   return this.isDesktop ? this.editor1 : this.editor2;
-  // }
+  get visibleEditor(): Editor {
+    return this.isDesktop ? this.EditorRef.instance : this.MarkdownEditorRef.instance;
+  }
+  get visibleEditorRef(): ComponentRef<EditorComponent | MarkdownEditorComponent> {
+    return this.isDesktop ? this.EditorRef : this.MarkdownEditorRef;
+  }
 
   EditorRef: ComponentRef<EditorComponent>;
   diffEditorRef: ComponentRef<DiffEditorComponent>;
   MarkdownEditorRef: ComponentRef<MarkdownEditorComponent>;
   PreviewRef: ComponentRef<MarkdownEditorComponent>;
-  visibleEditor: MarkdownEditorComponent | EditorComponent;
+  // visibleEditor: MarkdownEditorComponent | EditorComponent;
   preview: MarkdownEditorComponent;
   loadEditor() {
     const viewContainerRef = this.editorHost.viewContainerRef;
@@ -145,7 +148,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.MarkdownEditorRef = componentRef2;
     this.PreviewRef = componentRef3;
     this.diffEditorRef = componentRef4;
-    this.visibleEditor = componentRef.instance;
+    // this.visibleEditor = componentRef.instance;
     this.preview = componentRef3.instance;
     this.preview.preview = true;
 
@@ -159,7 +162,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       (this.PreviewRef.location.nativeElement as HTMLElement).style.display="block";
       (this.diffEditorRef.location.nativeElement as HTMLElement).style.display="block";
       this.detachAllFromEditorHost();
-      this.insertComponentIntoEditorHost(this.EditorRef.hostView);
+      this.insertComponentIntoEditorHost(this.visibleEditorRef.hostView);
     }, 1000);
   }
 
@@ -186,7 +189,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   //these variables sent to child components
   userId;
   repositoryName;
-  repositoryDetails;
+  repositoryDetails: RepositoryType;
   branches: Array<any>;
   selectedBranch;
   selectedCommit;
@@ -198,6 +201,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   placeholderForCommit: string = `it's from ${window.location}`;
   //local state
   saveActionSubject: Subject<any> = new Subject();
+  contentChangeSubject: Subject<string> = new Subject();
   selectedNodePath: string;
   contentStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
   treeStatus: TreeStatusOnWorkspace = TreeStatusOnWorkspace.NotInitialized;
@@ -250,7 +254,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.editorStatusFsm.onEnter(EditorStatusOnWorkspace.Editor, (from) => {
       this.detachAllFromEditorHost();
       if(this.selectedFileType == FileType.Text){
-        this.insertComponentIntoEditorHost(this.EditorRef.hostView);
+        this.insertComponentIntoEditorHost(this.visibleEditorRef.hostView);
         this.preview.setContent("preview", "");
         this.preview.select('preview');
         this.visibleEditor.select(this.selectedNodePath);
@@ -286,7 +290,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       if (loaded) {
         let path = node?.path;
         this.fillEditor(path);
-        this.dispatchSaveAction(this.autoSaveRef.checked);
+        this.requestToSave(this.autoSaveRef.checked);
         this.editorStatusFsm.go(EditorStatusOnWorkspace.Editor);
       }
     });
@@ -307,7 +311,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         let { oldPath, newPath } = renameInfo;
         this.nodeMoved(oldPath, newPath);
         this.invalidateDirtyCount();  
-        this.dispatchSaveAction(this.autoSaveRef.checked);
+        this.requestToSave(this.autoSaveRef.checked);
       }
     });
 
@@ -315,15 +319,14 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let s8 = removedPath$.subscribe((removedPath) => {
       if (removedPath) {
         this.invalidateDirtyCount();
-        this.dispatchSaveAction(this.autoSaveRef.checked);
+        this.requestToSave(this.autoSaveRef.checked);
       }
     });
 
     let latestPathForChanges$ = this.store.pipe(select(latestPathForChangesInContentSelector));
-    let s9 = latestPathForChanges$.pipe(delay(1000)).subscribe(({path, time}) => {
+    let s9 = latestPathForChanges$.pipe(map(({path, time}) => path)).subscribe(path => {
       if (path) {
-        this.nodeContentChanged(path);
-        this.dispatchSaveAction(this.autoSaveRef.checked);
+        this.contentChangeSubject.next(path);
       }
     });
 
@@ -341,7 +344,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       if (this.selectedNodePath != path) {
         this.nodeCreated(path);
         this.invalidateDirtyCount();
-        this.dispatchSaveAction(this.autoSaveRef.checked);
+        this.requestToSave(this.autoSaveRef.checked);
       }
     });
 
@@ -359,8 +362,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           const asyncText = this.getOriginalText(node.sha)
           asyncText.then(async (text) => {
             this.visibleEditor.setContent(path, text);
-            await this.nodeContentChanged(path);
-            this.dispatchSaveAction(this.autoSaveRef.checked);
+            await this.contentChangeSubject.next(path);
           }, () => {
             console.error(`The original content of ${path} couldn't be loaded.`);
           });
@@ -429,21 +431,26 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     });
     this.ngrx();
 
-    //It saves data when the content is modified.
+    this.subscriptions.push(this.contentChangeSubject.pipe(distinctUntilChanged()).subscribe(path => { // at first time when a change event comes
+      this.nodeContentChanged(path);
+      this.requestToSave(this.autoSaveRef.checked);
+    }));
+
+    this.subscriptions.push(this.contentChangeSubject.pipe(debounceTime(1000)).subscribe(path => { // at a time when a event is made after debounce time
+      this.nodeContentChanged(path);
+      this.requestToSave(this.autoSaveRef.checked);
+    }));
+
     this.subscriptions.push(this.saveActionSubject.pipe(bufferCount(15)).subscribe(() => {
-      this.dispatchSaveAction(true);
+      this.requestToSave(true);
     }));
     this.subscriptions.push(this.saveActionSubject.pipe(debounceTime(5000)).subscribe(() => {
-      this.dispatchSaveAction(true);
+      this.requestToSave(true);
     }));
   }
 
   initialize(userId, repositoryName, branchName): Promise<void> {
     this.treeStatus = TreeStatusOnWorkspace.Loading;
-    // this.contentStatus = ContentStatusOnWorkspace.NotInitialized;
-    // this.resetTab();
-    // this.resetEditor();
-    // this.resetWorkspace();
     let promise = this.initializeWorkspace(userId, repositoryName, branchName).then(() => {
       console.log('Your workspace have been initialized with latest saved data.');
       if (this.root == undefined)
@@ -639,7 +646,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           }
           this.contentStatus = ContentStatusOnWorkspace.Done;
         } else {
-          this.wrapper.getBlob(this.userId, this.repositoryName, node.sha).then(
+          this.wrapper.getBlobWithCache(this.userId, this.repositoryName, node.sha).then(
             (blob: Blob) => {
               if (fileType == FileType.Image)
                 this.selectedImagePath = this.getImage(blob.content, TextUtil.getMime(node.syncedNode.path))
@@ -697,7 +704,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     } else {
       this.visibleEditor.setContent(event.node.path, event.base64);
     }
-    this.dispatchSaveAction(this.autoSaveRef.checked);
+    this.requestToSave(this.autoSaveRef.checked);
   }
 
   async nodeContentChanged(path: string) {
@@ -717,7 +724,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   private async getOriginalText(sha: string) {
     if (sha != undefined) {
-      return this.wrapper.getBlob(this.userId, this.repositoryName, sha).then((blob: Blob) => {
+      return this.wrapper.getBlobWithCache(this.userId, this.repositoryName, sha).then((blob: Blob) => {
         let bytes = TextUtil.base64ToBytes(blob.content);
         let encoding = this.defaultEncoding;
         const originalText: string = TextUtil.decode(bytes, encoding);
@@ -731,7 +738,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   onBranchChange(event: MatSelectChange) {
-    let promise = this.dispatchSaveAction(true);
+    let promise = this.requestToSave(true);
     if (promise instanceof Promise) {
       try {
         promise.then(() => {
@@ -762,7 +769,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   onSave() {
-    this.dispatchSaveAction(true);
+    this.requestToSave(true);
   }
 
   getBase64(path: string): string {
@@ -780,7 +787,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   async onCommit(msg: string) {
-    let promise = this.dispatchSaveAction(true);
+    let promise = this.requestToSave(true);
     if (promise instanceof Promise) {
       try {
         await promise.then(async () => {
@@ -939,12 +946,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return `https://github.com/${this.userId}/${this.repositoryName}/blob/${this.selectedBranch.name}/${path}`
   }
 
-  private dispatchSaveAction(eagerly: boolean): Promise<any> | void {
+  private requestToSave(eagerly: boolean): Promise<any> | void {
     if (eagerly) {
       this.isBeingChanged = false;
       this.store.dispatch(requestToSave({}));
-      let feature = createFeatureSelector(workspaceReducerKey);
-      let done = this.store.select(createSelector(feature, (state:WorkspaceState) => state.latestSnapshot.doneTime));
+      let done = this.store.select(createSelector(createFeatureSelector(workspaceReducerKey), (state:WorkspaceState) => state.latestSnapshot.doneTime));
       return done.pipe(take(1)).toPromise();
     } else {
       this.isBeingChanged = true;
@@ -961,7 +967,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     }
     const dialogRef = this.dialog.open(InfoComponent, {
       width: '350px',
-      data: <DisplayInfo>{ name: node.name, path: node.path, size: size, mime: (mime == null ? '' : mime), rawUrl: this.selectedRawPath, states: node.state, htmlUrl: this.htmlBlobUrl(node.path) }
+      data: <DisplayInfo>{ name: node.name, path: node.path, size: size, mime: (mime == null ? '' : mime), rawUrl: this.selectedRawPath
+      , states: node.state
+      , htmlUrl: this.htmlBlobUrl(node.path)
+      , repositoryJSON: this.repositoryDetails }
     });
   }
 

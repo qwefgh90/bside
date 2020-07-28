@@ -59,7 +59,7 @@ export class MarkdownEditorComponent implements Editor, OnInit, AfterContentInit
   }
 
   load(pack: WorkspacePack) {
-    pack.editorPacks.forEach((v) => {
+    pack?.editorPacks?.forEach((v) => {
       let content;
       let type = TextUtil.getFileType(v.path);
       if (type == FileType.Text) {
