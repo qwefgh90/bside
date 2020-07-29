@@ -7,6 +7,7 @@ import { createFeatureSelector, select, Store } from '@ngrx/store';
 import { authReducerKey, AuthState } from './oauth/auth.reducer';
 import { updateUserInformation } from './app.actions';
 import { AppState } from './app.reducer';
+import { DeviceDetectorService } from 'ngx-device-detector';
 
 @Component({
   selector: 'app-root',
@@ -18,8 +19,10 @@ export class AppComponent {
   title = 'web';
   inWorkspace = false;
   cookieDisabled = false;
+  isDesktop = false;
   constructor(private route: ActivatedRoute, private router: Router, private analytics: AnalyticsService, private wrapper: WrapperService
-    , private store: Store<{app: AppState}>) {
+    , private store: Store<{app: AppState}>
+    , private detector: DeviceDetectorService) {
     let selector = createFeatureSelector<any, AuthState>(authReducerKey);
     let accessToken$ = this.store.select(selector);
     accessToken$.subscribe(({isLogin, accessToken}: AuthState) => {
@@ -40,6 +43,7 @@ export class AppComponent {
             this.inWorkspace = true;
           else
             this.inWorkspace = false;
+          this.isDesktop = detector.isDesktop();
         }
       }
       

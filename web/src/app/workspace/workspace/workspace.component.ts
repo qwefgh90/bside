@@ -31,10 +31,6 @@ import {
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { InfoComponent, DisplayInfo } from '../info/info.component';
 import { BuildHistoryComponent } from '../build-history/build-history.component';
-import { MicroActionComponentMap, SupportedComponents } from '../core/action/micro/micro-action-component-map';
-import { WorkspaceClearMicroAction } from '../core/action/micro/workspace-clear-micro-action';
-import { WorkspaceUndoMicroAction as WorkspaceUndoMicroAction } from '../core/action/micro/workspace-undo-micro-action';
-import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, timestamp, map, filter, switchMap, takeUntil, takeWhile, skipWhile, retry, take, delay } from 'rxjs/operators';
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
@@ -201,7 +197,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   placeholderForCommit: string = `it's from ${window.location}`;
   //local state
   saveActionSubject: Subject<any> = new Subject();
-  contentChangeSubject: Subject<string> = new Subject();
+  contentChangeSubject: Subject<{path: string}> = new Subject();
   selectedNodePath: string;
   contentStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
   treeStatus: TreeStatusOnWorkspace = TreeStatusOnWorkspace.NotInitialized;
@@ -288,8 +284,12 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let selectedNode$ = this.store.pipe(select(createSelector(nodeSelector, editorSelector, (node, loaded) => ({node, loaded}))));
     let s0 = selectedNode$.subscribe(({node, loaded}) => {
       if (loaded) {
+        const lastNodePath = this.selectedNodePath;
+        const lastNodeType = this.selectedFileType
+        if(lastNodePath && lastNodeType == FileType.Text)
+          this.checkChangesInContent(lastNodePath);
         let path = node?.path;
-        this.fillEditor(path);
+        this.showContent(path);
         this.requestToSave(this.autoSaveRef.checked);
         this.editorStatusFsm.go(EditorStatusOnWorkspace.Editor);
       }
@@ -326,7 +326,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let latestPathForChanges$ = this.store.pipe(select(latestPathForChangesInContentSelector));
     let s9 = latestPathForChanges$.pipe(map(({path, time}) => path)).subscribe(path => {
       if (path) {
-        this.contentChangeSubject.next(path);
+        this.contentChangeSubject.next({path});
       }
     });
 
@@ -362,7 +362,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           const asyncText = this.getOriginalText(node.sha)
           asyncText.then(async (text) => {
             this.visibleEditor.setContent(path, text);
-            await this.contentChangeSubject.next(path);
+            await this.contentChangeSubject.next({path});
           }, () => {
             console.error(`The original content of ${path} couldn't be loaded.`);
           });
@@ -414,7 +414,6 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let s7 = this.store.select(latestSnapshotSelector).subscribe((snapshotInfo) => {
       if(snapshotInfo?.doneTime){
         let pack = WorkspacePack.of(snapshotInfo.workspaceSnapshot.repositoryId, snapshotInfo.workspaceSnapshot.repositoryName, snapshotInfo.workspaceSnapshot.commitSha, snapshotInfo.workspaceSnapshot.treeSha, snapshotInfo.workspaceSnapshot.name, snapshotInfo.workspaceSnapshot.packs, snapshotInfo.treeSnapshot.nodes, snapshotInfo.tabSnapshot.tabs, snapshotInfo.workspaceSnapshot.selectedNodePath, snapshotInfo.workspaceSnapshot.autoSave, snapshotInfo.workspaceSnapshot.dirtyCount, snapshotInfo.treeSnapshot.removedChildren);
-        // this.database.save(pack);
         this.indexedDBService.savePack(pack);
       }
     });
@@ -431,13 +430,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     });
     this.ngrx();
 
-    this.subscriptions.push(this.contentChangeSubject.pipe(distinctUntilChanged()).subscribe(path => { // at first time when a change event comes
-      this.nodeContentChanged(path);
+    this.subscriptions.push(this.contentChangeSubject.pipe(distinctUntilChanged((x,y) => (x.path == y.path))).subscribe(({path}) => { // at first time when a change event comes
+      this.checkChangesInContent(path);
       this.requestToSave(this.autoSaveRef.checked);
     }));
 
-    this.subscriptions.push(this.contentChangeSubject.pipe(debounceTime(1000)).subscribe(path => { // at a time when a event is made after debounce time
-      this.nodeContentChanged(path);
+    this.subscriptions.push(this.contentChangeSubject.pipe(debounceTime(1000)).subscribe(({path}) => { // at a time when a event is made after debounce time
+      this.checkChangesInContent(path);
       this.requestToSave(this.autoSaveRef.checked);
     }));
 
@@ -622,7 +621,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return branch != undefined ? true : false;
   }
 
-  fillEditor(pathOrNode: string | GithubTreeNode | undefined) {
+  showContent(pathOrNode: string | GithubTreeNode | undefined) {
     if (!pathOrNode) {
       this.selectedNodePath = undefined;
       this.contentStatus = ContentStatusOnWorkspace.NotInitialized
@@ -707,7 +706,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     this.requestToSave(this.autoSaveRef.checked);
   }
 
-  async nodeContentChanged(path: string) {
+  async checkChangesInContent(path: string) {
     const node = this.root.find(path);
     if (node != undefined && node.type == 'blob') {
       const asyncText = this.getOriginalText(node.sha)

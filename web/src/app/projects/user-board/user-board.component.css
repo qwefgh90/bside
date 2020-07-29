@@ -5,6 +5,7 @@
     display: flex;
     flex: 1;
     max-width: 60%;
+    min-height: 0px;
 }
 .app-user-profile{
 }

@@ -1,6 +1,5 @@
 <!--The content below is only a placeholder and can be replaced.-->
-<div [ngClass]="{'workspace': inWorkspace, 'frame': !inWorkspace}" [ngStyle.xs]="{'height': 'auto'}"
-    [ngStyle.sm]="{'height': 'auto'}">
+<div [ngClass]="{'workspace': inWorkspace && isDesktop, 'mobile-workspace': inWorkspace && !isDesktop, 'frame': !inWorkspace}" [ngStyle.lt-md]="{'height': 'auto'}">
     <app-header style="display: flex;"></app-header>
     <router-outlet></router-outlet>
     <div class="cookie-outer" *ngIf="!cookieDisabled">

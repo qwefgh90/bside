@@ -87,6 +87,9 @@ export class MarkdownEditorComponent implements Editor, OnInit, AfterContentInit
    */
   setContent(path: string, content: string) {
     this.models.set(path, content);
+    if(this.current.path == path){ // update the markdown editor
+      this.select(path);
+    }
   }
   /**
    * whether a path exists as a model linked to the path

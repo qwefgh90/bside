@@ -32,6 +32,12 @@
     display: flex;
 }
 
+.mobile-workspace {
+  flex-direction: column;
+  height: auto;
+  display: flex;
+}
+
 app-workspace-initializer{
   flex-grow: 1;
   display: flex;
