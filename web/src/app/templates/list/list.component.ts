@@ -4,8 +4,9 @@ import { environment } from 'src/environments/environment';
 import { MatDialog } from '@angular/material/dialog';
 import { ForkComponent } from '../fork/fork.component';
 import { Router, ActivatedRoute, UrlSerializer, DefaultUrlSerializer } from '@angular/router';
-import { LoginGuard } from 'src/app/oauth/guard/login.guard';
 import { TypeState } from 'typestate';
+import { Store, select, createSelector, createFeatureSelector } from '@ngrx/store';
+import { authReducerKey, AuthState } from 'src/app/oauth/auth.reducer';
 
 enum UIStatus{
   None,
@@ -21,7 +22,15 @@ enum UIStatus{
 })
 export class ListComponent implements OnInit, OnChanges {
   UIStatus = UIStatus;
-  constructor(private templateService: TemplateService, public dialog: MatDialog, private router: Router, private route: ActivatedRoute, private guard: LoginGuard) { }
+  constructor(private templateService: TemplateService, public dialog: MatDialog, private router: Router, private route: ActivatedRoute, private store: Store<{}>) { 
+      let selector = createFeatureSelector<any, AuthState>(authReducerKey);
+      let isLoginSelector = createSelector(selector, (state: AuthState) => state.isLogin);
+      let isLogin$ = this.store.pipe(select(isLoginSelector));
+      isLogin$.subscribe((isLogin: boolean) => {
+        this.isLogin = isLogin;
+      });
+  }
+  isLogin = false;
 
   @Input("singleMode")
   singleMode: boolean = false;
@@ -77,7 +86,7 @@ export class ListComponent implements OnInit, OnChanges {
     if (page != undefined)
       queryParams['page'] = page;
     let tree = this.router.createUrlTree(this.route.snapshot.url, {queryParams: queryParams, fragment: view});
-    if(this.guard.isLogin){
+    if(this.isLogin){
       // let arr = repo.full_name.split('/');
       const dialogRef = this.dialog.open(ForkComponent, {
         width: '350px',

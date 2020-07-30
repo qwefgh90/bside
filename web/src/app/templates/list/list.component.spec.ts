@@ -10,9 +10,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Router, ParamMap, Params, convertToParamMap, ActivatedRoute } from '@angular/router';
-import { ReplaySubject } from 'rxjs';
+import { ReplaySubject, Subject } from 'rxjs';
 import { TemplateService } from '../service/template.service';
 import { LoginGuard } from 'src/app/oauth/guard/login.guard';
+import { Store } from '@ngrx/store';
 
 describe('ListComponent', () => {
   let component: ListComponent;
@@ -35,6 +36,7 @@ describe('ListComponent', () => {
         {provide: ActivatedRoute, useValue: routeStub},
         {provide: MatDialog, useValue: matDialogSpy},
         {provide: TemplateService, useValue: templateServiceSpy},
+        {provide: Store, useValue: {pipe: () => new Subject()}},
         {provide: LoginGuard, useValue: loginGuardSpy}],
       imports: [
         FlexLayoutModule,

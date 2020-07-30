@@ -20,9 +20,7 @@ export class AppComponent {
   inWorkspace = false;
   cookieDisabled = false;
   isDesktop = false;
-  constructor(private route: ActivatedRoute, private router: Router, private analytics: AnalyticsService, private wrapper: WrapperService
-    , private store: Store<{app: AppState}>
-    , private detector: DeviceDetectorService) {
+  constructor(private router: Router, private analytics: AnalyticsService, private wrapper: WrapperService, private store: Store<{app: AppState}>, private detector: DeviceDetectorService) {
     let selector = createFeatureSelector<any, AuthState>(authReducerKey);
     let accessToken$ = this.store.select(selector);
     accessToken$.subscribe(({isLogin, accessToken}: AuthState) => {

@@ -38,12 +38,11 @@ export class RedirectComponent implements OnInit {
       }
       this.state = map.get("state");
       this.code = map.get("code");
-
-      this.oauth.login(this.state, this.code).then((value) => {
-        console.log("success to login");
-        if(this.redirectUrl != undefined){
+      this.oauth.getAccessToken(this.state, this.code).then((value) => {
+        console.log("It succeeds to get access_token");
+        if(this.redirectUrl != '')
           this.router.navigateByUrl(this.redirectUrl);
-        }else
+        else
           this.router.navigate(["/"]);
       }, (reason) =>{
         console.error("It fails to get access_token");
@@ -53,6 +52,4 @@ export class RedirectComponent implements OnInit {
       this.router.navigate(["/login"]);
     }
   }
-
-
 }

@@ -14,7 +14,7 @@ import { notifyChangesInContent, editorLoaded } from '../workspace.actions';
   templateUrl: './editor.component.html',
   styleUrls: ['./editor.component.css']
 })
-export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor {
+export class EditorComponent implements OnInit, OnDestroy, Editor {
 
   editor: monacoNameSpace.editor.IStandaloneCodeEditor;
   model: monacoNameSpace.editor.ITextModel
@@ -63,9 +63,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy, Editor
       this.setContent(v.path, content);
     });
     this.store.dispatch(editorLoaded({}));
-  }
-
-  ngAfterViewInit() {
   }
 
   /**

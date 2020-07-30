@@ -17,8 +17,10 @@ import { StoreModule } from '@ngrx/store';
 import { projectsReducerKey, projectsReducer } from './projects.reducer';
 import { MatSelectModule } from '@angular/material/select';
 import {MatBadgeModule} from '@angular/material/badge';
+import {TimeAgoExtendsPipe} from '../pipe/time-ago-extend-pipe';
+
 @NgModule({
-  declarations: [RepositoriesComponent, UserBoardComponent, HistoryComponent, UserProfileComponent, TimeAgoPipe],
+  declarations: [RepositoriesComponent, UserBoardComponent, HistoryComponent, UserProfileComponent, TimeAgoExtendsPipe],
   imports: [
     StoreModule.forFeature(projectsReducerKey, projectsReducer),
     CommonModule,

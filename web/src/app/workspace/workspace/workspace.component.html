@@ -50,8 +50,7 @@
         <div style="display: flex; flex-direction: column; flex:1; height: 100%; width: 100%;">
           <div class="toolbar" fxLayout="row" fxLayoutAlign="start center" style="position: relative">
             <div class="fileName" [class.none]="!((workspaceStatus == WorkspaceStatus.Stage) || (treeStatus != TreeStatus.Done))">
-              <span>{{selectedNodePath != undefined ? selectedNodePath : ''}}
-                <span style="color: slategrey;" *ngIf="editor?.isDiffOn">(diff)</span></span></div>
+              <span>{{selectedNodePath != undefined ? selectedNodePath : ''}}</span></div>
             <app-tab fxFlex="100" [class.none]="(workspaceStatus == WorkspaceStatus.Stage) || (treeStatus != TreeStatus.Done)">
             </app-tab>
             <div class="buttons" fxLayout="row" fxLayoutAlign="center cneter"
@@ -64,7 +63,7 @@
                 <mat-icon>visibility</mat-icon>
               </button>
               <button mat-icon-button title="Compare with original" (click)="toggleDiff()" *ngIf="isDesktop"
-                [ngClass]="{'mat-button-toggle-checked':(!(editorStatusFsm.currentState == EditorType.Md) && editor?.isDiffOn)}">
+                [ngClass]="{'mat-button-toggle-checked':(!(editorStatusFsm.currentState == EditorType.Md) && editorStatusFsm.currentState == EditorType.Diff)}">
                 <mat-icon>compare</mat-icon>
               </button>
               <a mat-icon-button *ngIf="isDesktop"

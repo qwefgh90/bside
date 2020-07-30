@@ -28,7 +28,7 @@ export class OAuthService {
       });
   }
 
-  login(state: string, code: string) {
+  getAccessToken(state: string, code: string) {
     let httpParams = new FormData();
     httpParams.set("state", state);
     httpParams.set("code", code);

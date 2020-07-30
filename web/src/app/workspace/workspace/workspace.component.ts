@@ -129,7 +129,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   PreviewRef: ComponentRef<MarkdownEditorComponent>;
   // visibleEditor: MarkdownEditorComponent | EditorComponent;
   preview: MarkdownEditorComponent;
-  loadEditor() {
+  private loadEditor() {
     const viewContainerRef = this.editorHost.viewContainerRef;
     viewContainerRef.clear();
     const componentFactory = this.componentFactoryResolver.resolveComponentFactory(EditorComponent);
@@ -158,14 +158,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       (this.PreviewRef.location.nativeElement as HTMLElement).style.display="block";
       (this.diffEditorRef.location.nativeElement as HTMLElement).style.display="block";
       this.detachAllFromEditorHost();
-      this.insertComponentIntoEditorHost(this.visibleEditorRef.hostView);
+      // this.insertComponentIntoEditorHost(this.visibleEditorRef.hostView);
     }, 1000);
   }
-
-  private detachComponentFromEditorHost(viewRef: ViewRef){
-    this.editorHost.viewContainerRef.detach(this.editorHost.viewContainerRef.indexOf(viewRef));
-  }
-
+  
   private insertComponentIntoEditorHost(viewRef: ViewRef){
     this.editorHost.viewContainerRef.insert(viewRef);
   }
@@ -198,14 +194,14 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   //local state
   saveActionSubject: Subject<any> = new Subject();
   contentChangeSubject: Subject<{path: string}> = new Subject();
-  selectedNodePath: string;
   contentStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
   treeStatus: TreeStatusOnWorkspace = TreeStatusOnWorkspace.NotInitialized;
   workspaceStatus: WorkspaceStatus = WorkspaceStatus.View;
-  selectedFileType: FileType;
   encodingMap: Map<string, string> = new Map<string, string>();
+  selectedFileType: FileType;
   selectedImagePath: SafeResourceUrl;
   selectedRawPath: SafeResourceUrl;
+  selectedNodePath: string;
   errorDescription: string;
 
   dirtyCount: number = 0;
@@ -267,7 +263,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     });
   }
 
-  ngrx(){
+  private ngrx(){
     let feature = createFeatureSelector(workspaceReducerKey);
     let selectedPathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
     let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
@@ -297,10 +293,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
     let pathSelector$ = this.store.pipe(select(selectedPathSelector));
     let s1 = pathSelector$.subscribe(path => {
-      if(path && path != ''){
+      if (path) {
         if (this.route.snapshot.queryParams['path'] == path) {
         } else {
-          this.router.navigate([], { queryParamsHandling: 'merge', queryParams: { path: path } }); //synchronization with router
+          this.router.navigate([], { queryParamsHandling: 'merge', queryParams: { path: path }, replaceUrl: true }); //synchronization with router
         }
       }
     });
@@ -374,6 +370,10 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     });
 
     let queryPathSelector = selectQueryParam('path');
+    let firstQueryPath;
+    this.store.select(queryPathSelector).subscribe((path) => {
+      firstQueryPath = path;
+    }).unsubscribe();
 
     let tuple = createSelector(editorSelector, databaseReadySelector, (editorLoaded, dbReady) => ({editorLoaded, dbReady, userId: this.parameter.userId, 
       repositoryName: this.parameter.repositoryName, branchName: this.parameter.branchName}));
@@ -391,14 +391,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
               return undefined;
             }) as WorkspacePack;
 
-          let s = this.store.select(queryPathSelector).subscribe((path) => {
-            if (path) {
-              setTimeout(() => this.store.dispatch(selectPathWithRouterOrSnapshot({ path })), 0);
+            if (firstQueryPath) {
+              setTimeout(() => this.store.dispatch(selectPathWithRouterOrSnapshot({ path: firstQueryPath })), 0);
             } else if (loadedPack?.selectedNodePath) {
               setTimeout(() => this.store.dispatch(selectPathWithRouterOrSnapshot({ path: loadedPack.selectedNodePath })), 0);
             }
-          });
-          s.unsubscribe();
         }, (r) => {
           console.error(`An initialization of ${userId}/${repositoryName} failed. ${r}`);
           this.errorDescription = r;
@@ -583,11 +580,11 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   ngOnDestroy() {
     this.clean();
+    this.store.dispatch(workspaceDestoryed({}));
   }
 
   private clean() {
     this.subscriptions.forEach(subscribe => subscribe.unsubscribe());
-    this.store.dispatch(workspaceDestoryed({}));
   }
 
   toggleSidenav() {
@@ -624,6 +621,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   showContent(pathOrNode: string | GithubTreeNode | undefined) {
     if (!pathOrNode) {
       this.selectedNodePath = undefined;
+      this.selectedFileType = undefined;
+      this.selectedRawPath = undefined;
+      this.selectedImagePath = undefined
       this.contentStatus = ContentStatusOnWorkspace.NotInitialized
     } else {
       const node = (typeof pathOrNode == 'string') ? this.root?.find(pathOrNode) : pathOrNode;
@@ -744,7 +744,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           const branch = event.value;
           this.selectedNodePath = undefined;
           this.treeStatus = this.TreeStatus.BranchChanging;
-          this.router.navigate([], { queryParams: { branch: branch.name }});
+          this.router.navigate([], { queryParams: { branch: branch.name }, replaceUrl: true});
         });
       } catch (e) {
         console.error(e);

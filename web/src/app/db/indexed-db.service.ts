@@ -86,6 +86,20 @@ export class IndexedDbService {
     });
   }
 
+  async deleteAll(){
+    await this.checkStatus();
+    let {store, tran} = this.getStore(latestVersionInfo.workspacePackStoreName);
+    let req = store.clear();
+    return new Promise<undefined>((res, rej) => {
+      req.onsuccess = (ev) => {
+        res();
+      };
+      req.onerror = (ev) => {
+        rej(ev);
+      }
+    });
+  }
+
   private async getByRepositoryID(id: number){
     await this.checkStatus();
     const indexName = "repositoryId";
@@ -103,6 +117,7 @@ export class IndexedDbService {
   }
 
   async getByRepositoryIDAndBranchAndSha(id: number, branchName: string, sha: string){
+    await this.checkStatus();
     return this.getByRepositoryID(id).then((arr) => {
       let results = arr.filter((pack) => pack.branchName == branchName && pack.commit_sha == sha);
       if(results.length == 1)

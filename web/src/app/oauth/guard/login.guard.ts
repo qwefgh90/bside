@@ -17,13 +17,13 @@ export class LoginGuard implements CanActivate {
     ){
       let selector = createFeatureSelector<any, AuthState>(authReducerKey);
       let isLoginSelector = createSelector(selector, (state: AuthState) => state.isLogin);
-      let isLogin$ = this.store.pipe(select(isLoginSelector));
-      isLogin$.subscribe((isLogin: boolean) => {
-        this.isLogin = isLogin;
-      });
+      // let isLogin$ = this.store.pipe(select(isLoginSelector));
+      // isLogin$.subscribe((isLogin: boolean) => {
+      //   this.isLogin = isLogin;
+      // });
   }
 
-  isLogin = false;
+  // isLogin = false;
   canActivate(
     next: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): Observable<boolean> {
@@ -32,6 +32,7 @@ export class LoginGuard implements CanActivate {
     let success = this.oauthService.checkConnectionWithBackend().then((success) => { // if session is invalid, execute checkLogin()
       if(!success){
         this.goLogin(url);
+        console.debug("guard!");
         return false;
       }else
         return true;

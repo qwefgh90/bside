@@ -4,6 +4,7 @@ import { WorkspaceComponent } from '../workspace/workspace.component';
 import { Store, createSelector, createFeatureSelector } from '@ngrx/store';
 import { selectQueryParam, selectRouteParam } from 'src/app/app-routing.reducer';
 import { workspaceDestoryed } from '../workspace.actions';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-workspace-initializer',
@@ -21,17 +22,20 @@ export class WorkspaceInitializerComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.subscription.forEach(s => s.unsubscribe());
   }
 
+  subscription: Array<Subscription> = [];
   ngrx(){
     let branchNameSelector = selectQueryParam('branch');
     let repositoryNameSelector = selectRouteParam('repositoryName');
     let userIdSelector = selectRouteParam('userId');
     let repositoryInformationSelector = createSelector(branchNameSelector, repositoryNameSelector, userIdSelector, 
       (branchName, repositoryName, userId) => ({branchName, repositoryName, userId}));
-    this.store.select(repositoryInformationSelector).subscribe((info) => {
+    let s = this.store.select(repositoryInformationSelector).subscribe((info) => {
       this.loadComponent(info);
     });
+    this.subscription.push(s);
   }
 
   loadComponent(info: RepositoryInformation) {

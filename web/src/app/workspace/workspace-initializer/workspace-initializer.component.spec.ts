@@ -1,6 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { WorkspaceInitializerComponent } from './workspace-initializer.component';
+import { Store } from '@ngrx/store';
+import { Subject } from 'rxjs';
 
 describe('WorkspaceInitializerComponent', () => {
   let component: WorkspaceInitializerComponent;
@@ -8,7 +10,8 @@ describe('WorkspaceInitializerComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ WorkspaceInitializerComponent ]
+      declarations: [ WorkspaceInitializerComponent ], 
+      providers: [{provide: Store, useValue: {select: () => new Subject()}}]
     })
     .compileComponents();
   }));

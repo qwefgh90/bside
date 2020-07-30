@@ -14,7 +14,7 @@ import { AppState } from '../app.reducer';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
 
-  constructor(public oauth: OAuthService, private router: Router, private wrapperService: WrapperService, private activatedRoute: ActivatedRoute, private store: Store<{}>) {
+  constructor(public oauth: OAuthService, private router: Router, private store: Store<{}>) {
   }
 
   subscriptions: Array<Subscription> = []

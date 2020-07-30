@@ -13,7 +13,7 @@ import { authReducerKey, AuthState } from '../oauth/auth.reducer';
   providedIn: 'root'
 })
 export class WrapperService {
-  constructor(private oauth: OAuthService, private http: HttpClient, private store: Store<{}>) {
+  constructor(private http: HttpClient, private store: Store<{}>) {
 
     let selector = createFeatureSelector<any, AuthState>(authReducerKey);
     let accessToken$ = this.store.pipe(select(selector));
@@ -23,8 +23,8 @@ export class WrapperService {
     });
   }
 
-  _token = '';
-  _isLogin = false;
+  private _token = '';
+  private _isLogin = false;
 
   private hasToken() {
     return this._isLogin;

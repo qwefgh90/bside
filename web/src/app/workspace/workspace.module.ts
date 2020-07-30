@@ -73,8 +73,7 @@ import { EditorDirective } from './workspace/editor.directive';
     MatCheckboxModule,
     MatTooltipModule,
   ],
-  providers: [{provide: DatabaseToken, useClass: LocalDbService},
-    {provide: IndexedDbService, useClass: IndexedDbService}],
+  providers: [{provide: DatabaseToken, useClass: LocalDbService}],
   entryComponents: [
     InfoComponent,
     BuildHistoryComponent,

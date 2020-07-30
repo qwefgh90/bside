@@ -81,7 +81,7 @@ const componentLoadingStatus = [
         return ({ ...state, treeLoaded: true }) 
     }),
     on(workspaceActions.stageLoaded, (state: WorkspaceState, { }) => {
-        return ({ ...state, stageLoaded: true }) 
+        return ({ ...state, stageLoaded: true, latestStageLoadedTime: new Date() }) 
     }),
     on(workspaceActions.stageUnloaded, (state: WorkspaceState, { }) => {
         return ({ ...state, stageLoaded: false }) 

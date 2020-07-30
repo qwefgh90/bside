@@ -27,6 +27,7 @@ import { appReducer } from './app.reducer';
 import { indexedDBReducer } from './db/indexed-db.reducer';
 import { DatabaseToken } from './db/database';
 import { LocalDbService } from './db/local-db.service';
+import { IndexedDbService } from './db/indexed-db.service';
 
 export function initAuth(oauthService: OAuthService){
   return () => oauthService.initAccessTokenOnSession();
@@ -62,7 +63,8 @@ export function initAuth(oauthService: OAuthService){
     FlexLayoutModule,
   ],
   providers: [{ provide: APP_INITIALIZER, useFactory: initAuth, deps: [OAuthService], multi: true },
-              {provide: DatabaseToken, useClass: LocalDbService}],
+              {provide: DatabaseToken, useClass: LocalDbService},
+              {provide: IndexedDbService, useClass: IndexedDbService}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

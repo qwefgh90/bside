@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, EventEmitter, Output, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, EventEmitter, Output, ViewChild, OnDestroy, SimpleChange } from '@angular/core';
 import { GithubTreeNode, GithubNode, NodeStateAction } from '../tree/github-tree-node';
 import { Stage } from './stage';
 import { WrapperService } from 'src/app/github/wrapper.service';
@@ -10,7 +10,7 @@ import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher
 import { Store, createSelector, select, createFeatureSelector } from '@ngrx/store';
 import { undo, resetWorkspace, nodeSelectedInChangesTree, nodeSelected, stageLoaded, stageUnloaded } from '../workspace.actions';
 import { workspaceReducerKey, WorkspaceState } from '../workspace.reducer';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject, combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-stage',
@@ -33,6 +33,7 @@ export class StageComponent implements OnInit, OnChanges, Stage, OnDestroy {
   options = {
     scrollOnActivate: false,
   };
+  countChanges = new Subject<void>();
 
   constructor(private dispatcher: UserActionDispatcher, private wrapper: WrapperService, private store: Store) { }
 
@@ -47,23 +48,18 @@ export class StageComponent implements OnInit, OnChanges, Stage, OnDestroy {
     if(this.modifiedNodes != undefined){
       this.treeComponent.treeModel.update();
       setTimeout(() => {
-        this.store.dispatch(stageLoaded({}));
+        if((changes.modifiedNodes as SimpleChange).isFirstChange())
+          this.store.dispatch(stageLoaded({}));
+        if((changes.modifiedNodes as SimpleChange)?.previousValue?.length != (changes.modifiedNodes as SimpleChange)?.currentValue?.length){
+          this.countChanges.next();
+        }
       }, 0);
-
-      // let index = this.modifiedNodes.findIndex((v, idx) => (v.state as NodeStateAction[]).findIndex(v => v == NodeStateAction.Deleted) == -1)
-      // if(index != -1){
-      //   setTimeout(() => {
-      //     let currentNode = this.treeComponent.treeModel.getActiveNode();
-      //     if(currentNode?.data != this.modifiedNodes[index])
-      //       this.selectNode(this.modifiedNodes[index].path);
-      //   }, 0);
-      // }
     }
   }
 
   ngOnDestroy(){
     this.store.dispatch(stageUnloaded({}));
-    this.subscriptions.forEach(s => s.unsubscribe());
+    this.subscriptions.forEach(s => s.unsubscribe()); 
   }
 
   subscriptions: Array<Subscription> = [];
@@ -71,13 +67,16 @@ export class StageComponent implements OnInit, OnChanges, Stage, OnDestroy {
   ngrx() {
     let feature = createFeatureSelector(workspaceReducerKey);
     let pathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
-    let stageLoadedSelector = createSelector(feature, (state: WorkspaceState) => state.stageLoaded);
-    let selectedPath$ = this.store.pipe(select(createSelector(pathSelector, stageLoadedSelector, (path, stageLoaded) => ({path, stageLoaded}))));
-    let s2 = selectedPath$.subscribe(({path, stageLoaded}) => {
-      if(stageLoaded){
-        if(!this.modifiedNodes?.find(n => n.path == path)){
+    let stageLoadedSelector = createSelector(feature, (state: WorkspaceState) => (state.stageLoaded));
+    let undoSelector = createSelector(feature, (state: WorkspaceState) => (state.latestPathToUndo));
+    let selectedPath$ = this.store.pipe(select(createSelector(pathSelector, stageLoadedSelector, undoSelector, (path, stageLoaded) => ({ path, stageLoaded }))));
+    let s2 = combineLatest(this.countChanges, selectedPath$).subscribe(([v, { path, stageLoaded }]) => {
+      if (stageLoaded) {
+        if (!this.modifiedNodes?.find(n => n.path == path))
           this.selectNode(this.modifiedNodes?.[0]?.path);
-        }else
+        else if (this.modifiedNodes?.length == 0)
+          this.selectNode(undefined);
+        else
           this.selectNode(path);
       }
     });

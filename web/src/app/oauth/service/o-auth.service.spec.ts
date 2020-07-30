@@ -3,15 +3,26 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 
 import { OAuthService } from './o-auth.service';
 import { CookieToken } from 'src/app/db/cookie';
+import { Store } from '@ngrx/store';
+import { Subject } from 'rxjs';
 
 describe('OAuthService', () => {
+  let storeSpy;
+  let dispatchSpy: jasmine.Spy;
   let cookie = {autoLogin: false, includingPrivate: false};
-  beforeEach(() => TestBed.configureTestingModule({
-    imports:[HttpClientTestingModule],
-    providers: [{provide: CookieToken, useValue: cookie}]
-  }));
+  beforeEach(() => {
+    storeSpy = jasmine.createSpyObj("Store", ['dispatch', 'pipe']);
+    (storeSpy.pipe as jasmine.Spy).and.returnValue(new Subject());
+    dispatchSpy = (storeSpy.dispatch as jasmine.Spy);
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [{ provide: CookieToken, useValue: cookie },
+      { provide: Store, useValue: storeSpy },
+      ]
+    })
+});
 
-  it('intialOAuthInfo()', (done: DoneFn) => {
+  it('tests intialOAuthInfo()', (done: DoneFn) => {
     const service: OAuthService = TestBed.get(OAuthService);
     expect(service).toBeTruthy();
     service.intialOAuthInfo().then(v => {
@@ -32,79 +43,80 @@ describe('OAuthService', () => {
     // Finally, assert that there are no outstanding requests.
     httpTestingController.verify();
   });
-  
-  it('login()', (done: DoneFn) => {
+
+  it('tests getAccessToken()', (done: DoneFn) => {
     const service: OAuthService = TestBed.get(OAuthService);
-    expect(service.accessToken).toBeUndefined;
-    expect(service.isLogin).toBeFalsy();
     expect(service).toBeTruthy();
-    
-    service.login('','').then(v => {
-      expect(service.accessToken).toBeDefined();
-      expect(service.isLogin).toBeTruthy();
+    service.getAccessToken("state", "code").then(() => {
+      expect(dispatchSpy.calls.count()).toBe(1);
       done();
     });
 
     const httpTestingController = TestBed.get(HttpTestingController);
     const req = httpTestingController.expectOne('/api/login/github/accesstoken');
-    // Assert that the request is a GET.
     expect(req.request.method).toEqual('POST');
-
-    // Respond with mock data, causing Observable to resolve.
-    // Subscribe callback asserts that correct data was returned.
-    req.flush({access_token: ''});
-
-    // Finally, assert that there are no outstanding requests.
+    req.flush({});
     httpTestingController.verify();
   });
 
-  it('logout()', (done: DoneFn) => {
+  it('tests logout()', (done: DoneFn) => {
     const service: OAuthService = TestBed.get(OAuthService);
-    service.accessToken = "fake";
-    service.isLogin = true;
     expect(service).toBeTruthy();
-    
-    service.logout().then(v => {
-      expect(service.accessToken).toBeUndefined;
-      expect(service.isLogin).toBeFalsy();
+    service.logout().then(() => {
+      expect(dispatchSpy.calls.count()).toBe(1);
       done();
     });
 
     const httpTestingController = TestBed.get(HttpTestingController);
     const req = httpTestingController.expectOne('/api/login/github/logout');
-    // Assert that the request is a GET.
     expect(req.request.method).toEqual('POST');
-
-    // Respond with mock data, causing Observable to resolve.
-    // Subscribe callback asserts that correct data was returned.
     req.flush({});
-
-    // Finally, assert that there are no outstanding requests.
     httpTestingController.verify();
   });
 
-  it('initAccessTokenOnSession()', (done: DoneFn) => {
+  it('tests initAccessTokenOnSession()', (done: DoneFn) => {
     const service: OAuthService = TestBed.get(OAuthService);
-    expect(service.accessToken).toBeUndefined;
-    expect(service.isLogin).toBeFalsy();
     expect(service).toBeTruthy();
-    
-    service.initAccessTokenOnSession().then(v => {
-      expect(service.accessToken).toBeDefined();
-      expect(service.isLogin).toBeTruthy();
+    service.initAccessTokenOnSession().then(() => {
+      expect(dispatchSpy.calls.count()).toBe(1);
       done();
     });
 
     const httpTestingController = TestBed.get(HttpTestingController);
     const req = httpTestingController.expectOne('/api/login/github/accesstoken');
-    // Assert that the request is a GET.
     expect(req.request.method).toEqual('GET');
+    req.flush({});
+    httpTestingController.verify();
+  });
 
-    // Respond with mock data, causing Observable to resolve.
-    // Subscribe callback asserts that correct data was returned.
-    req.flush({access_token: ''});
+  it('tests checkConnectionWithBackend()', (done: DoneFn) => {
+    const service: OAuthService = TestBed.get(OAuthService);
+    expect(service).toBeTruthy();
+    service.checkConnectionWithBackend().then((v) => {
+      expect(v).toBeTruthy();
+      done();
+    });
 
-    // Finally, assert that there are no outstanding requests.
+    const httpTestingController = TestBed.get(HttpTestingController);
+    const req = httpTestingController.expectOne('/api/login/github/ping');
+    expect(req.request.method).toEqual('GET');
+    req.flush({});
+    httpTestingController.verify();
+  });
+
+  it('tests checkConnectionWithBackend() with 500 error', (done: DoneFn) => {
+    const service: OAuthService = TestBed.get(OAuthService);
+    expect(service).toBeTruthy();
+    service.checkConnectionWithBackend().then((v) => {
+      expect(dispatchSpy.calls.count()).toBe(1);
+      expect(v).toBeFalsy();
+      done();
+    });
+
+    const httpTestingController = TestBed.inject(HttpTestingController);
+    const req = httpTestingController.expectOne('/api/login/github/ping');
+    expect(req.request.method).toEqual('GET');
+    req.flush({}, {status: 500, statusText: "An error occurs in the server"});
     httpTestingController.verify();
   });
 });

@@ -38,7 +38,7 @@ export const treeLoaded = createAction(
     props<{}>()
 )
 export const stageLoaded = createAction(
-    '[Stage Component] Tree loaded',
+    '[Stage Component] Stage loaded',
     props<{}>()
 )
 export const stageUnloaded = createAction(
@@ -56,7 +56,7 @@ export const removedNodeAddedToTree = createAction(
 );
 
 export const selectPath = createAction(
-    '[Workspace Component] Select the node',
+    '[Workspace Component] Select the path',
     props<{path: string}>()
 );
 
