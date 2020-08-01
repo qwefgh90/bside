@@ -1,7 +1,7 @@
 <div style="width: 100%; height: 100%; display: flex; flex-flow: column">
   <div class="repository-title">
     <div style="flex: 1;">
-      <h3 style="display:inline;">Staged</h3>
+      <h3 style="display:inline;">Changes</h3>
     </div>
     <div>
       <mat-icon style="cursor: pointer" [matMenuTriggerFor]="appMenuForRoot" class="context-menu-button"
@@ -9,14 +9,14 @@
         arrow_drop_down</mat-icon>
       <mat-menu #appMenuForRoot="matMenu" xPosition="before">
         <button mat-menu-item style="margin-top: -12px; margin-bottom: -12px;" (click)="undoAll()">
-          <mat-icon>undo</mat-icon>Undo all
+          <mat-icon>undo</mat-icon>Undo all changes
         </button>
       </mat-menu>
     </div>
   </div>
 
   <div class="tree-box-outer">
-    <label style="color:#b6b6b6;">Tree</label>
+    <label>Tree</label>
     <mat-divider></mat-divider>
     <div style="text-align: center; margin-top: 1em" *ngIf="modifiedNodes ? (modifiedNodes.length == 0) : false">
       <span>Nothing to commit</span>
@@ -32,7 +32,7 @@
               (dblclick)="node.mouseAction('dblClick', $event)" (contextmenu)="node.mouseAction('contextMenu', $event)"
               (treeDrop)="node.onDrop($event)" [treeAllowDrop]="node.allowDrop" [treeDrag]="node"
               [treeDragEnabled]="node.allowDrag()">
-              <div class="node-title" (click)="selectNode(node)">
+              <div class="node-title" (click)="onSelectNode(node)">
                 <mat-icon *ngIf="!(node.data.type == 'tree')">description</mat-icon>
                 <mat-icon *ngIf="node.data.type == 'tree'">
                   {{!node.isExpanded ? 'folder' : 'folder_open'}}
@@ -56,7 +56,6 @@
       </tree-root>
       <!-- </div> -->
     </div>
-    <mat-divider></mat-divider>
   </div>
   <mat-form-field appearance="outline" class="description" *ngIf="!((modifiedNodes ? (modifiedNodes.length == 0) : false) || !isPossibleCommit)">
     <mat-label>Leave an description</mat-label>

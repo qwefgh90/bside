@@ -1,49 +1,62 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 
 @Component({
   selector: 'app-commit-progress',
   templateUrl: './commit-progress.component.html',
   styleUrls: ['./commit-progress.component.css']
 })
-export class CommitProgressComponent implements OnInit {
+export class CommitProgressComponent implements OnInit, OnDestroy {
 
   constructor() { }
 
   ngOnInit() {
   }
 
-  _msg: string = "Preparing to commit...";
+  msgs = [];
+
+  set msg(_msg:string){
+    this.msgs = _msg.split("\n");
+  };
 
   prepare(){
-    this._msg = "Preparing to commit...";
+    this.msg = "Preparing to commit...";
   }
 
   uploadBlob(blobName: string){
-    this._msg = `Uploading ${blobName}...`;
+    this.msg = `Uploading ${blobName}...`;
   }
 
   uploadBlobs(count: number){
-    this._msg = `Uploading ${count} blobs...`
+    this.msg = `Uploading ${count} blobs...`
   }
 
   createTree(){
-    this._msg = 'Creating new tree...'
+    this.msg = 'Creating new tree...'
   }
 
   commit(){
-    this._msg = 'Committing...'
+    this.msg = 'Committing...'
   }
 
   updateBranch(branchName: string){
-    this._msg = `Updating ${branchName}...`
+    this.msg = `Updating ${branchName}...`
   }
 
-  done(){
-    this._msg = `Cleaning...`
+  second = 0;
+
+  done(repositoryName, timeout: number=30,  expectingTime: number=10){
+    let dotdotdot = [".", "..", "..."]
+    let handle: any;
+    handle = setInterval(() => {
+      this.second += 1;
+      this.msg = `Loading ${repositoryName}${dotdotdot[this.second%3]}\nIt takes about ${expectingTime} seconds.`;
+      if(this.second > timeout){
+        clearInterval(handle);
+      }
+    }, 1000);
   }
 
-  msg(msg :string){
-    this._msg = msg;
+  ngOnDestroy(){
   }
 
 }

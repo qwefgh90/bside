@@ -3,3 +3,17 @@
     height: 20vh !important;
     display: none;
 }
+.none{
+    display: none;
+}
+.block{
+    display: block;
+}
+.flex{
+    display: flex;
+}
+
+:host {
+    flex: 1;
+    min-height: 0px;
+}

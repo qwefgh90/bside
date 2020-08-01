@@ -23,7 +23,7 @@
             </app-tree>
             <app-stage #stage style="flex: 1" [repository]="repositoryDetails" [tree]="root" [branch]="selectedBranch"
               [modifiedNodes]="nodesToStage"
-              [class.none]="(workspaceStatus == WorkspaceStatus.View) || (treeStatus != TreeStatus.Done)"
+              *ngIf="!((workspaceStatus == WorkspaceStatus.View) || (treeStatus != TreeStatus.Done))"
               (commit)="onCommit($event)" [placeholder]="placeholderForCommit">
             </app-stage>
             <mat-form-field class="branches" [class.none]="(workspaceStatus == WorkspaceStatus.Stage)"
@@ -38,7 +38,7 @@
           </div>
         </div>
       </div>
-      <div class="left-fold" (click)="toggle()" [fxHide.xs]="true" [fxHide.sm]="true">
+      <div class="left-fold" (click)="toggleSidenav()" [fxHide.xs]="true" [fxHide.sm]="true">
         <mat-icon *ngIf="leftPaneOpened">chevron_left</mat-icon>
         <mat-icon *ngIf="!leftPaneOpened">chevron_right</mat-icon>
       </div>
@@ -48,64 +48,62 @@
       [ngStyle.sm]="{'min-height.vh': 100, 'max-height.vh': 100, 'margin-left.em': '1', 'margin-right.em': '0.2'}">
       <div class="content-pane">
         <div style="display: flex; flex-direction: column; flex:1; height: 100%; width: 100%;">
-          <div class="toolbar" *ngIf="selectedNodePath != undefined" [class.none]="treeStatus != TreeStatus.Done"
-            [class.flex]="treeStatus == TreeStatus.Done">
-            <div style="margin-left: 1em;">
-              <button mat-icon-button title="info" class="button-with-toggle-style"
-                (click)="showInfo(selectedNodePath)">
+          <div class="toolbar" fxLayout="row" fxLayoutAlign="start center" style="position: relative">
+            <div class="fileName" [class.none]="!((workspaceStatus == WorkspaceStatus.Stage) || (treeStatus != TreeStatus.Done))">
+              <span>{{selectedNodePath != undefined ? selectedNodePath : ''}}</span></div>
+            <app-tab fxFlex="100" [class.none]="(workspaceStatus == WorkspaceStatus.Stage) || (treeStatus != TreeStatus.Done)">
+            </app-tab>
+            <div class="buttons" fxLayout="row" fxLayoutAlign="center cneter"
+              *ngIf="selectedNodePath != undefined && selectedFileType == FileType.Text">
+              <button mat-icon-button title="info" class="button-with-toggle-style" (click)="showInfo(selectedNodePath)">
                 <mat-icon aria-label="info">info</mat-icon>
               </button>
-            </div>
-            <span class="fileName">{{selectedNodePath != undefined ? selectedNodePath : ''}}
-              <span style="color: slategrey;" *ngIf="editor?.isMdOn">(preview)</span>
-              <span style="color: slategrey;" *ngIf="editor?.isDiffOn">(diff)</span>
-              <span
-                [@savingChanged]="saving ? 'in' : 'out'" style="color: #673ab7; font-size: 0.7em">
-                Saving...</span></span>
-            <div class="spacer"></div>
-            <div *ngIf="selectedNodePath != undefined && selectedFileType == FileType.Text">
-              <button mat-stroked-button title="Preview" (click)="toggleMd()" *ngIf="isDesktop"
-                [ngClass]="{'mat-button-toggle-checked':editor.isMdOn}">
+              <button mat-icon-button title="Preview" (click)="togglePreview()" *ngIf="isDesktop"
+                [ngClass]="{'mat-button-toggle-checked':(editorStatusFsm.currentState == EditorType.Md)}">
                 <mat-icon>visibility</mat-icon>
               </button>
-              <button mat-stroked-button title="Compare with original" (click)="toggleDiff()" *ngIf="isDesktop"
-                [ngClass]="{'mat-button-toggle-checked':editor.isDiffOn}">
+              <button mat-icon-button title="Compare with original" (click)="toggleDiff()" *ngIf="isDesktop"
+                [ngClass]="{'mat-button-toggle-checked':(!(editorStatusFsm.currentState == EditorType.Md) && editorStatusFsm.currentState == EditorType.Diff)}">
                 <mat-icon>compare</mat-icon>
               </button>
-              <a href="https://github.com/{{userId}}/{{repositoryName}}/blob/{{selectedBranch?.name}}/{{selectedNodePath}}" target="_blank"
-                style="text-decoration: none;color: unset;margin-right: 1em"><button mat-stroked-button
-                  title="Open the content">
-                  <mat-icon>open_in_new</mat-icon>
-                </button></a>
+              <a mat-icon-button *ngIf="isDesktop"
+                href="https://github.com/{{userId}}/{{repositoryName}}/blob/{{selectedBranch?.name}}/{{selectedNodePath}}"
+                target="_blank" style="text-decoration: none;color: unset;margin-right: 1em">
+                <mat-icon>open_in_new</mat-icon>
+              </a>
               <!-- <a href="{{getRawUrl(repositoryDetails.full_name, selectedBranch.commit.sha, selectedNode.syncedNode.path)}}" style="text-decoration: none;color: unset" download><button mat-stroked-button style="margin-right: 1em"><mat-icon>cloud_download</mat-icon></button></a> -->
             </div>
           </div>
-          <app-tab></app-tab>
           <div style="flex:1; display: block" *ngIf="contentStatus == ContentStatus.NotInitialized">
             <div style="display: flex; justify-content: center; width: 100%; height: 100%; align-items: center;">
               <div style="text-align: center;">
-                <div>Welcome to BSide</div>
                 <div *ngIf="treeStatus == TreeStatus.TreeEmpty">
                   <div>Your repository is <b>empty</b> now.</div>
                   <div>Please create one file at least in <a href="{{repositoryDetails?.html_url}}"
                       target="_blank">{{repositoryDetails?.html_url}}</a> and refresh here.</div>
                 </div>
                 <div *ngIf="treeStatus == TreeStatus.Fail">
-                  <div>Some problems have been found.</div>
                   <div>{{errorDescription}}</div>
+                  <div>Check out <a href="{{repositoryDetails?.html_url}}" target="_blank">{{repositoryDetails?.html_url}}</a> and refresh here.</div>
                 </div>
 
               </div>
             </div>
           </div>
-          <app-editor #editor1 style="flex:1; min-height: 0px;"
+          
+          <ng-template editor-host></ng-template>
+          <!-- <app-editor #editor1 style="flex:1; min-height: 0px;"
+            [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done) && (editorStatusFsm.currentState == editorType.Editor)"
+            [class.none]="((selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)) || (editorStatusFsm.currentState == editorType.Md)"
+            *ngIf="isDesktop"></app-editor> -->
+          <!-- <app-markdown-editor #preview [preview]="true"
+            [class.block]="(editorStatusFsm.currentState == editorType.Md)"
+            [class.none]="!(editorStatusFsm.currentState == editorType.Md)"
+            *ngIf="isDesktop"></app-markdown-editor> -->
+          <!-- <app-markdown-editor #editor2 style="margin-bottom: 2em; flex:1; min-height: 0px;"
             [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
             [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"
-            *ngIf="isDesktop"></app-editor>
-          <app-markdown-editor #editor2 style="margin-bottom: 2em; flex:1; min-height: 0px;"
-            [class.block]="(selectedFileType == FileType.Text) && (contentStatus == ContentStatus.Done)"
-            [class.none]="(selectedFileType != FileType.Text) || (contentStatus != ContentStatus.Done)"
-            *ngIf="!isDesktop"></app-markdown-editor>
+            *ngIf="!isDesktop"></app-markdown-editor> -->
           <div style="flex:1; display: block; height: 100px "
             *ngIf="(selectedFileType == FileType.Image) && (contentStatus == ContentStatus.Done)">
             <div style="overflow-y: scroll; height: 100%;"><img [src]="selectedImagePath" /></div>
@@ -122,17 +120,11 @@
             *ngIf="(contentStatus == ContentStatus.Loading)">
             <div class="loading">
               <mat-spinner [strokeWidth]="4"></mat-spinner>
-              <div>Loading...</div>
+              <div>{{getFileName(selectedNodePath)}}...</div>
             </div>
           </div>
-          <!-- <div style="height: 10px; margin-top: 5px; background-color: #9da5a2"></div>
-          <div style="flex:1; display: block; overflow-y: scroll; background-color: white">
-            <ngx-md [data]="editor1?.getContent()" style="display:block; height: 0px"></ngx-md>
-          </div> -->
-          <!-- <app-editor style="flex:1; display: block"></app-editor> -->
         </div>
       </div>
-
       <div class="right-pane">
         <app-action #action (stage)="onStage()" (edit)="onEdit()" (save)="onSave()" [dirtyCount]="dirtyCount" [isBeingChanged]="isBeingChanged"
           (buildHistory)="onBuildHistory()" [repository]="repositoryDetails">

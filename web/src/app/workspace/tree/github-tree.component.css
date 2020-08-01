@@ -59,6 +59,16 @@
     font-size: 1.5em;
 }
 
+.repository-title-box > a {
+    text-decoration: none;
+    vertical-align: middle;
+    color: black;
+}
+
+.repository-title-box > a > img {
+    vertical-align: middle;
+}
+
 .repository-tools{
     display: flex;
     flex-direction: row;

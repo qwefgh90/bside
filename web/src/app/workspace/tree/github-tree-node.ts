@@ -9,7 +9,7 @@ export interface GithubNode {
   sha: string;
   size?: number;
   url: string;
-  extra?: {state: Array<NodeStateAction>};
+  extra?: {state: Array<NodeStateAction>, removedChildren: Array<GithubNode>};
 }
 
 export class GithubTreeNode {
@@ -82,7 +82,7 @@ export class GithubTreeNode {
   //custom field
   children: GithubTreeNode[];
   removedChildren: GithubTreeNode[];
-  readonly state: Array<NodeStateAction> = [];
+  state: Array<NodeStateAction> = [];
   readonly isRoot: boolean;
   private parentNode: GithubTreeNode;
 
@@ -112,8 +112,33 @@ export class GithubTreeNode {
     this.isRoot = isRoot;
   }
 
+  find(path: string): GithubTreeNode{
+    if(this.isRoot){
+      let partial = path.split('/');
+      return this._find(partial);
+    }
+  }
+
+  private _find(partialPath: Array<string>): GithubTreeNode | undefined{
+    if(partialPath.length == 0)
+      return undefined;
+    else if(partialPath.length == 1){
+      let firstPathComponent = partialPath[0];
+      return this.children.find((child) => child.name == firstPathComponent) || this.removedChildren.find((child) => child.name == firstPathComponent);
+    }else{
+      let firstPathComponent = partialPath[0];
+      let foundChild = this.children.find((child) => child.name == firstPathComponent);
+      partialPath.splice(0, 1);
+      return foundChild ? foundChild._find(partialPath) : undefined;
+    }
+  }
+
   getParentNode() {
     return this.parentNode;
+  }
+
+  setParentNode(parent: GithubTreeNode){
+    this.parentNode = parent;
   }
 
   /**
@@ -123,13 +148,15 @@ export class GithubTreeNode {
   move(newParent: GithubTreeNode, postAction?: (node: GithubTreeNode, parent: GithubTreeNode, prePath: string, newPath: string) => void) {
     if (!this.isMyDescendant(newParent)) {
       if (newParent != undefined && newParent.type.toLocaleLowerCase() == 'tree') {
-        const prePath = this.path;
+        const prePath = this.path
         this._path = newParent.isRoot ? this.name : `${newParent.path}/${this.name}`
         this.state.push(NodeStateAction.Moved)
         console.debug(`Change of path: from ${prePath} to ${this.path}`);
         this.changeAllParents(this.parentNode);
         if (newParent != this.parentNode) {
           this.parentNode = newParent;
+          // preParent.children
+          // newParent.children.push(this);
           this.changeAllParents(this.parentNode);
         }
         if (postAction)
@@ -156,7 +183,7 @@ export class GithubTreeNode {
     if (found != -1) {
       this.state.push(NodeStateAction.Deleted);
       let removedOne = this.parentNode.children.splice(found, 1);
-      this.parentNode.removedChildren = this.parentNode.removedChildren.concat(removedOne);
+      this.parentNode.removedChildren = [...this.parentNode.removedChildren, ...removedOne];
       this.changeAllParents(this.parentNode);
       if (postAction)
         postAction(this);
@@ -338,7 +365,7 @@ export class GithubTreeNode {
       type: this.type,
       size: this.size,
       url: this.url,
-      extra: {state: this.state}
+      extra: {state: [... this.state], removedChildren: this.removedChildren?.map(v => v.toGithubNode())}
     };
     return node;
   }
@@ -358,14 +385,18 @@ export class GithubTreeNode {
       return node;
     }
 
-    createRootNode(sha: string) {
-      let node = new GithubTreeNode(true);
-      node._type = 'tree';
-      node._sha = sha;
-      node._path = '';
-      node.children = [];
-      node.removedChildren = [];
-      return node;
+    createRootNode(sha: string, removedChildren: GithubNode[]) {
+      let root = new GithubTreeNode(true);
+      root._type = 'tree';
+      root._sha = sha;
+      root._path = '';
+      root.children = [];
+      root.removedChildren = (!removedChildren ? [] : removedChildren.map(node => {
+        let githubTreeNode = this.of(node);
+        githubTreeNode.setParentNode(root);
+        return githubTreeNode;
+      }));
+      return root;
     }
 
     of(v: GithubNode) {
@@ -384,7 +415,11 @@ export class GithubTreeNode {
         })
       if (real._type == 'tree') {
         real.children = [];
-        real.removedChildren = [];
+        real.removedChildren = [...(!v?.extra?.removedChildren ? [] : v.extra.removedChildren.map(node => {
+          let githubTreeNode = this.of(node);
+          githubTreeNode.setParentNode(real);
+          return githubTreeNode;
+        }))];
       }
 
       return real;

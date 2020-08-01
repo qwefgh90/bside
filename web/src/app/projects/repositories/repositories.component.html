@@ -2,45 +2,85 @@
   <div class="repos" [ngStyle.xs]="{'width': 'unset'}" [ngStyle.sm]="{'width': 'unset'}">
     <mat-nav-list color="primary">
       <div class="custom-sub-header">
-        <h2>Projects<span *ngIf="repositories != undefined">({{repositories.length}})</span></h2>
+        <div class="repo-label" >
+          <mat-icon>notes</mat-icon>&nbsp;Your Repositories
+        </div>
         <div class="spacer"></div>
         <div class="filter">
-          <mat-form-field color="primary"><input matInput placeholder="" [formControl]="searchInputFormControl" />
-            <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
-
+          <form>
+            <mat-form-field>
+              <input matInput placeholder="" [formControl]="searchInputFormControl" />
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Sorted by</mat-label>
+              <mat-select [formControl]="selectedOptionForSorting">
+                <mat-option [value]="Updated">
+                  Updated
+                </mat-option>
+                <mat-option [value]="Edited">
+                  Edited
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </form>
         </div>
       </div>
-      <mat-divider color=""></mat-divider>
       <div class="items" *ngIf="repositories">
-        <a mat-list-item routerLink="/repos/{{repo.full_name}}" (click)="startLoading(repo.name)"
-          *ngFor="let repo of getRepositories()">
-          <mat-icon mat-list-icon>folder</mat-icon>
-          <div mat-line style="display: flex;">
-            <h3 style="margin: 0px;font-weight: unset;">{{repo.name}}</h3>
-            <div *ngIf="repo?.private"><span
-                style="font-size: 0.7em;margin: 0px; vertical-align: middle; margin-left: 0.4em; font-weight: bold;">private</span>
-            </div>
+        <div mat-list-item class="item" *ngFor="let repo of repositories" fxLayout fxLayoutGap="1em">
+          <div fxLayout fxLayoutAlign="center center" class="left-icon">
+            <mat-icon *ngIf="repo.homepage != '' && repo.homepage != undefined" class="pageview">
+              <a target="_blank" href="{{repo.homepage}}">pageview</a>
+            </mat-icon>
+            <mat-icon *ngIf="repo.homepage == undefined || repo.homepage == ''">
+              <a>folder</a>
+            </mat-icon>
           </div>
-          <p mat-line>{{repo.updated_at | date:'short'}}</p>
-          <div style="text-align: center;" *ngIf="repo.name == repositoryToLoad">
-            <mat-spinner style="display: inline-block" [diameter]="25"></mat-spinner>
+          <div fxFlex="100">
+            <a routerLink="/repos/{{repo.full_name}}" (click)="startLoading(repo.name)">
+              <div class="repo-link" fxLayout>
+                <div fxLayout="column" fxFlex="100">
+                  <div class="repository-name-box">
+                    <div class="repository-name">{{repo.name}}</div>
+                    <div *ngIf="repo?.private"><span
+                        style="font-size: 0.7em;margin: 0px; vertical-align: middle; margin-left: 0.4em; font-weight: bold;">private</span>
+                    </div>
+                    <div style="flex:1"></div>
+                    <div fxLayout fxLayoutAlign="center center" class="spinner-box"
+                      *ngIf="repo.name == repositoryToLoad">
+                      <mat-spinner style="display: inline-block" [diameter]="18"></mat-spinner>
+                    </div>
+                    <div fxLayout fxLayoutAlign="center center" class="bookmark-box">
+                      <mat-icon *ngIf="bookmarkList.has(repo.full_name)" (click)="addBookmark($event, repo)"
+                        class="bookmark">bookmark</mat-icon>
+                      <mat-icon *ngIf="!bookmarkList.has(repo.full_name)" (click)="removeBookmark($event, repo)"
+                        class="bookmark">bookmark_border</mat-icon>
+                    </div>
+                  </div>
+                  <div class="repo-info" fxLayout>
+                    <div fxFlex="100" fxLayout fxLayoutAlign="flex-start flex-end">
+                      <div fxLayout fxLayoutAlign="flex-start center"><img src="assets/GitHub-Mark-32px.png" class="logo-img">Updated {{repo.pushed_at | timeAgo}}&nbsp;</div>
+                      <div fxLayout fxLayoutAlign="flex-start center" *ngIf="lastEditTimeAndDirtyCount.has(repo?.id)"><img src="assets/logo.png" class="logo-img">
+                        <!-- Changes in&nbsp;<span style="font-weight: bold;">{{lastEditTimeAndDirtyCount.get(repo.id).dirtyCount}} 
+                        file<span *ngIf="lastEditTimeAndDirtyCount.get(repo.id).dirtyCount > 1">s</span></span> -->
+                        Edited
+                        {{lastEditTimeAndDirtyCount.get(repo.id).date | timeAgo}}&nbsp;</div>
+                    </div>
+                    <mat-icon *ngIf="repo.language">language</mat-icon>
+                    <span *ngIf="repo.language">{{repo.language}}</span>
+                  </div>
+                </div>
+              </div>
+            </a>
           </div>
-        </a>
+        </div>
       </div>
       <div class="progress-box" *ngIf="!repositories">
         <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
           <mat-spinner style="display: inline-block" [strokeWidth]="10"></mat-spinner>
-          <span>Repositories...</span>
+          <span>Fetching...</span>
         </div>
       </div>
-      <!-- <mat-divider></mat-divider>
-  <h3 mat-subheader>Notes</h3>
-  <mat-list-item *ngFor="let note of notes">
-    <mat-icon mat-list-icon>note</mat-icon>
-    <h4 mat-line>{{note.name}}</h4>
-    <p mat-line> {{note.updated | date}} </p>
-  </mat-list-item> -->
     </mat-nav-list>
   </div>
 </div>

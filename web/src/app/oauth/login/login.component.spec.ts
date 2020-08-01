@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed, fakeAsync, tick, flushMicrotasks } fr
 
 import { LoginComponent, LOCATION_TOKEN, LoginStatus } from './login.component';
 import { OAuthService } from '../service/o-auth.service';
-import { defer, ReplaySubject } from 'rxjs'
+import { defer, ReplaySubject, Subject } from 'rxjs'
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -14,6 +14,7 @@ import { environment } from 'src/environments/environment';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Params, convertToParamMap } from '@angular/router';
 import { CookieToken } from 'src/app/db/cookie';
+import { Store } from '@ngrx/store';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -21,8 +22,11 @@ describe('LoginComponent', () => {
   let oauthServiceSpy;
   let locationSpy;
   let routeStub;
+  let storeSpy;
   let cookie = {autoLogin: false, includingPrivate: false};
   beforeEach(async(() => {
+    storeSpy = jasmine.createSpyObj("Store", ['dispatch', 'pipe']);
+    (storeSpy.pipe as jasmine.Spy).and.returnValue(new Subject());
     oauthServiceSpy = jasmine.createSpyObj('OAuthService', ['intialOAuthInfo'])
     oauthServiceSpy.intialOAuthInfo.and.returnValue(asyncData({state: 'state', client_id: 'client_id'}).toPromise())
     locationSpy = jasmine.createSpyObj('Location', ['assign'])
@@ -33,6 +37,7 @@ describe('LoginComponent', () => {
         {provide: ActivatedRoute, useValue: routeStub},
         {provide: OAuthService, useValue: oauthServiceSpy},
         {provide: LOCATION_TOKEN, useValue: locationSpy},
+        {provide: Store, useValue: storeSpy},
         {provide: CookieToken, useValue: cookie}],
       imports: [
           BrowserAnimationsModule,
@@ -63,12 +68,13 @@ describe('LoginComponent', () => {
     tick();
     expect(component).toBeTruthy();
     component.login();
-    let spy = locationSpy.assign as jasmine.Spy;
-    expect(spy.calls.count()).toBe(1);
-    let githubLocation: string = spy.calls.first().args[0];
-    expect(githubLocation).toContain("state=state")
-    expect(githubLocation).toContain("client_id=client_id")
-    expect(githubLocation).toContain(component.makeRedirectUrl());
+    let assignSpy = locationSpy.assign as jasmine.Spy;
+    expect(assignSpy.calls.count()).toBe(1);
+    let githubLocation: string = assignSpy.calls.first().args[0];
+    expect(githubLocation).toContain("state=state");
+    expect(githubLocation).toContain("client_id=client_id");
+    expect(githubLocation).toContain("scope=public_repo");
+    expect(githubLocation).toContain(component.redirectUrl);
     expect(component.status).toBe(LoginStatus.Initialized)
     console.debug('github location: ' + githubLocation);
   }));

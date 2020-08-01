@@ -1,0 +1,20 @@
+.outer{
+    margin-top: 2em;
+}
+.app-repositories{
+    display: flex;
+    flex: 1;
+    max-width: 60%;
+    min-height: 0px;
+}
+.app-user-profile{
+}
+.app-history{
+}
+.left{
+    flex: 1;
+    max-width: 40%;
+}
+.outer-gt-md{
+    width: 1080px;
+}

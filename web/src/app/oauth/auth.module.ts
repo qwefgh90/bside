@@ -44,10 +44,14 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { DatabaseToken } from '../db/database';
 import { LocalDbService } from '../db/local-db.service';
 import { CookieToken } from '../db/cookie';
+import { authReducerKey, authReducer } from './auth.reducer';
+import { StoreModule } from '@ngrx/store';
+import { StoreRouterConnectingModule } from '@ngrx/router-store';
 
 @NgModule({
   declarations: [LoginComponent, RedirectComponent],
   imports: [
+    StoreModule.forFeature(authReducerKey, authReducer),
     CommonModule,
     AuthRoutingModule,
     HttpClientModule,

@@ -109,16 +109,12 @@
 .spacer{
     flex: 1; 
 }
-.toolbar{
-    display: flex;
-    flex-direction: row; 
-    width: 100%;
-    padding-top: 0.5em;
-    align-items: center;
-}
 .fileName{
     font-size: 1.4em;
     word-break: break-word;
+    padding-left: 1em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
 }
 .loading{    
     margin-left: 1em;
@@ -126,4 +122,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+.buttons{
+    z-index: 9999;
+    position: absolute;
+    right: 0px;
+}
+.toolbar{
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    margin: 0em 0em 0.5em 0em;
 }

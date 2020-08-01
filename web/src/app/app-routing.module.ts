@@ -7,7 +7,6 @@ const routes: Routes = [
   {
     path: "repos", 
     loadChildren: () => import('./workspace/workspace.module').then(m => m.WorkspaceModule)
-    // loadChildren: './workspace/workspace.module#WorkspaceModule'
   }
 ];
 

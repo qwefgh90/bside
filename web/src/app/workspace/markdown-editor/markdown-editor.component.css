@@ -4,3 +4,7 @@
     height: 100%;
     /* margin-bottom: 2em; */
 }
+:host{
+    flex:1;
+    min-height: 0px;
+}

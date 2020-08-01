@@ -22,7 +22,7 @@
 
 .frame {
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
 }
 
@@ -32,13 +32,47 @@
     display: flex;
 }
 
-router-outlet + ::ng-deep * {
+.mobile-workspace {
+  flex-direction: column;
+  height: auto;
+  display: flex;
+}
+
+app-workspace-initializer{
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  min-height: 0px;
+  flex-direction: column;
+}
+
+app-welcome {
     flex-grow: 1;
     display: flex;
     justify-content: center;
     min-height: 0px;
     flex-direction: column;
-    /* height: 1000px; */
+}
+
+app-user-board {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  min-height: 0px;
+}
+
+app-login{
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  min-height: 0px;
+}
+
+app-redirect{
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  min-height: 0px;
 }
 
 .cookie-outer {

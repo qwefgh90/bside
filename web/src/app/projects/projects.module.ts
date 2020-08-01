@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
+import {TimeAgoPipe} from 'time-ago-pipe';
 import { ProjectsRoutingModule } from './projects-routing.module';
 import { RepositoriesComponent } from './repositories/repositories.component';
 import { MatListModule } from '@angular/material/list';
@@ -10,9 +10,19 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { UserBoardComponent } from './user-board/user-board.component';
+import { HistoryComponent } from './history/history.component';
+import { UserProfileComponent } from './user-profile/user-profile.component';
+import { StoreModule } from '@ngrx/store';
+import { projectsReducerKey, projectsReducer } from './projects.reducer';
+import { MatSelectModule } from '@angular/material/select';
+import {MatBadgeModule} from '@angular/material/badge';
+import {TimeAgoExtendsPipe} from '../pipe/time-ago-extend-pipe';
+
 @NgModule({
-  declarations: [RepositoriesComponent],
+  declarations: [RepositoriesComponent, UserBoardComponent, HistoryComponent, UserProfileComponent, TimeAgoExtendsPipe],
   imports: [
+    StoreModule.forFeature(projectsReducerKey, projectsReducer),
     CommonModule,
     ProjectsRoutingModule,
     MatListModule,
@@ -22,7 +32,9 @@ import { FlexLayoutModule } from '@angular/flex-layout';
     MatInputModule,
     FormsModule,
     ReactiveFormsModule,
-    FlexLayoutModule
+    FlexLayoutModule,
+    MatSelectModule,
+    MatBadgeModule
   ]
 })
 export class ProjectsModule { }

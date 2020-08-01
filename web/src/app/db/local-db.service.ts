@@ -95,6 +95,21 @@ export class LocalDbService implements Database, Cookie {
     return Promise.resolve(res);
   }
 
+  listAll(): Promise<Array<WorkspacePack>> {
+    let res = [];
+    Object.keys(this.storage).forEach(k => {
+      let json = localStorage.getItem(k);
+      try {
+        if (json != undefined && json != '') {
+          let pack = JSON.parse(LZString.decompressFromUTF16(json)) as WorkspacePack;
+          return res.push(pack);
+        }
+      } catch (e) { }
+    }
+    )
+    return Promise.resolve(res);
+  }
+
   delete(repositoryId: number, branchName: string, commit_sha: string) {
     this.storage.removeItem(repositoryId + '-' + branchName + '-' + commit_sha);
   }

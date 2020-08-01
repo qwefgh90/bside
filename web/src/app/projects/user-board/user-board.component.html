@@ -1,0 +1,7 @@
+<div [ngClass.gt-md]="{'outer-gt-md': true}" fxLayout.lt-md="column" fxLayout.gt-sm="row" fxLayoutAlign="center" class="outer">
+  <div fxLayout="column" [ngClass.gt-sm]="{'left': true}">
+    <app-user-profile></app-user-profile>
+    <app-history></app-history>
+  </div>
+  <app-repositories [ngStyle.lt-md]="{'max-width': 'unset'}"></app-repositories>
+</div>

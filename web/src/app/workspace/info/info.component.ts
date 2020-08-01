@@ -2,6 +2,7 @@ import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FileType, TextUtil } from '../text/text-util';
 import { NodeStateAction } from '../tree/github-tree-node';
+import { RepositoryType } from 'src/app/github/wrapper.service';
 
 @Component({
   selector: 'app-info',
@@ -10,11 +11,13 @@ import { NodeStateAction } from '../tree/github-tree-node';
 })
 export class InfoComponent implements OnInit {
 
+  json: String;
+
   constructor(
     private dialogRef: MatDialogRef<InfoComponent>,
     @Inject(MAT_DIALOG_DATA) public data: DisplayInfo) {
-      
-     }
+      this.json = JSON.stringify(data.repositoryJSON);
+  }
 
   ngOnInit() {
   }
@@ -22,7 +25,7 @@ export class InfoComponent implements OnInit {
   getLabel: (v: NodeStateAction) => any = getLabel;
 }
 
-export interface DisplayInfo{
+export interface DisplayInfo {
   name: string;
   path: string;
   size: number;
@@ -30,17 +33,18 @@ export interface DisplayInfo{
   rawUrl: string;
   states: NodeStateAction[];
   htmlUrl: string;
+  repositoryJSON: RepositoryType
 }
 
 export let labelTable = {
-  "C": {short: "C", name: "Created"},
-  "CM": {short: "CM", name: "Modified content"},
-  "M": {short: "M", name: "Moved"},
-  "NM": {short: "NM", name: "Modified name"},
-  "D": {short: "D", name: "Deleted"},
-  "T": {short: "T", name: "Changed tree"},
-  "U": {short: "U", name: "Uploaded"},
-  "E": {short: "E", name: "ETC"},
+  "C": { short: "C", name: "Created" },
+  "CM": { short: "CM", name: "Modified content" },
+  "M": { short: "M", name: "Moved" },
+  "NM": { short: "NM", name: "Modified name" },
+  "D": { short: "D", name: "Deleted" },
+  "T": { short: "T", name: "Changed tree" },
+  "U": { short: "U", name: "Uploaded" },
+  "E": { short: "E", name: "ETC" },
 };
 
 export function getLabel(v: NodeStateAction) {
@@ -58,6 +62,6 @@ export function getLabel(v: NodeStateAction) {
     return labelTable["T"];
   else if (v == NodeStateAction.Uploaded)
     return labelTable["U"];
-  else 
+  else
     return labelTable["E"];
 }

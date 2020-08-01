@@ -1,5 +1,5 @@
 import { WorkspacePack } from './workspace-pack';
 
 export interface WorkspaceChild {
-    load(pack: WorkspacePack)
+    load(pack: WorkspacePack | undefined)
 }

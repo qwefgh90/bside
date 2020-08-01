@@ -23,12 +23,13 @@ export class Interceptor implements HttpInterceptor {
         let wrapperReq: HttpRequest<any>;
         if ((req.method.toLowerCase() == "get") && this.etagMap.has(this.getKey(req))) {
             wrapperReq = req.clone({ headers: req.headers.set('If-None-Match', this.etagMap.get(this.getKey(req)))
-                // .set('Cache-Control', 'no-cache')
+                .set("If-Modified-Since", new Date().toUTCString())
+                // .set('Cache-Control', 'no-cache') // it's not allowed by Github
                 // .set('Pragma', 'no-cache')
                 // .set('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
             }); //use ETag
         } else {
-            wrapperReq = req;
+            wrapperReq = req.clone({ headers: req.headers.set('If-None-Match', "")}); // make a request for latest data
         }
         return next.handle(wrapperReq).pipe(tap(
             event => {

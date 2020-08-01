@@ -6,6 +6,8 @@ import { togglePreview } from 'easymde';
 import { TextUtil, FileType } from '../text/text-util';
 import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { NotifyContentChangeAction } from '../core/action/user/notify-content-change-action';
+import { Store } from '@ngrx/store';
+import { notifyChangesInContent } from '../workspace.actions';
 
 
 @Component({
@@ -13,7 +15,7 @@ import { NotifyContentChangeAction } from '../core/action/user/notify-content-ch
   templateUrl: './markdown-editor.component.html',
   styleUrls: ['./markdown-editor.component.css']
 })
-export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit {
+export class MarkdownEditorComponent implements Editor, OnInit, AfterContentInit {
 
   models: Map<string, string> = new Map<string, string>();
   current: {path: string, content: string} = {
@@ -21,7 +23,7 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
     content: undefined
   };
   mde: EasyMDE;
-  constructor(private dispatcher: UserActionDispatcher) {
+  constructor(private store: Store) {
   }
 
   @Input("preview")
@@ -47,7 +49,7 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
     if (!this.preview) {
       this.mde.codemirror.on("change", () => {
         this.models.set(this.current.path, this.mde.value());
-        new NotifyContentChangeAction(this.current.path, this, this.dispatcher);
+        this.store.dispatch(notifyChangesInContent({path: this.current.path}));
       });
     }
   }
@@ -57,7 +59,7 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
   }
 
   load(pack: WorkspacePack) {
-    pack.editorPacks.forEach((v) => {
+    pack?.editorPacks?.forEach((v) => {
       let content;
       let type = TextUtil.getFileType(v.path);
       if (type == FileType.Text) {
@@ -85,6 +87,9 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
    */
   setContent(path: string, content: string) {
     this.models.set(path, content);
+    if(this.current.path == path){ // update the markdown editor
+      this.select(path);
+    }
   }
   /**
    * whether a path exists as a model linked to the path
@@ -116,8 +121,11 @@ export class MarkdownEditorComponent implements OnInit, Editor, AfterContentInit
   /**
    * go to markdown view
    */
-  md() {
-    togglePreview(this.mde);
+  md(on: boolean) {
+    if(on && !this.isMdOn)
+      togglePreview(this.mde);
+    else if(!on && this.isMdOn)
+      togglePreview(this.mde);
   }
   /**
    * get a path list

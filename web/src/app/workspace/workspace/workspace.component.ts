@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, Inject } from '@angular/core';
-import { WrapperService } from 'src/app/github/wrapper.service';
+import { Component, OnInit, OnDestroy, ViewChild, AfterContentInit, Inject, Input, ComponentFactoryResolver, ViewEncapsulation, ViewRef, ComponentRef } from '@angular/core';
+import { WrapperService, RepositoryType } from 'src/app/github/wrapper.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription, Subject, combineLatest, from, ReplaySubject, empty, of } from 'rxjs';
+import { Subscription, Subject, combineLatest, from, ReplaySubject, empty, of, timer, interval, Observable } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSelectChange } from '@angular/material/select';
 import { MatDrawer } from '@angular/material/sidenav';
@@ -31,24 +31,32 @@ import {
 import { DeviceDetectorService } from 'ngx-device-detector';
 import { InfoComponent, DisplayInfo } from '../info/info.component';
 import { BuildHistoryComponent } from '../build-history/build-history.component';
-import { async } from '@angular/core/testing';
-import { MicroActionComponentMap, SupportedComponents } from '../core/action/micro/micro-action-component-map';
-import { WorkspaceRenameMicroAction } from '../core/action/micro/workspace-rename-micro-action';
-import { WorkspaceSelectMicroAction } from '../core/action/micro/workspace-select-micro-action';
-import { SelectAction } from '../core/action/user/select-action';
-import { WorkspaceRemoveNodeMicroAction } from '../core/action/micro/workspace-remove-node-micro-action';
-import { WorkspaceCreateMicroAction } from '../core/action/micro/workspace-create-micro-action';
-import { WorkspaceContentChangeMicroAction } from '../core/action/micro/workspace-content-change-micro-action';
-import { WorkspaceSnapshotMicroAction, WorkspaceSnapshot } from '../core/action/micro/workspace-snapshot-micro-action';
-import { SaveAction } from '../core/action/user/save-action';
-import { WorkspaceClearMicroAction } from '../core/action/micro/workspace-clear-micro-action';
-import { WorkspaceUndoMicroAction as WorkspaceUndoMicroAction } from '../core/action/micro/workspace-undo-micro-action';
-import { UserActionDispatcher } from '../core/action/user/user-action-dispatcher';
 import { MatCheckbox } from '@angular/material/checkbox';
-import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, timestamp, map, filter } from 'rxjs/operators';
+import { bufferCount, bufferTime, distinctUntilChanged, debounceTime, tap, timestamp, map, filter, switchMap, takeUntil, takeWhile, skipWhile, retry, take, delay } from 'rxjs/operators';
 import { Timestamp } from 'rxjs/internal/operators/timestamp';
+import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
+import { WorkspaceState, workspaceReducerKey } from '../workspace.reducer';
+import { selectPath as selectPathWithRouterOrSnapshot, monacoLoaded, workspaceDestoryed, requestToSave, updateWorkspaceSnapshot, createNewGithubTree, removedNodeAddedToTree } from '../workspace.actions';
+import { selectQueryParam, selectRouteParam } from 'src/app/app-routing.reducer';
+import { DOCUMENT } from '@angular/common';
+import { WorkspaceSnapshot } from '../core/action/micro/workspace-snapshot-micro-action';
+import { MarkdownEditorComponent } from '../markdown-editor/markdown-editor.component';
+import { RepositoryInformation } from '../workspace-initializer/workspace-initializer.component';
+import { routerRequestAction } from '@ngrx/router-store';
+import { TypeState } from 'typestate';
+import { IndexedDbService } from 'src/app/db/indexed-db.service';
+import { IndexedDBState } from 'src/app/db/indexed-db.reducer';
+import { EditorDirective } from './editor.directive';
+import { EditorComponent } from '../editor/editor.component';
+import { DiffEditorComponent } from '../diff-editor/diff-editor.component';
 
 declare const monaco;
+
+export enum EditorStatusOnWorkspace{
+  Editor,
+  Diff,
+  Md
+}
 
 export enum TreeStatusOnWorkspace {
   Loading, Committing, NotInitialized, Done, Fail, TreeEmpty, BranchChanging
@@ -79,71 +87,130 @@ export enum WorkspaceStatus {
       transition('in => out', [animate('800ms ease-in')])
     ])
   ]
+
 })
 export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
+  @Input() parameter: RepositoryInformation;
   FileType = FileType;
   TreeStatus = TreeStatusOnWorkspace;
+  EditorType = EditorStatusOnWorkspace;
   ContentStatus = ContentStatusOnWorkspace;
   WorkspaceStatus = WorkspaceStatus;
   constructor(private wrapper: WrapperService, private monacoService: MonacoService, private route: ActivatedRoute
     , private router: Router, private sanitizer: DomSanitizer, @Inject(DatabaseToken) private database: Database
-    , private userActionDispatcher: UserActionDispatcher
     , public detector: DeviceDetectorService
-    , public dialog: MatDialog) {
+    , public dialog: MatDialog, private store: Store<{}>,
+    @Inject(DOCUMENT) private document: Document
+    , private indexedDBService: IndexedDbService
+    , private componentFactoryResolver: ComponentFactoryResolver) {
     this.isDesktop = this.detector.isDesktop();
   }
-
   @ViewChild("tree", { static: true }) tree: GithubTreeComponent;
   @ViewChild("editor1") editor1: Editor;
   @ViewChild("editor2") editor2: Editor;
+  // @ViewChild("preview") preview: MarkdownEditorComponent;
   @ViewChild("stage", { static: true }) stage: Stage;
   @ViewChild("action", { static: true }) action: ActionComponent;
   @ViewChild(CommitProgressComponent, { static: true }) commitProgress: CommitProgressComponent;
   @ViewChild(TabComponent, { static: true }) tab: Tab;
-  @ViewChild("autoSaveRef", { static: true}) autoSaveRef: MatCheckbox;
+  @ViewChild("autoSaveRef", { static: true }) autoSaveRef: MatCheckbox;
 
-  get editor(): Editor {
-    return this.isDesktop ? this.editor1 : this.editor2;
+  @ViewChild(EditorDirective, {static: true}) editorHost: EditorDirective;
+  get visibleEditor(): Editor {
+    return this.isDesktop ? this.EditorRef.instance : this.MarkdownEditorRef.instance;
+  }
+  get visibleEditorRef(): ComponentRef<EditorComponent | MarkdownEditorComponent> {
+    return this.isDesktop ? this.EditorRef : this.MarkdownEditorRef;
   }
 
+  EditorRef: ComponentRef<EditorComponent>;
+  diffEditorRef: ComponentRef<DiffEditorComponent>;
+  MarkdownEditorRef: ComponentRef<MarkdownEditorComponent>;
+  PreviewRef: ComponentRef<MarkdownEditorComponent>;
+  // visibleEditor: MarkdownEditorComponent | EditorComponent;
+  preview: MarkdownEditorComponent;
+  private loadEditor() {
+    const viewContainerRef = this.editorHost.viewContainerRef;
+    viewContainerRef.clear();
+    const componentFactory = this.componentFactoryResolver.resolveComponentFactory(EditorComponent);
+    const componentRef = viewContainerRef.createComponent(componentFactory);
+    const componentFactory2 = this.componentFactoryResolver.resolveComponentFactory(MarkdownEditorComponent);
+    const componentRef2 = viewContainerRef.createComponent(componentFactory2);
+    const componentFactory3 = this.componentFactoryResolver.resolveComponentFactory(MarkdownEditorComponent);
+    const componentRef3 = viewContainerRef.createComponent(componentFactory3);
+    const componentFactory4 = this.componentFactoryResolver.resolveComponentFactory(DiffEditorComponent);
+    const componentRef4 = viewContainerRef.createComponent(componentFactory4);
+    this.EditorRef = componentRef;
+    this.MarkdownEditorRef = componentRef2;
+    this.PreviewRef = componentRef3;
+    this.diffEditorRef = componentRef4;
+    // this.visibleEditor = componentRef.instance;
+    this.preview = componentRef3.instance;
+    this.preview.preview = true;
+
+    (this.EditorRef.location.nativeElement as HTMLElement).style.display="none";
+    (this.MarkdownEditorRef.location.nativeElement as HTMLElement).style.display="none";
+    (this.PreviewRef.location.nativeElement as HTMLElement).style.display="none";
+    (this.diffEditorRef.location.nativeElement as HTMLElement).style.display="none";
+    setTimeout(() => { // initializing components takes some time.
+      (this.EditorRef.location.nativeElement as HTMLElement).style.display="block";
+      (this.MarkdownEditorRef.location.nativeElement as HTMLElement).style.display="block";
+      (this.PreviewRef.location.nativeElement as HTMLElement).style.display="block";
+      (this.diffEditorRef.location.nativeElement as HTMLElement).style.display="block";
+      this.detachAllFromEditorHost();
+      // this.insertComponentIntoEditorHost(this.visibleEditorRef.hostView);
+    }, 1000);
+  }
+  
+  private insertComponentIntoEditorHost(viewRef: ViewRef){
+    this.editorHost.viewContainerRef.insert(viewRef);
+  }
+
+  private detachAllFromEditorHost(){
+    const len = this.editorHost.viewContainerRef.length;
+    for(let i=0; i<len; i++){
+      this.editorHost.viewContainerRef.detach(0);
+    }
+  }
+
+  getFileName = TextUtil.getFileName;
+
+  editorStatusFsm = new TypeState.FiniteStateMachine<EditorStatusOnWorkspace>(EditorStatusOnWorkspace.Editor);
   isDesktop = false;
+  //these variables synchronized with router
+  //these variables sent to child components
   userId;
   repositoryName;
-  repositoryDetails;
+  repositoryDetails: RepositoryType;
   branches: Array<any>;
   selectedBranch;
   selectedCommit;
   root: GithubTreeNode;
   nodesToStage: GithubTreeNode[];
-  saveActionSubject: Subject<any> = new Subject();
 
-  selectedNodePath: string;
-  encoding = 'utf-8'
+  //const
+  defaultEncoding = 'utf-8';
+  placeholderForCommit: string = `it's from ${window.location}`;
+  //local state
+  saveActionSubject: Subject<any> = new Subject();
+  contentChangeSubject: Subject<{path: string}> = new Subject();
+  contentStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
+  treeStatus: TreeStatusOnWorkspace = TreeStatusOnWorkspace.NotInitialized;
+  workspaceStatus: WorkspaceStatus = WorkspaceStatus.View;
   encodingMap: Map<string, string> = new Map<string, string>();
   selectedFileType: FileType;
   selectedImagePath: SafeResourceUrl;
   selectedRawPath: SafeResourceUrl;
-  placeholderForCommit: string = `it's from ${window.location}`
+  selectedNodePath: string;
+  errorDescription: string;
 
   dirtyCount: number = 0;
-  contentStatus: ContentStatusOnWorkspace = ContentStatusOnWorkspace.NotInitialized;
-  treeStatus: TreeStatusOnWorkspace = TreeStatusOnWorkspace.NotInitialized;
-  workspaceStatus: WorkspaceStatus = WorkspaceStatus.View;
-  errorDescription: string;
-  commitStatePack: WorkspacePack;
-  afterCommit: boolean;
-  afterViewInit: Subject<void> = new ReplaySubject(1);;
 
   subjectWithoutSaveFile = new Subject<string>();
 
   subjectWithSaveFile = new Subject<WorkspacePack>();
-  refreshSubject = new Subject<void>()
-  sameUrlNavigationSubject = new Subject<void>()
   subscriptions: Array<Subscription> = []
   leftPaneOpened = false;
-
-  saveBufferPeriod = 10;
-  saveTimePeriod = 15000;
 
   @ViewChild("leftDrawer") leftPane: MatDrawer;
   @ViewChild("rightDrawer") rightPane: MatDrawer;
@@ -151,218 +218,262 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   isBeingChanged = false;
   saving = false;
 
-  ngOnInit() {
-    let monacoLoaderSubject = from(this.initalizeVSLoader());
-
-    //It saves data when the content is modified.
-    this.subscriptions.push(this.saveActionSubject.pipe(bufferCount(10)).subscribe(() => {
-      this.dispatchSaveAction(true);
-    }));
-    this.subscriptions.push(this.saveActionSubject.pipe(tap(() => {
-    }), debounceTime(15000)).subscribe(() => {
-      this.dispatchSaveAction(true);
-    }));
-    
-    this.subscriptions.push(MicroActionComponentMap.getSubjectByComponent(SupportedComponents.WorkspaceComponent).subscribe(async (micro) => {
-      if (micro instanceof WorkspaceRenameMicroAction) {
-        try {
-          this.nodeMoved(micro.oldPath, this.tree.get(micro.newPath));
-          this.dispatchSaveAction(this.autoSaveRef.checked);
-          micro.succeed(() => { });
-        } catch(ex){
-          micro.fail(ex);
-        }
-      } else if (micro instanceof WorkspaceSelectMicroAction) {
-        try {
-          let path = micro.selectedPath;
-          if(this.route.snapshot.queryParams['path'] == path){
-            this.sameUrlNavigationSubject.next();
-          }else{
-            this.router.navigate([], {queryParamsHandling: 'merge', queryParams: {path: path}});
-          }
-          micro.succeed(() => { });
-        } catch(ex){
-          micro.fail(ex);
-        }
-      } else if (micro instanceof WorkspaceRemoveNodeMicroAction) {
-        try {
-          let path = micro.removedPath;
-          this.nodeRemoved(path);
-          this.dispatchSaveAction(this.autoSaveRef.checked);
-          micro.succeed(() => { });
-        } catch(ex){
-          micro.fail(ex);
-        }
-      } else if (micro instanceof WorkspaceCreateMicroAction) {
-        try {
-          if (this.selectedNodePath != micro.path) {
-            this.nodeCreated(micro.path);
-            this.dispatchSaveAction(this.autoSaveRef.checked);
-          }
-          micro.succeed(() => { });
-        } catch(ex){
-          micro.fail(ex);
-        }
-      } else if (micro instanceof WorkspaceContentChangeMicroAction) {
-        try {
-          await this.nodeContentChanged(micro.path);
-          this.dispatchSaveAction(this.autoSaveRef.checked);
-          micro.succeed(() => { });
-        } catch(ex){
-          micro.fail(ex);
-        }
-      } else if (micro instanceof WorkspaceSnapshotMicroAction) {
-        if (this.treeStatus == TreeStatusOnWorkspace.Done) {
-          this.saving = true;
-          micro.parent.promise().finally(() => {
+  fsm(){
+    this.editorStatusFsm.fromAny(EditorStatusOnWorkspace).toAny(EditorStatusOnWorkspace);
+    this.editorStatusFsm.onEnter(EditorStatusOnWorkspace.Diff, (from) => {
+      this.detachAllFromEditorHost();
+      let nodes = this.root.getBlobNodes();
+      const filteredNodes = nodes.filter((v) => {
+        return v.path == this.selectedNodePath && !v.state.includes(NodeStateAction.Created);
+      });
+      if (filteredNodes.length == 1) {
+        let node = filteredNodes[0];
+        let type = TextUtil.getFileType(node.name);
+        if (type == FileType.Text) {
+          let editedContent = this.visibleEditor.getContent(this.selectedNodePath);
+          this.getOriginalText(node.sha).then((content: string) => {
             setTimeout(() => {
-              this.saving = false;
-            }, 300);
-          })
-          micro.succeed(() => { }, this.getSnapshot());
-        } else {
-          micro.fail(new Error('the workspace component is not ready'));
-        }
-      }else if (micro instanceof WorkspaceClearMicroAction) {
-        try {
-          this.database.delete(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha);
-          this.editor.clear();
-          this.selectedNodePath = undefined;
-          this.refreshSubject.next();
-          micro.succeed(() => { });
-        } catch(ex) {
-          micro.fail(ex);
-        }
-      }else if (micro instanceof WorkspaceUndoMicroAction) {
-        try {
-          const node = this.tree.get(micro.path);
-          if (node != undefined) {
-            const asyncText = this.getOriginalText(node.sha)
-            await asyncText.then(async (text) => {
-              this.editor.setContent(micro.path, text);
-              await this.nodeContentChanged(micro.path);
-              this.dispatchSaveAction(this.autoSaveRef.checked);
-            })
-          }
-          micro.succeed(() => { });
-        } catch(ex) {
-          micro.fail(ex);
-        }
-      }
-      this.invalidateDirtyCount();
-    }));
-
-    /**
-     * After loading saved data and all children are loaded, send the packs to others components.
-     * Eventually, get() of the tree component is called, but it's impossible to catch when tree is loaded in GithubTreeComponent.
-     * So setTimeout() is needed
-    */
-    this.subscriptions.push(combineLatest(this.subjectWithSaveFile, this.afterViewInit, monacoLoaderSubject).subscribe(([pack]) => {
-      this.autoSaveRef.checked = pack.autoSave;
-      setTimeout(() => {
-        let firstLoadedPath = pack.selectedNodePath ;
-        this.editor.load(pack);
-        this.tab.load(pack);
-        new SelectAction(firstLoadedPath, this, this.userActionDispatcher).start();
-      }, 300);
-      console.log('workspace have been initialized with saved data.');
-    }))
-
-    /**
-     * After reloading component and all children are loaded, 
-     * pass the packs to others components.
-    */
-    this.subscriptions.push(combineLatest(this.subjectWithoutSaveFile, this.afterViewInit, monacoLoaderSubject).subscribe(([path]) => {
-      setTimeout(() => {
-      if(path)
-        new SelectAction(path, this, this.userActionDispatcher).start();
-      }, 300);
-      console.log('the workspace have been just loaded.');
-    }))
-
-    /**
-     * When parameters of url have some changes, initialize the workspace again. 
-     */
-    let pathWithSameUrlNavigation = this.sameUrlNavigationSubject.pipe(timestamp());
-    let branchChange = this.route.queryParams.pipe(timestamp());
-    this.subscriptions.push(combineLatest(this.route.paramMap.pipe(timestamp())
-      , branchChange
-      , this.refreshSubject.pipe(timestamp())
-      , pathWithSameUrlNavigation
-      )
-    .subscribe(([paramMapWithTS, branchChangeWithTS, refreshWithTS, pathWithSameUrlNavigationWithTS
-    ]) => {
-      let promise: Promise<void>;
-      let p = paramMapWithTS.value;
-      let q = branchChangeWithTS.value;
-      let branch = q['branch'];
-      let path = q['path'];
-      if([paramMapWithTS.timestamp, branchChangeWithTS.timestamp, refreshWithTS.timestamp].every(timestamp => timestamp < pathWithSameUrlNavigationWithTS.timestamp) ||
-          ([paramMapWithTS.timestamp, pathWithSameUrlNavigationWithTS.timestamp, refreshWithTS.timestamp].every(timestamp => timestamp < branchChangeWithTS.timestamp)
-          && (branch == undefined || (this.selectedBranch && (branch == this.selectedBranch.name))))){
-        console.debug(`The path becomes ${path}`);
-        if(path != this.selectedNodePath){
-          this.nodeSelected(path);
-          this.dispatchSaveAction(this.autoSaveRef.checked);
-          this.editor.shrinkExpand();
-        }
-      }else{
-        if (p.has('userId') && p.has('repositoryName')) {
-          const userId = p.get('userId');
-          const repositoryName = p.get('repositoryName');
-          const branchName = branch ? branch : (this.selectedBranch ? this.selectedBranch.name : undefined);
-          promise = this.initialize(userId, repositoryName, branchName, path);
-        } else {
-          promise = new Promise((r, reject) => {
-            reject('It does not have user id or repository name');
+              this.insertComponentIntoEditorHost(this.diffEditorRef.hostView);
+              this.diffEditorRef.instance.diffWith(this.selectedNodePath, content, this.selectedNodePath, editedContent)
+            }, 0);
           });
         }
-        promise.catch((err) => {
-          console.error(err);
-          this.errorDescription = err;
-          this.treeStatus = TreeStatusOnWorkspace.Fail;
-        });
+      } else {
+        console.warn(`${filteredNodes[0].path} are ${filteredNodes.length}. it's expected to be one`)
       }
-    }));
-
-    // Below lines are for making combineLatest work as soon as booting up.
-    this.refreshSubject.next();
-    this.sameUrlNavigationSubject.next();
+      return true;
+    });
+    this.editorStatusFsm.onEnter(EditorStatusOnWorkspace.Editor, (from) => {
+      this.detachAllFromEditorHost();
+      if(this.selectedFileType == FileType.Text){
+        this.insertComponentIntoEditorHost(this.visibleEditorRef.hostView);
+        this.preview.setContent("preview", "");
+        this.preview.select('preview');
+        this.visibleEditor.select(this.selectedNodePath);
+      }
+      return true;
+    });
+    this.editorStatusFsm.onEnter(EditorStatusOnWorkspace.Md, (from) => {
+      this.detachAllFromEditorHost();
+      this.insertComponentIntoEditorHost(this.PreviewRef.hostView);
+      this.preview.setContent("preview", this.visibleEditor.getContent());
+      this.preview.select('preview');
+      setTimeout(() => this.preview.md(true), 0);
+      return true;
+    });
   }
 
-  initialize(userId, repositoryName, branchName, initialPath): Promise<void> {
+  private ngrx(){
+    let feature = createFeatureSelector(workspaceReducerKey);
+    let selectedPathSelector = createSelector(feature, (state: WorkspaceState) => state.selectedPath);
+    let nodeSelector = createSelector(feature, (state: WorkspaceState) => state.selectedNode);
+    let editorSelector = createSelector(feature, (state: WorkspaceState) => state.editorLoaded);
+    let renamedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRenamingPath);
+    let createdNodeSelector = createSelector(feature, (state: WorkspaceState) => state.latestCreatedPath);
+    let pathToUndoSelector = createSelector(feature, (state: WorkspaceState) => state.latestPathToUndo);
+    let saveRequestSelector = createSelector(feature, (state: WorkspaceState) => state.latestSnapshot.requestTime);
+    let latestSnapshotSelector = createSelector(feature, (state: WorkspaceState) => state.latestSnapshot);
+    let removedPathSelector = createSelector(feature, (state: WorkspaceState) => state.latestRemovedPath);
+    let latestResetTimeSelector = createSelector(feature, (state: WorkspaceState) => state.latestResetTime);
+    let latestPathForChangesInContentSelector = createSelector(feature, (state: WorkspaceState) => state.latestPathForChangesInContent);
+    let databaseReadySelector = createSelector((state: {indexedDB: IndexedDBState}) => state.indexedDB, (state) => state.ready);
+    let selectedNode$ = this.store.pipe(select(createSelector(nodeSelector, editorSelector, (node, loaded) => ({node, loaded}))));
+    let s0 = selectedNode$.subscribe(({node, loaded}) => {
+      if (loaded) {
+        const lastNodePath = this.selectedNodePath;
+        const lastNodeType = this.selectedFileType
+        if(lastNodePath && lastNodeType == FileType.Text)
+          this.checkChangesInContent(lastNodePath);
+        let path = node?.path;
+        this.showContent(path);
+        this.requestToSave(this.autoSaveRef.checked);
+        this.editorStatusFsm.go(EditorStatusOnWorkspace.Editor);
+      }
+    });
+
+    let pathSelector$ = this.store.pipe(select(selectedPathSelector));
+    let s1 = pathSelector$.subscribe(path => {
+      if (path) {
+        if (this.route.snapshot.queryParams['path'] == path) {
+        } else {
+          this.router.navigate([], { queryParamsHandling: 'merge', queryParams: { path: path }, replaceUrl: true }); //synchronization with router
+        }
+      }
+    });
+
+    let renamedPath$ = this.store.pipe(select(renamedPathSelector));
+    let s2 = renamedPath$.subscribe((renameInfo) => {
+      if (renameInfo) {
+        let { oldPath, newPath } = renameInfo;
+        this.nodeMoved(oldPath, newPath);
+        this.invalidateDirtyCount();  
+        this.requestToSave(this.autoSaveRef.checked);
+      }
+    });
+
+    let removedPath$ = this.store.pipe(select(removedPathSelector));
+    let s8 = removedPath$.subscribe((removedPath) => {
+      if (removedPath) {
+        this.invalidateDirtyCount();
+        this.requestToSave(this.autoSaveRef.checked);
+      }
+    });
+
+    let latestPathForChanges$ = this.store.pipe(select(latestPathForChangesInContentSelector));
+    let s9 = latestPathForChanges$.pipe(map(({path, time}) => path)).subscribe(path => {
+      if (path) {
+        this.contentChangeSubject.next({path});
+      }
+    });
+
+    let latestResetTime$ = this.store.pipe(select(latestResetTimeSelector));
+    let s5 = latestResetTime$.subscribe((date) => {
+      if (date) {
+        this.indexedDBService.deleteByRepositoryIDAndBranchAndSha(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha).then(() => {
+          this.document.location.reload();
+        });
+      }
+    });
+
+    let createdNode$ = this.store.pipe(select(createdNodeSelector));
+    let s3 = createdNode$.subscribe((path) => {
+      if (this.selectedNodePath != path) {
+        this.nodeCreated(path);
+        this.invalidateDirtyCount();
+        this.requestToSave(this.autoSaveRef.checked);
+      }
+    });
+
+    let pathToUndo$ = this.store.pipe(select(pathToUndoSelector));
+    let s10 = pathToUndo$.subscribe(({path, time}) => {
+      if (path) {
+        const node = this.root.find(path);
+        if (node != undefined) {
+          let index = node.state.findIndex(s => s == NodeStateAction.Deleted);
+          if(index != -1){
+            node.state.splice(index, 1);
+            node.getParentNode().children.push(node);
+            this.store.dispatch(removedNodeAddedToTree({}));
+          }
+          const asyncText = this.getOriginalText(node.sha)
+          asyncText.then(async (text) => {
+            this.visibleEditor.setContent(path, text);
+            await this.contentChangeSubject.next({path});
+          }, () => {
+            console.error(`The original content of ${path} couldn't be loaded.`);
+          });
+        
+        }else{
+          console.warn(`${path} couldn't be found.`);
+        }
+      }
+    });
+
+    let queryPathSelector = selectQueryParam('path');
+    let firstQueryPath;
+    this.store.select(queryPathSelector).subscribe((path) => {
+      firstQueryPath = path;
+    }).unsubscribe();
+
+    let tuple = createSelector(editorSelector, databaseReadySelector, (editorLoaded, dbReady) => ({editorLoaded, dbReady, userId: this.parameter.userId, 
+      repositoryName: this.parameter.repositoryName, branchName: this.parameter.branchName}));
+      
+    let s4 = this.store.select(tuple).subscribe(({editorLoaded, dbReady, userId, repositoryName, branchName}) => {
+      if (editorLoaded && dbReady && userId && repositoryName) {
+        let promise = this.initialize(userId, repositoryName, branchName);
+        promise.then(async() => {
+          this.invalidateDirtyCount();
+          let loadedPack = await this.indexedDBService.getByRepositoryIDAndBranchAndSha(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha)
+            .then(v => {
+              return v;
+            })
+            .catch((r: Error) => {
+              return undefined;
+            }) as WorkspacePack;
+
+            if (firstQueryPath) {
+              setTimeout(() => this.store.dispatch(selectPathWithRouterOrSnapshot({ path: firstQueryPath })), 0);
+            } else if (loadedPack?.selectedNodePath) {
+              setTimeout(() => this.store.dispatch(selectPathWithRouterOrSnapshot({ path: loadedPack.selectedNodePath })), 0);
+            }
+        }, (r) => {
+          console.error(`An initialization of ${userId}/${repositoryName} failed. ${r}`);
+          this.errorDescription = r;
+        });
+      }
+    });
+
+    let s6 = this.store.select(saveRequestSelector).subscribe((requestTime) => {
+      if(requestTime)
+        this.store.dispatch(updateWorkspaceSnapshot({snapshot: this.getSnapshot()}));
+    });
+
+    let s7 = this.store.select(latestSnapshotSelector).subscribe((snapshotInfo) => {
+      if(snapshotInfo?.doneTime){
+        let pack = WorkspacePack.of(snapshotInfo.workspaceSnapshot.repositoryId, snapshotInfo.workspaceSnapshot.repositoryName, snapshotInfo.workspaceSnapshot.commitSha, snapshotInfo.workspaceSnapshot.treeSha, snapshotInfo.workspaceSnapshot.name, snapshotInfo.workspaceSnapshot.packs, snapshotInfo.treeSnapshot.nodes, snapshotInfo.tabSnapshot.tabs, snapshotInfo.workspaceSnapshot.selectedNodePath, snapshotInfo.workspaceSnapshot.autoSave, snapshotInfo.workspaceSnapshot.dirtyCount, snapshotInfo.treeSnapshot.removedChildren);
+        this.indexedDBService.savePack(pack);
+      }
+    });
+    
+    this.subscriptions.push(s0, s1, s2, s3, s4, s6, s7, s8, s9, s10, s5);
+  }
+
+  ngOnInit() {
+    this.loadEditor();
+    this.fsm();
+    let loadPromise = this.initalizeVSLoader();
+    loadPromise.then(() => {
+      this.store.dispatch(monacoLoaded({}));
+    });
+    this.ngrx();
+
+    this.subscriptions.push(this.contentChangeSubject.pipe(distinctUntilChanged((x,y) => (x.path == y.path))).subscribe(({path}) => { // at first time when a change event comes
+      this.checkChangesInContent(path);
+      this.requestToSave(this.autoSaveRef.checked);
+    }));
+
+    this.subscriptions.push(this.contentChangeSubject.pipe(debounceTime(1000)).subscribe(({path}) => { // at a time when a event is made after debounce time
+      this.checkChangesInContent(path);
+      this.requestToSave(this.autoSaveRef.checked);
+    }));
+
+    this.subscriptions.push(this.saveActionSubject.pipe(bufferCount(15)).subscribe(() => {
+      this.requestToSave(true);
+    }));
+    this.subscriptions.push(this.saveActionSubject.pipe(debounceTime(5000)).subscribe(() => {
+      this.requestToSave(true);
+    }));
+  }
+
+  initialize(userId, repositoryName, branchName): Promise<void> {
     this.treeStatus = TreeStatusOnWorkspace.Loading;
-    this.contentStatus = ContentStatusOnWorkspace.NotInitialized;
-    if(!this.afterCommit){
-      this.resetTab();
-      this.resetEditor();
-    }
-    this.resetWorkspace();
-    let promise = this.initialzeWorkspace(userId, repositoryName, branchName, initialPath).then(() => {
+    let promise = this.initializeWorkspace(userId, repositoryName, branchName).then(() => {
+      console.log('Your workspace have been initialized with latest saved data.');
       if (this.root == undefined)
         this.treeStatus = TreeStatusOnWorkspace.TreeEmpty;
       else
         this.treeStatus = TreeStatusOnWorkspace.Done;
+    }, (reason) => {
+      this.treeStatus = TreeStatusOnWorkspace.Fail;
+      return Promise.reject(reason);
     });
     return promise;
   }
 
-  async initialzeWorkspace(userId, repositoryName, branchName: string, initialPath: string): Promise<void> {
+  async initializeWorkspace(userId, repositoryName, branchName: string): Promise<void> {
     try {
       this.userId = userId;
       this.repositoryName = repositoryName;
-      let details = this.wrapper.repositoryDetails(userId, repositoryName).then((result) => {
+      await this.wrapper.repositoryDetails(userId, repositoryName).then((result) => {
         this.repositoryDetails = result;
       }, () => Promise.reject("Repository can't be loaded."));
 
-      let branches = this.wrapper.branches(userId, repositoryName).then((result) => {
+      await this.wrapper.branches(userId, repositoryName).then((result) => {
         this.branches = result;
       }, () => Promise.reject("Branches can't be loaded."));
 
-      await Promise.all([details, branches]);
-
       if (this.branches.length == 0) {
-        return Promise.reject("It seems that this repository is empty.");
+        return Promise.reject("There are no branches here.");
       } else {
         const defaultBranchName = this.repositoryDetails.default_branch;
         if (branchName)
@@ -371,44 +482,44 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
           this.setBranchByName(defaultBranchName);
 
         // if it has already loaded packs, do nothing.
-        let loadedPack = await this.database.get(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha)
+        let loadedPack = await this.indexedDBService.getByRepositoryIDAndBranchAndSha(this.repositoryDetails.id, this.selectedBranch.name, this.selectedBranch.commit.sha)
           .then(v => {
-            console.log(`${v.commit_sha} have been loaded completely.`)
+            console.debug(`${v.commit_sha} have been loaded completely.`)
             return v;
           })
           .catch(r => {
-            console.log(r);
+            console.debug(r.message);
             return undefined;
           }) as WorkspacePack
-
-        let tree;
-        let doAfterLoadingTree: () => void;
-        if (loadedPack) { // load the saved file
-          tree = Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha });
-          if(initialPath)
-            loadedPack.selectedNodePath = initialPath;
-          doAfterLoadingTree = () => this.subjectWithSaveFile.next(loadedPack);
-        } else {  // just load the tree
-          tree = this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha);
-          doAfterLoadingTree = () => this.subjectWithoutSaveFile.next(initialPath);
+        
+        if(loadedPack){
+          await this.initializeTree(Promise.resolve({ tree: loadedPack.treePacks, sha: loadedPack.tree_sha,removedChildren: loadedPack.removedChildren }));
+          this.autoSaveRef.checked = loadedPack.autoSave;
+          await this.visibleEditor.load(loadedPack);
+          await this.tab.load(loadedPack);
+        }else{
+          await this.initializeTree(this.wrapper.tree(this.userId, this.repositoryName, this.selectedBranch.commit.sha));
+          await this.visibleEditor.load(undefined);
+          await this.tab.load(undefined);
         }
-        return this.initTree(tree).then(() => doAfterLoadingTree(), () => console.error("A tree can't be loaded."));
+        return Promise.resolve();
       }
     } catch (error) {
       return Promise.reject(error);
     }
   }
 
-  async initTree(tree: Promise<{ sha: string, tree: Array<any> }>): Promise<void> {
-    return tree.then((tree: { sha: string, tree: Array<any> }) => {
+  async initializeTree(tree: Promise<{ sha: string, tree: Array<any>, removedChildren?: Array<GithubNode> }>): Promise<void> {
+    return tree.then((tree: { sha: string, tree: Array<any>, removedChildren?: Array<GithubNode> }) => {
       const nodeTransformer = new GithubTreeToTree(tree);
       const hiarachyTree = nodeTransformer.getTree();
       this.root = hiarachyTree;
+      this.store.dispatch(createNewGithubTree({}));
       console.log(`A tree is loaded with ${tree.tree.length} nodes.`)
     }, () => this.root = undefined);
   }
 
-  async get(url: string){
+  async get(url: string) {
     return this.wrapper.getResponse(url).then((v) => v.body);
   }
 
@@ -446,83 +557,43 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   toggleDiff() {
-    if (this.editor.isDiffOn) {
-      this.editor.select(this.selectedNodePath);
-    } else {
-      let nodes = this.root.getBlobNodes();
-      const filteredNodes = nodes.filter((v) => {
-        return v.path == this.selectedNodePath && !v.state.includes(NodeStateAction.Created);
-      });
-      if (filteredNodes.length == 1) {
-        let node = filteredNodes[0];
-        let type = TextUtil.getFileType(node.name);
-        if (type == FileType.Text) {
-          this.getOriginalText(node.sha).then((content: string) => {
-            this.editor.diffWith(this.selectedNodePath, content);
-          });
-        }
-      } else {
-        console.warn(`${filteredNodes[0].path} are ${filteredNodes.length}. it's expected to be one`)
-      }
-    }
+    if(!(this.editorStatusFsm.currentState == EditorStatusOnWorkspace.Diff))
+      this.editorStatusFsm.go(EditorStatusOnWorkspace.Diff);
+    else
+      this.editorStatusFsm.go(EditorStatusOnWorkspace.Editor);
   }
 
-  toggleMd() {
-    if (this.editor.isMdOn) {
-      this.editor.select(this.selectedNodePath);
-    } else {
-      let nodes = this.root.getBlobNodes();
-      const filteredNodes = nodes.filter((v) => {
-        return v.path == this.selectedNodePath;
-      });
-      if (filteredNodes.length == 1) {
-        this.editor.md();
-      }
-    }
-  }
-
-  resetTab() {
-    if (this.tab)
-      this.tab.clear();
-
-  }
-  resetEditor() {
-    if(this.editor)
-      this.editor.clear();
-  }
-
-  resetWorkspace() {
-    this.selectedImagePath = undefined;
-    this.selectedFileType = undefined;
-    this.selectedNodePath = undefined;
-    this.errorDescription = undefined;
-    this.afterCommit = false;
-    this.action.select(ActionState.Edit);
+  togglePreview(){
+    if(!(this.editorStatusFsm.currentState == EditorStatusOnWorkspace.Md))
+      this.editorStatusFsm.go(EditorStatusOnWorkspace.Md);
+    else
+      this.editorStatusFsm.go(EditorStatusOnWorkspace.Editor);
   }
 
   ngAfterContentInit() {
     let ripples = this.autoSaveRef._elementRef.nativeElement.getElementsByClassName('mat-ripple')
-    if(ripples.length > 0)
+    if (ripples.length > 0)
       ripples[0].remove();
     this.autoSaveRef.checked = false;
-    this.toggle();
-    this.afterViewInit.next();
-    this.afterViewInit.complete();
+    this.toggleSidenav();
   }
 
   ngOnDestroy() {
     this.clean();
+    this.store.dispatch(workspaceDestoryed({}));
   }
 
   private clean() {
-    this.subscriptions.forEach(subscribe =>
-      subscribe.unsubscribe());
+    this.subscriptions.forEach(subscribe => subscribe.unsubscribe());
   }
 
-  toggle() {
+  toggleSidenav() {
     this.leftPaneOpened = !this.leftPaneOpened;
-    if (this.leftPaneOpened && this.editor != undefined)
-      this.editor.shrinkExpand();
+    this.visibleEditor?.shrinkExpand();
+    this.diffEditorRef?.instance?.shrinkExpand();
+    if (this.leftPaneOpened){
+      
+    }
   }
 
   getImage(base64: string, mediaType: string): SafeResourceUrl {
@@ -533,24 +604,13 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return `https://raw.githubusercontent.com/${fullName}/${commitSha}/${path}`;
   }
 
-  private setContentAndFocusInEditor(path: string, content: string): void {
-    if (this.editor != undefined) {
-      if (this.editor.exist(path))
-        this.editor.select(path);
-      else {
-        this.editor.setContent(path, content)
-        this.editor.select(path);
-      }
-    }
-  }
-
   setBranchByName(branchName: string): boolean {
     const branch = this.branches.find((v) => {
       if (v.name == branchName) {
         return true;
       } return false;
     });
-    
+
     this.selectedBranch = branch;
     this.get(branch.commit.url).then(v => {
       this.selectedCommit = v;
@@ -558,77 +618,78 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     return branch != undefined ? true : false;
   }
 
-  nodeSelected(path: string | GithubTreeNode) {
-    if (path == undefined) {
+  showContent(pathOrNode: string | GithubTreeNode | undefined) {
+    if (!pathOrNode) {
       this.selectedNodePath = undefined;
+      this.selectedFileType = undefined;
+      this.selectedRawPath = undefined;
+      this.selectedImagePath = undefined
       this.contentStatus = ContentStatusOnWorkspace.NotInitialized
     } else {
-      const node = (typeof path == 'string') ? this.tree.get(path) : path;
+      const node = (typeof pathOrNode == 'string') ? this.root?.find(pathOrNode) : pathOrNode;
       if (node && node.type == 'blob') {
         this.selectedRawPath = undefined;
         this.selectedNodePath = node.path;
         this.contentStatus = ContentStatusOnWorkspace.Loading;
-        let type = TextUtil.getFileType(node.name);
-        this.selectedFileType = type;
-        if (node.state.filter((v) => v == NodeStateAction.Created).length == 1) {
-          if (this.editor.exist(node.path)) {
-            let base64OrText = this.editor.getContent(node.path);
-            if (type == FileType.Image) {
-              let mime = TextUtil.getMime(node.name);
-              this.selectedImagePath = this.getImage(base64OrText, mime);
-            } else if (type == FileType.Text) {
-              let encoding = this.encoding;
-              this.encodingMap.set(node.sha, encoding);
-              this.setContentAndFocusInEditor(node.path, base64OrText);
-            }
-          } else {
-            console.error(`The blob of ${node.path} must be in monaco editor`);
+        let fileType = TextUtil.getFileType(node.name);
+        this.selectedFileType = fileType;
+        if (this.visibleEditor.exist(node.path)) {
+          let base64OrText = this.visibleEditor.getContent(node.path);
+          if (fileType == FileType.Image) {
+            let mime = TextUtil.getMime(node.name);
+            this.selectedImagePath = this.getImage(base64OrText, mime);
+          } else if (fileType == FileType.Text) {
+            let encoding = this.defaultEncoding;
+            this.encodingMap.set(node.sha, encoding);
+            this.visibleEditor.select(node.path);
           }
           this.contentStatus = ContentStatusOnWorkspace.Done;
         } else {
-          this.wrapper.getBlob(this.userId, this.repositoryName, node.sha).then(
+          this.wrapper.getBlobWithCache(this.userId, this.repositoryName, node.sha).then(
             (blob: Blob) => {
-              if (type == FileType.Image)
+              if (fileType == FileType.Image)
                 this.selectedImagePath = this.getImage(blob.content, TextUtil.getMime(node.syncedNode.path))
-              else if (type == FileType.Text) {
+              else if (fileType == FileType.Text) {
                 let bytes = TextUtil.base64ToBytes(blob.content);
-                let encoding = this.encoding;
+                let encoding = this.defaultEncoding;
                 this.encodingMap.set(node.sha, encoding);
-                this.setContentAndFocusInEditor(node.path, TextUtil.decode(bytes, encoding));
+                if(this.selectedNodePath == node.path){ // other asynchronous changes can happen during getBlob()
+                  this.visibleEditor.setContent(node.path, TextUtil.decode(bytes, encoding))
+                  this.visibleEditor.select(node.path);
+                }else{
+                  this.visibleEditor.setContent(node.path, TextUtil.decode(bytes, encoding))
+                }
               }
               this.selectedRawPath = this.getRawUrl(this.repositoryDetails.full_name, this.selectedBranch.commit.sha, node.syncedNode.path);
             }, (reason) => {
-              console.debug("An error during getting the blob. Maybe selectedNode is invalid.");
-              console.debug(node);
+              console.error(`An error during getting the blob`);
+              console.error(node);
             }
           ).finally(() => {
             this.contentStatus = ContentStatusOnWorkspace.Done;
           });
         }
-      }else{
-        console.warn(`${path} is not found in the tree`);
+      } else {
+        console.warn(`${pathOrNode} is not found in the tree`);
       }
     }
   }
 
   nodeCreated(path: string) {
-    this.editor.setContent(path, '');
+    this.visibleEditor.setContent(path, '');
   }
 
   nodeRemoved(path: string) {
-    this.editor.removeContent(path);
+    this.visibleEditor.removeContent(path);
   }
 
-  nodeMoved(fromPath: string, to: GithubTreeNode) {
-    let isSelectedNode = (this.selectedNodePath != undefined) && (this.selectedNodePath == fromPath);
-    if (to.type == 'blob') {
-      if (this.editor.exist(fromPath)) {
-        let content = this.editor.getContent(fromPath);
-        this.editor.removeContent(fromPath);
-        this.editor.setContent(to.path, content);
-      }
-      if (isSelectedNode) {
-        new SelectAction(to.path, this, this.userActionDispatcher).start();
+  nodeMoved(fromPath: string, toPath: string) {
+    let target = this.root.find(toPath);
+    if (target.type == 'blob') {
+      if (this.visibleEditor.exist(fromPath)) {
+        let content = this.visibleEditor.getContent(fromPath);
+        this.visibleEditor.removeContent(fromPath);
+        this.visibleEditor.setContent(toPath, content);
       }
     }
   }
@@ -637,19 +698,20 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     let type = TextUtil.getFileType(event.node.name);
     if (type == FileType.Text) {
       let bytes = TextUtil.base64ToBytes(event.base64.toString());
-      let encoding = this.encoding;
-      this.editor.setContent(event.node.path, TextUtil.decode(bytes, encoding));
+      let encoding = this.defaultEncoding;
+      this.visibleEditor.setContent(event.node.path, TextUtil.decode(bytes, encoding));
     } else {
-      this.editor.setContent(event.node.path, event.base64);
+      this.visibleEditor.setContent(event.node.path, event.base64);
     }
+    this.requestToSave(this.autoSaveRef.checked);
   }
 
-  async nodeContentChanged(path: string) {
-    const node = this.tree.get(path);
+  async checkChangesInContent(path: string) {
+    const node = this.root.find(path);
     if (node != undefined && node.type == 'blob') {
       const asyncText = this.getOriginalText(node.sha)
       await asyncText.then((originalText) => {
-        if (this.editor.getContent(path) == originalText)
+        if (this.visibleEditor.getContent(path) == originalText)
           node.setContentModifiedFlag(false);
         else
           node.setContentModifiedFlag(true);
@@ -661,9 +723,9 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
 
   private async getOriginalText(sha: string) {
     if (sha != undefined) {
-      return this.wrapper.getBlob(this.userId, this.repositoryName, sha).then((blob: Blob) => {
+      return this.wrapper.getBlobWithCache(this.userId, this.repositoryName, sha).then((blob: Blob) => {
         let bytes = TextUtil.base64ToBytes(blob.content);
-        let encoding = this.encoding;
+        let encoding = this.defaultEncoding;
         const originalText: string = TextUtil.decode(bytes, encoding);
         return originalText;
       }, (reason) => {
@@ -675,14 +737,14 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   onBranchChange(event: MatSelectChange) {
-    let promise = this.dispatchSaveAction(true);
+    let promise = this.requestToSave(true);
     if (promise instanceof Promise) {
       try {
-        promise.then(async () => {
+        promise.then(() => {
           const branch = event.value;
           this.selectedNodePath = undefined;
           this.treeStatus = this.TreeStatus.BranchChanging;
-          this.router.navigate([], { queryParams: { branch: branch.name } });
+          this.router.navigate([], { queryParams: { branch: branch.name }, replaceUrl: true});
         });
       } catch (e) {
         console.error(e);
@@ -693,25 +755,27 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   onStage() {
     this.workspaceStatus = WorkspaceStatus.Stage;
     this.invalidateDirtyCount()
-    this.editor.readonly = true;
-    this.editor.shrinkExpand();
+    this.visibleEditor.readonly = true;
+    this.visibleEditor.shrinkExpand();
+    this.diffEditorRef.instance.shrinkExpand();
   }
 
   onEdit() {
     this.workspaceStatus = WorkspaceStatus.View;
-    this.editor.readonly = false;
-    this.editor.shrinkExpand();
+    this.visibleEditor.readonly = false;
+    this.visibleEditor.shrinkExpand();
+    this.diffEditorRef.instance.shrinkExpand();
   }
 
   onSave() {
-    this.dispatchSaveAction(true);
+    this.requestToSave(true);
   }
 
   getBase64(path: string): string {
-    if (this.editor.exist(path)) {
+    if (this.visibleEditor.exist(path)) {
       let type = TextUtil.getFileType(path);
       let base64;
-      let base64OrText = this.editor.getContent(path);
+      let base64OrText = this.visibleEditor.getContent(path);
       if (type == FileType.Image || type == FileType.Other) {
         base64 = base64OrText;
       } else {
@@ -722,7 +786,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   async onCommit(msg: string) {
-    let promise = this.dispatchSaveAction(true);
+    let promise = this.requestToSave(true);
     if (promise instanceof Promise) {
       try {
         await promise.then(async () => {
@@ -746,7 +810,7 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
             let createdCommit = await this.wrapper.createCommit(this.userId, this.repositoryName, msg, createdTree.sha, this.selectedBranch.commit.sha);
             this.commitProgress.updateBranch(this.selectedBranch.name);
             let createdBranch = await this.wrapper.updateBranch(this.userId, this.repositoryName, this.selectedBranch.name, createdCommit.sha);
-            this.commitProgress.done();
+            this.commitProgress.done(this.repositoryName, 30, 10);
             console.log(`The commit and updating ${createdBranch.ref} have succeeded which is ${createdBranch.object.sha}. Check out all in ${createdBranch.url}`);
           } else {
             console.error("Invalid state of nodes is found because blobs containing more than zero state exist");
@@ -755,11 +819,44 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       } catch (e) {
         console.error(e);
       } finally {
-        this.afterCommit = true;
-        this.clearCommits();
-        this.refreshSubject.next();
+        const shaBeforeCommit = this.selectedBranch.commit.sha;
+        let resultOfPolling = this.pollBranchCommitChange(shaBeforeCommit, 6);
+        resultOfPolling.then((sha) => {
+          console.info(`It is successful in getting new commit which is ${sha}`);
+          this.treeStatus = TreeStatusOnWorkspace.Done;
+          this.document.location.reload();
+        }
+        ,(err) => {
+          console.error(err);
+          console.error(`It isn't successful in getting new commit of ${this.selectedBranch.name}`);
+          this.treeStatus = TreeStatusOnWorkspace.Done;
+        })
       }
     }
+  }
+
+  /**
+   * 
+   * @param branchChecker 
+   * @param maxTryCount 
+   * @param intervalSencond 
+   * @returns branch
+   */
+  private pollBranchCommitChange(shaBeforeCommit: string, maxTry: number): Promise<string>{
+    return this._pollBranchCommitChange(shaBeforeCommit, 0, maxTry);
+  }
+
+  private _pollBranchCommitChange(shaBeforeCommit: string, count: number, maxTry: number): Promise<string>{
+    let promise = this.wrapper.branch(this.userId, this.repositoryName, this.selectedBranch.name);
+    count++;
+    return promise.then((branch) => {
+       if(shaBeforeCommit != branch?.commit?.sha){
+         return branch.commit.sha;
+       }else if(count > maxTry){
+          throw new Error(`The count is over ${maxTry}`);
+       }else
+        return this._pollBranchCommitChange(shaBeforeCommit, count, maxTry);
+    });
   }
 
   public compactByCuttingUnchangedBlobs(objectsForCreatingTree: GithubTreeNode[], root: GithubTreeNode) {
@@ -789,8 +886,8 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
       let promise: Promise<{ sha: string, url: string }>;
       if (v.state.includes(NodeStateAction.ContentModified) ||
         v.state.includes(NodeStateAction.Created)) {
-        if (this.editor.exist(v.path)) {
-          let base64OrText = this.editor.getContent(v.path);
+        if (this.visibleEditor.exist(v.path)) {
+          let base64OrText = this.visibleEditor.getContent(v.path);
           if (type == FileType.Image || type == FileType.Other) {
             promise = this.wrapper.createBlob(this.userId, this.repositoryName, base64OrText);
           } else {
@@ -816,28 +913,19 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
     });
   }
 
-  private clearCommits() {
-    this.database.list(this.repositoryDetails.id).then((arr) => {
-      arr.forEach(p => {
-        if (this.selectedBranch.name == p.branchName)
-          this.database.delete(p.repositoryId, p.branchName, p.commit_sha);
-      })
-    });
-  }
-
-  private getSnapshot(containgTree: boolean = true): WorkspaceSnapshot {
+  private getSnapshot(): WorkspaceSnapshot {
     const autoSave = this.autoSaveRef.checked;
     const repositoryId: number = this.repositoryDetails.id;
     const repositoryName: string = this.repositoryDetails.full_name;
     const commitSha = this.selectedBranch.commit.sha;
     const treeSha = this.root.sha;
     const name = this.selectedBranch.name;
-    const packs = Array.from(this.editor.getPathList())
-      .map((path) => this.tree.get(path))
+    const packs = Array.from(this.visibleEditor.getPathList())
+      .map((path) => this.root.find(path))
       .filter((node) => node != undefined)
       .map((node) => {
         let path = node.path;
-        const c = this.editor.getContent(path);
+        const c = this.visibleEditor.getContent(path);
         let base64;
         let type = TextUtil.getFileType(path);
         if (type == FileType.Text)
@@ -847,66 +935,41 @@ export class WorkspaceComponent implements OnInit, OnDestroy, AfterContentInit {
         return BlobPack.of(commitSha, node, base64);
       });
     return {
-      repositoryId: repositoryId, repositoryName: repositoryName, commitSha: commitSha,
-      treeSha: treeSha, name: name, packs: packs, selectedNodePath: this.selectedNodePath, database: this.database,
-      autoSave: autoSave
+      repositoryId, repositoryName, commitSha,
+      treeSha, name, packs, selectedNodePath: this.selectedNodePath, 
+      autoSave, dirtyCount: this.dirtyCount
     };
   }
 
-  private pack(containgTree: boolean = true): WorkspacePack {
-    const autoSave = this.autoSaveRef.checked;
-    const repositoryId: number = this.repositoryDetails.id;
-    const repositoryName: string = this.repositoryDetails.full_name;
-    const commitSha = this.selectedBranch.commit.sha;
-    const treeSha = this.root.sha;
-    const name = this.selectedBranch.name;
-    const tabs = Array.from(this.tab.tabs);
-    const packs = Array.from(this.editor.getPathList())
-      .map((path) => this.tree.get(path))
-      .filter((node) => node != undefined)
-      .map((node) => {
-        let path = node.path;
-        const c = this.editor.getContent(path);
-        let base64;
-        let type = TextUtil.getFileType(path);
-        if (type == FileType.Text)
-          base64 = TextUtil.stringToBase64(c);
-        else
-          base64 = c;
-        return BlobPack.of(commitSha, node, base64);
-      });
-    const treeArr = this.root.reduce((acc, node, tree) => {
-      if (node.path != "")
-        acc.push(node.toGithubNode());
-      return acc;
-    }, [] as Array<GithubNode>, false);
-    return WorkspacePack.of(repositoryId, repositoryName, commitSha, treeSha, name, packs, treeArr, tabs, this.selectedNodePath, autoSave);
-  }
-
-  private htmlBlobUrl(path: string){
+  private htmlBlobUrl(path: string) {
     return `https://github.com/${this.userId}/${this.repositoryName}/blob/${this.selectedBranch.name}/${path}`
   }
 
-  private dispatchSaveAction(eagerly: boolean): Promise<string> | void{
-    if(eagerly){
+  private requestToSave(eagerly: boolean): Promise<any> | void {
+    if (eagerly) {
       this.isBeingChanged = false;
-      return new SaveAction(this, this.userActionDispatcher).start();
-    }else{
+      this.store.dispatch(requestToSave({}));
+      let done = this.store.select(createSelector(createFeatureSelector(workspaceReducerKey), (state:WorkspaceState) => state.latestSnapshot.doneTime));
+      return done.pipe(take(1)).toPromise();
+    } else {
       this.isBeingChanged = true;
       return this.saveActionSubject.next();
     }
   }
 
   showInfo(path: string) {
-    let node = this.tree.get(path);
+    let node = this.root.find(path);
     let mime = TextUtil.getMime(node.name);
     let size = node.size;
     if (this.selectedFileType == FileType.Text) {
-      size = TextUtil.encode(this.editor.getContent()).length;
+      size = TextUtil.encode(this.visibleEditor.getContent()).length;
     }
     const dialogRef = this.dialog.open(InfoComponent, {
       width: '350px',
-      data: <DisplayInfo>{ name: node.name, path: node.path, size: size, mime: (mime == null ? '' : mime), rawUrl: this.selectedRawPath, states: node.state, htmlUrl: this.htmlBlobUrl(node.path)}
+      data: <DisplayInfo>{ name: node.name, path: node.path, size: size, mime: (mime == null ? '' : mime), rawUrl: this.selectedRawPath
+      , states: node.state
+      , htmlUrl: this.htmlBlobUrl(node.path)
+      , repositoryJSON: this.repositoryDetails }
     });
   }
 

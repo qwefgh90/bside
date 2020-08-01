@@ -1,85 +1,79 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
-import { OAuthServiceChannel } from './o-auth-service-channel';
-import { Subject, ReplaySubject } from 'rxjs';
+import { Subject, ReplaySubject, Observable } from 'rxjs';
 import { CookieToken, Cookie } from 'src/app/db/cookie';
+import { Store, createFeatureSelector, select, createSelector } from '@ngrx/store';
+import { signIn, signOut, apiConnectionProblem } from '../auth.actions';
+import { authReducerKey, AuthState } from '../auth.reducer';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OAuthService {
-  constructor(private httpClient: HttpClient, @Inject(CookieToken) private cookie: Cookie) { 
-    this.isLogin = false; 
-    // this.intialOAuthInfo();
+  constructor(private httpClient: HttpClient, @Inject(CookieToken) private cookie: Cookie, private store: Store<{}>) {
+    let selector = createFeatureSelector(authReducerKey);
+    let accessToken$ = this.store.pipe(select(createSelector(selector, (state: AuthState) => state.accessToken)));
   }
 
-  isLogin;
   clientId: string;
-  accessToken: string;
 
-  private updateLogin(isLogin, accessToken){
-    this.isLogin = isLogin;
-    this.accessToken = accessToken;
-    this.loginSubject.next(isLogin);
-  }
-
-  redirectUrl: string;
-
-  private loginSubject = new ReplaySubject<boolean>(1);
-  readonly channel = new OAuthServiceChannel(this.loginSubject);
-  
-  intialOAuthInfo(): Promise<{state: string, client_id: string}> {
+  intialOAuthInfo(): Promise<{ state: string, client_id: string }> {
     return this.httpClient
-      .get<{state: string, client_id: string}>(`${environment.apiServer}/login/github/initialdata`)
+      .get<{ state: string, client_id: string }>(`${environment.apiServer}/login/github/initialdata`)
       .toPromise().then(info => {
         this.clientId = info.client_id;
         return info;
       });
   }
 
-  login(state: string, code: string){
+  getAccessToken(state: string, code: string) {
     let httpParams = new FormData();
     httpParams.set("state", state);
     httpParams.set("code", code);
-    
+
     let options = {
       headers: new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded')
     };
 
     return this.httpClient
-      .post<{access_token: string}>(`${environment.apiServer}/login/github/accesstoken`, httpParams)
+      .post<{ access_token: string }>(`${environment.apiServer}/login/github/accesstoken`, httpParams)
       .toPromise().then<void>((value) => {
         this.cookie.autoLogin = true; // when a user sign in or sign out by oneself, update autoLogin true otherwise false.
-        this.updateLogin(true, value.access_token);
+        this.store.dispatch(signIn({accessToken: value.access_token}));
       });
   }
 
-  logout(){
+  logout() {
     return this.httpClient
       .post<void>(`${environment.apiServer}/login/github/logout`, '')
       .toPromise().then<void>(() => {
-        this.cookie.autoLogin = false; // when a user sign in or sign out by oneself, update autoLogin true otherwise false.
-        this.updateLogin(false, undefined);
+        this.cookie.autoLogin = false;
+        this.store.dispatch(signOut({}));
       });
   }
 
   initAccessTokenOnSession() {
     return this.httpClient
-      .get<{access_token: string}>(`${environment.apiServer}/login/github/accesstoken`)
+      .get<{ access_token: string }>(`${environment.apiServer}/login/github/accesstoken`)
       .toPromise().then<void>((value) => {
-        this.updateLogin(true, value.access_token);
+        this.store.dispatch(signIn({accessToken: value.access_token}));
       }).catch(() => Promise.resolve());
   }
 
-  checkSession(){
+  checkConnectionWithBackend() {
     return this.httpClient
       .get<HttpResponse<void>>(`${environment.apiServer}/login/github/ping`, { observe: 'response' })
-      .toPromise().then<void>((res) => {
-        if(!res.ok)
-          this.updateLogin(false, undefined);
+      .toPromise().then((res) => {
+        if (!res.ok){
+          this.store.dispatch(apiConnectionProblem({}));
+          return false;
+        }
+        return true;
       }).catch(() => {
-        this.updateLogin(false, undefined);
+        this.store.dispatch(apiConnectionProblem({}));
+        return Promise.resolve(false);
       });
   }
 }

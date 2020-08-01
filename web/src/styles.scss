@@ -38,3 +38,20 @@ body{
     min-height: 350px;
     flex: 1;
 }
+
+.mat-menu-panel{
+    min-height: 0px !important;
+}
+
+.grow {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    min-height: 0px;
+    flex-direction: column;
+    /* height: 1000px; */
+}
+
+.mat-tab-header{
+    border-bottom: 0px solid rgba(0, 0, 0, 0.12)  !important;
+}

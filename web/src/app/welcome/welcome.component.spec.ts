@@ -19,7 +19,7 @@ describe('WelcomeComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ WelcomeComponent, ListComponent],
-      providers: [{provide: OAuthService, useValue: {isLogin: false}}],
+      providers: [{provide: OAuthService, useValue: {}}],
       imports: [FlexLayoutModule, MatIconModule]
     })
     .compileComponents();

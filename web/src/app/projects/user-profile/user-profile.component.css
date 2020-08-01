@@ -1,0 +1,18 @@
+.image-box{
+    min-height: 0px;
+    width: 10vw;
+}
+
+.image-box > img{
+    width: 100%;
+}
+
+.profile{
+    max-width: 80%;
+}
+.name{
+    font-size: 1.6em;
+}
+.bio{
+    color: darkslategray;
+}

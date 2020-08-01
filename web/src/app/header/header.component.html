@@ -13,20 +13,20 @@
   </div>
   <div>
     <!-- <mat-icon class="example-icon" aria-hidden="false" aria-label="Example heart icon">favorite</mat-icon> -->
-    <a routerLink="/login" [fxHide.xs]="true" [fxHide.sm]="true"><button class="signin" mat-raised-button *ngIf="!oauth.isLogin && !redirecting">
+    <a routerLink="/login" [fxHide.xs]="true" [fxHide.sm]="true"><button class="signin" mat-raised-button *ngIf="!isLogin && !redirecting">
       <img style="height: 1.3em; margin-right: 0.3em" src="/assets/GitHub-Mark-32px.png"/>Sign
       in</button></a>
-    <mat-icon [matMenuTriggerFor]="appMenu" *ngIf="!oauth.isLogin && !redirecting" [fxShow]="false" [fxShow.xs]="true" [fxShow.sm]="true" style="vertical-align: middle;">menu</mat-icon>
+    <mat-icon [matMenuTriggerFor]="appMenu" *ngIf="!isLogin && !redirecting" [fxShow]="false" [fxShow.xs]="true" [fxShow.sm]="true" style="vertical-align: middle;">menu</mat-icon>
     <mat-menu #appMenu="matMenu">
       <button mat-menu-item [routerLink]="['/login']">
         Sign in
       </button>
     </mat-menu>
-    <!-- <button mat-icon-button [matMenuTriggerFor]="menu" *ngIf="oauth.isLogin" color="white" style="width: 32px; height: 32px;"> -->
-    <img src="{{user?.avatar_url}}" [matMenuTriggerFor]="menu" *ngIf="oauth.isLogin && user" color="white"
+    <!-- <button mat-icon-button [matMenuTriggerFor]="menu" *ngIf="isLogin" color="white" style="width: 32px; height: 32px;"> -->
+    <img src="{{user?.avatar_url}}" [matMenuTriggerFor]="menu" *ngIf="isLogin && user" color="white"
       style="width: 32px; height: 32px; vertical-align: middle;" title="{{user?.login}}({{user?.name}})"
       id="profile-image" />
-    <mat-spinner style="display: inline-block;" [diameter]="30" [strokeWidth]="3" *ngIf="oauth.isLogin && !user">
+    <mat-spinner style="display: inline-block;" [diameter]="30" [strokeWidth]="3" *ngIf="isLogin && !user">
     </mat-spinner>
     <!-- </button>  -->
     <mat-menu #menu="matMenu">

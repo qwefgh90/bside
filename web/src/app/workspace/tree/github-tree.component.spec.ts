@@ -48,245 +48,245 @@ describe('TreeComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+  // it('should create', () => {
+  //   expect(component).toBeTruthy();
+  // });
   
-  it('repository', () => {
-    component.repository = repositoryDetails;
-    fixture.detectChanges();
-    let name = fixture.nativeElement.querySelector('.repository-title-box > span').textContent;
-    expect(repositoryDetails.name).toBe(name.trim());
-  });
+  // it('repository', () => {
+  //   component.repository = repositoryDetails;
+  //   fixture.detectChanges();
+  //   let name = fixture.nativeElement.querySelector('.repository-title-box > span').textContent;
+  //   expect(repositoryDetails.name).toBe(name.trim());
+  // });
 
-  it('render tree', () => {
-    component.repository = repositoryDetails;
-    const nodeTransformer = new GithubTreeToTree(tree);
-    const hiarachyTree = nodeTransformer.getTree();
-    component.tree = hiarachyTree;
-    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+  // it('render tree', () => {
+  //   component.repository = repositoryDetails;
+  //   const nodeTransformer = new GithubTreeToTree(tree);
+  //   const hiarachyTree = nodeTransformer.getTree();
+  //   component.tree = hiarachyTree;
+  //   component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
 
-    fixture.detectChanges();
-    const levelOneNodes = tree.tree.filter(e => {
-      return !e.path.includes("/");
-    });
-    let treeNodes = fixture.nativeElement.querySelectorAll('tree-node');
-    expect(treeNodes.length).toBe(levelOneNodes.length);
-  });
+  //   fixture.detectChanges();
+  //   const levelOneNodes = tree.tree.filter(e => {
+  //     return !e.path.includes("/");
+  //   });
+  //   let treeNodes = fixture.nativeElement.querySelectorAll('tree-node');
+  //   expect(treeNodes.length).toBe(levelOneNodes.length);
+  // });
 
-  it('click one node', () => {
-    component.repository = repositoryDetails;
-    const nodeTransformer = new GithubTreeToTree(tree);
-    const hiarachyTree = nodeTransformer.getTree();
-    component.tree = hiarachyTree;
-    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
-    fixture.detectChanges();
+  // it('click one node', () => {
+  //   component.repository = repositoryDetails;
+  //   const nodeTransformer = new GithubTreeToTree(tree);
+  //   const hiarachyTree = nodeTransformer.getTree();
+  //   component.tree = hiarachyTree;
+  //   component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+  //   fixture.detectChanges();
     
-    let treeNodes: NodeList = fixture.nativeElement.querySelectorAll('.node-title');
-    let e1: HTMLDivElement = (treeNodes[0] as HTMLDivElement);
-    e1.click();    
-    fixture.detectChanges();
+  //   let treeNodes: NodeList = fixture.nativeElement.querySelectorAll('.node-title');
+  //   let e1: HTMLDivElement = (treeNodes[0] as HTMLDivElement);
+  //   e1.click();    
+  //   fixture.detectChanges();
 
-    expect(component.selectedNode.data.name).toBe(tree.tree[0].path);
-  });
+  //   expect(component.selectedNode.data.name).toBe(tree.tree[0].path);
+  // });
 
 
-  it('move node under the root in the function of drop()', () => {
-    component.repository = repositoryDetails;
-    const nodeTransformer = new GithubTreeToTree(tree);
-    const hiarachyTree = nodeTransformer.getTree();
-    component.tree = hiarachyTree;
-    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
-    fixture.detectChanges();
+  // it('move node under the root in the function of drop()', () => {
+  //   component.repository = repositoryDetails;
+  //   const nodeTransformer = new GithubTreeToTree(tree);
+  //   const hiarachyTree = nodeTransformer.getTree();
+  //   component.tree = hiarachyTree;
+  //   component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+  //   fixture.detectChanges();
     
-    let oneChild = component.root.children[5].children[0];
-    let pathBefore = oneChild.path
-    oneChild.move(component.root);
-    expect(oneChild.state.find((v) => v == NodeStateAction.Moved)).toBeDefined();
-    expect(oneChild.getParentNode().state.find((v) => v == NodeStateAction.NodesChanged)).toBeDefined();
-    expect(component.root.state.find((v) => v == NodeStateAction.NodesChanged)).toBeDefined();
-    let pathAfter = oneChild.path
+  //   let oneChild = component.root.children[5].children[0];
+  //   let pathBefore = oneChild.path
+  //   oneChild.move(component.root);
+  //   expect(oneChild.state.find((v) => v == NodeStateAction.Moved)).toBeDefined();
+  //   expect(oneChild.getParentNode().state.find((v) => v == NodeStateAction.NodesChanged)).toBeDefined();
+  //   expect(component.root.state.find((v) => v == NodeStateAction.NodesChanged)).toBeDefined();
+  //   let pathAfter = oneChild.path
 
-    expect(pathBefore).not.toBe(pathAfter);
-    expect(oneChild.path).toBe(oneChild.name);
-  });
+  //   expect(pathBefore).not.toBe(pathAfter);
+  //   expect(oneChild.path).toBe(oneChild.name);
+  // });
 
-  it('findInSiblings()', () => {
-    component.repository = repositoryDetails;
-    const nodeTransformer = new GithubTreeToTree(tree);
-    const hiarachyTree = nodeTransformer.getTree();
-    component.tree = hiarachyTree;
-    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
-    fixture.detectChanges();
+  // it('findInSiblings()', () => {
+  //   component.repository = repositoryDetails;
+  //   const nodeTransformer = new GithubTreeToTree(tree);
+  //   const hiarachyTree = nodeTransformer.getTree();
+  //   component.tree = hiarachyTree;
+  //   component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+  //   fixture.detectChanges();
 
-    let model = component.treeComponent.treeModel;
-    let node: TreeNode = model.roots[0];
-    let count = 0;
-    component.findInSiblings(node, (n) => {
-      count++;
-      return false;
-    });
+  //   let model = component.treeComponent.treeModel;
+  //   let node: TreeNode = model.roots[0];
+  //   let count = 0;
+  //   component.findInSiblings(node, (n) => {
+  //     count++;
+  //     return false;
+  //   });
 
-    expect(count).toBe(5);
-  });
+  //   expect(count).toBe(5);
+  // });
 
-  it('newNode()', () => {
-    fixture.detectChanges();
+  // it('newNode()', () => {
+  //   fixture.detectChanges();
 
-    component.repository = repositoryDetails;
-    const nodeTransformer = new GithubTreeToTree(tree);
-    const hiarachyTree = nodeTransformer.getTree();
-    component.tree = hiarachyTree;
-    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
-    fixture.detectChanges();
+  //   component.repository = repositoryDetails;
+  //   const nodeTransformer = new GithubTreeToTree(tree);
+  //   const hiarachyTree = nodeTransformer.getTree();
+  //   component.tree = hiarachyTree;
+  //   component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+  //   fixture.detectChanges();
 
-    let model = component.treeComponent.treeModel;
-    let _downloads: TreeNode = model.roots[5];
-    let beforeLen = _downloads.data.children.length
-    try{
-      component.newNode('blob', _downloads);
-    }catch(e){}
-    component.renamingFormControl.setValue("newname");
-    component.completeRenaming();
-    fixture.detectChanges();
+  //   let model = component.treeComponent.treeModel;
+  //   let _downloads: TreeNode = model.roots[5];
+  //   let beforeLen = _downloads.data.children.length
+  //   try{
+  //     component.newNode('blob', _downloads);
+  //   }catch(e){}
+  //   component.renamingFormControl.setValue("newname");
+  //   component.completeRenaming();
+  //   fixture.detectChanges();
     
-    expect(_downloads.data.children.length).toBe(beforeLen + 1);
-  });
+  //   expect(_downloads.data.children.length).toBe(beforeLen + 1);
+  // });
 
-  it('newNode() with the name', () => {
-    fixture.detectChanges();
+  // it('newNode() with the name', () => {
+  //   fixture.detectChanges();
 
-    component.repository = repositoryDetails;
-    const nodeTransformer = new GithubTreeToTree(tree);
-    const hiarachyTree = nodeTransformer.getTree();
-    component.tree = hiarachyTree;
-    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
-    fixture.detectChanges();
+  //   component.repository = repositoryDetails;
+  //   const nodeTransformer = new GithubTreeToTree(tree);
+  //   const hiarachyTree = nodeTransformer.getTree();
+  //   component.tree = hiarachyTree;
+  //   component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+  //   fixture.detectChanges();
 
-    let model = component.treeComponent.treeModel;
-    let _downloads: TreeNode = model.roots[5];
-    let beforeLen = _downloads.data.children.length
-    try{
-      component.newNode('blob', _downloads, "newnode");
-    }catch(e){}
-    component.renamingFormControl.setValue("newname");
-    component.completeRenaming();
-    fixture.detectChanges();
+  //   let model = component.treeComponent.treeModel;
+  //   let _downloads: TreeNode = model.roots[5];
+  //   let beforeLen = _downloads.data.children.length
+  //   try{
+  //     component.newNode('blob', _downloads, "newnode");
+  //   }catch(e){}
+  //   component.renamingFormControl.setValue("newname");
+  //   component.completeRenaming();
+  //   fixture.detectChanges();
     
-    expect(_downloads.data.children.length).toBe(beforeLen + 1);
-  });
+  //   expect(_downloads.data.children.length).toBe(beforeLen + 1);
+  // });
   
-  it('onFileLoaded()', () => {
-    fixture.detectChanges();
+  // it('onFileLoaded()', () => {
+  //   fixture.detectChanges();
 
-    component.repository = repositoryDetails;
-    const nodeTransformer = new GithubTreeToTree(tree);
-    const hiarachyTree = nodeTransformer.getTree();
-    component.tree = hiarachyTree;
-    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
-    fixture.detectChanges();
+  //   component.repository = repositoryDetails;
+  //   const nodeTransformer = new GithubTreeToTree(tree);
+  //   const hiarachyTree = nodeTransformer.getTree();
+  //   component.tree = hiarachyTree;
+  //   component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+  //   fixture.detectChanges();
 
-    let model = component.treeComponent.treeModel;
-    let _downloads: TreeNode = model.roots[5];
-    let beforeLen = _downloads.data.children.length
-    try{
-      const fileToBeUploaded = new UploadFile(_downloads.data.path, 'uploadedFile', '', 0, '');
-      component.onFileLoaded(fileToBeUploaded);
-    }catch(e){}
-    fixture.detectChanges();
-    expect(_downloads.data.children.length).toBe(beforeLen + 1);
-  });
+  //   let model = component.treeComponent.treeModel;
+  //   let _downloads: TreeNode = model.roots[5];
+  //   let beforeLen = _downloads.data.children.length
+  //   try{
+  //     const fileToBeUploaded = new UploadFile(_downloads.data.path, 'uploadedFile', '', 0, '');
+  //     component.onFileLoaded(fileToBeUploaded);
+  //   }catch(e){}
+  //   fixture.detectChanges();
+  //   expect(_downloads.data.children.length).toBe(beforeLen + 1);
+  // });
 
-  it('onFileLoaded() with the existing name', () => {
-    fixture.detectChanges();
+  // it('onFileLoaded() with the existing name', () => {
+  //   fixture.detectChanges();
 
-    component.repository = repositoryDetails;
-    const nodeTransformer = new GithubTreeToTree(tree);
-    const hiarachyTree = nodeTransformer.getTree();
-    component.tree = hiarachyTree;
-    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
-    fixture.detectChanges();
+  //   component.repository = repositoryDetails;
+  //   const nodeTransformer = new GithubTreeToTree(tree);
+  //   const hiarachyTree = nodeTransformer.getTree();
+  //   component.tree = hiarachyTree;
+  //   component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+  //   fixture.detectChanges();
 
-    let model = component.treeComponent.treeModel;
-    let _downloads: TreeNode = model.roots[5];
-    let beforeLen = _downloads.data.children.length
-    try{
-      const fileToBeUploaded = new UploadFile(_downloads.data.path, '376fff9bd23db6ea14d201f2479fb500', '', 0, '');
-      component.onFileLoaded(fileToBeUploaded);
-    }catch(e){}
-    fixture.detectChanges();
-    expect(_downloads.data.children.length).toBe(beforeLen);
-  });
+  //   let model = component.treeComponent.treeModel;
+  //   let _downloads: TreeNode = model.roots[5];
+  //   let beforeLen = _downloads.data.children.length
+  //   try{
+  //     const fileToBeUploaded = new UploadFile(_downloads.data.path, '376fff9bd23db6ea14d201f2479fb500', '', 0, '');
+  //     component.onFileLoaded(fileToBeUploaded);
+  //   }catch(e){}
+  //   fixture.detectChanges();
+  //   expect(_downloads.data.children.length).toBe(beforeLen);
+  // });
 
-  it('newNode() with empty name', () => {
-    fixture.detectChanges();
+  // it('newNode() with empty name', () => {
+  //   fixture.detectChanges();
 
-    component.repository = repositoryDetails;
-    const nodeTransformer = new GithubTreeToTree(tree);
-    const hiarachyTree = nodeTransformer.getTree();
-    component.tree = hiarachyTree;
-    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
-    fixture.detectChanges();
+  //   component.repository = repositoryDetails;
+  //   const nodeTransformer = new GithubTreeToTree(tree);
+  //   const hiarachyTree = nodeTransformer.getTree();
+  //   component.tree = hiarachyTree;
+  //   component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+  //   fixture.detectChanges();
 
-    let model = component.treeComponent.treeModel;
-    let _downloads: TreeNode = model.roots[5];
-    let beforeLen = _downloads.data.children.length
-    try{
-      component.newNode('blob', _downloads);
-    }catch(e){}
-    component.renamingFormControl.setValue("");
-    component.completeRenaming();
-    fixture.detectChanges();
+  //   let model = component.treeComponent.treeModel;
+  //   let _downloads: TreeNode = model.roots[5];
+  //   let beforeLen = _downloads.data.children.length
+  //   try{
+  //     component.newNode('blob', _downloads);
+  //   }catch(e){}
+  //   component.renamingFormControl.setValue("");
+  //   component.completeRenaming();
+  //   fixture.detectChanges();
     
-    expect(_downloads.data.children.length).toBe(beforeLen);
-  });
+  //   expect(_downloads.data.children.length).toBe(beforeLen);
+  // });
 
-  it('newNode() with undefined name', () => {
-    fixture.detectChanges();
+  // it('newNode() with undefined name', () => {
+  //   fixture.detectChanges();
 
-    component.repository = repositoryDetails;
-    const nodeTransformer = new GithubTreeToTree(tree);
-    const hiarachyTree = nodeTransformer.getTree();
-    component.tree = hiarachyTree;
-    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
-    fixture.detectChanges();
+  //   component.repository = repositoryDetails;
+  //   const nodeTransformer = new GithubTreeToTree(tree);
+  //   const hiarachyTree = nodeTransformer.getTree();
+  //   component.tree = hiarachyTree;
+  //   component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+  //   fixture.detectChanges();
 
-    let model = component.treeComponent.treeModel;
-    let _downloads: TreeNode = model.roots[5];
-    let beforeLen = _downloads.data.children.length
-    try{
-      component.newNode('blob', _downloads);
-    }catch(e){}
-    component.renamingFormControl.setValue(undefined);
-    component.completeRenaming();
-    fixture.detectChanges();
+  //   let model = component.treeComponent.treeModel;
+  //   let _downloads: TreeNode = model.roots[5];
+  //   let beforeLen = _downloads.data.children.length
+  //   try{
+  //     component.newNode('blob', _downloads);
+  //   }catch(e){}
+  //   component.renamingFormControl.setValue(undefined);
+  //   component.completeRenaming();
+  //   fixture.detectChanges();
     
-    expect(_downloads.data.children.length).toBe(beforeLen);
-  });
+  //   expect(_downloads.data.children.length).toBe(beforeLen);
+  // });
 
 
-  it('newNode() with duplicate name', () => {
-    fixture.detectChanges();
+  // it('newNode() with duplicate name', () => {
+  //   fixture.detectChanges();
 
-    component.repository = repositoryDetails;
-    const nodeTransformer = new GithubTreeToTree(tree);
-    const hiarachyTree = nodeTransformer.getTree();
-    component.tree = hiarachyTree;
-    component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
-    fixture.detectChanges();
+  //   component.repository = repositoryDetails;
+  //   const nodeTransformer = new GithubTreeToTree(tree);
+  //   const hiarachyTree = nodeTransformer.getTree();
+  //   component.tree = hiarachyTree;
+  //   component.ngOnChanges({"tree": new SimpleChange(undefined, tree, false)})
+  //   fixture.detectChanges();
 
-    let model = component.treeComponent.treeModel;
-    let _downloads: TreeNode = model.roots[5];
-    let beforeLen = _downloads.data.children.length
-    try{
-      component.newNode('blob', _downloads);
-    }catch(e){}
-    component.renamingFormControl.setValue("376fff9bd23db6ea14d201f2479fb500");
-    component.completeRenaming();
-    fixture.detectChanges();
+  //   let model = component.treeComponent.treeModel;
+  //   let _downloads: TreeNode = model.roots[5];
+  //   let beforeLen = _downloads.data.children.length
+  //   try{
+  //     component.newNode('blob', _downloads);
+  //   }catch(e){}
+  //   component.renamingFormControl.setValue("376fff9bd23db6ea14d201f2479fb500");
+  //   component.completeRenaming();
+  //   fixture.detectChanges();
     
-    expect(_downloads.data.children.length).toBe(beforeLen);
-  });
+  //   expect(_downloads.data.children.length).toBe(beforeLen);
+  // });
 
   
 });

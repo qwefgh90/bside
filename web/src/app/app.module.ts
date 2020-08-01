@@ -20,6 +20,14 @@ import { OAuthService } from './oauth/service/o-auth.service';
 import { WorkspaceModule } from './workspace/workspace.module';
 import { TemplatesModule } from './templates/templates.module';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { StoreModule } from '@ngrx/store';
+import { StoreRouterConnectingModule, routerReducer } from '@ngrx/router-store';
+import { metaReducers } from './app-routing.reducer';
+import { appReducer } from './app.reducer';
+import { indexedDBReducer } from './db/indexed-db.reducer';
+import { DatabaseToken } from './db/database';
+import { LocalDbService } from './db/local-db.service';
+import { IndexedDbService } from './db/indexed-db.service';
 
 export function initAuth(oauthService: OAuthService){
   return () => oauthService.initAccessTokenOnSession();
@@ -31,10 +39,16 @@ export function initAuth(oauthService: OAuthService){
     WelcomeComponent,
   ],
   imports: [
+    StoreModule.forRoot({
+      router: routerReducer,
+      app: appReducer,
+      indexedDB: indexedDBReducer
+    }, {metaReducers}),
     ProjectsModule,
     TemplatesModule,
     AuthModule,
     AppRoutingModule,
+    StoreRouterConnectingModule.forRoot(),
     BrowserModule,
     BrowserAnimationsModule,
     MatToolbarModule,
@@ -46,9 +60,11 @@ export function initAuth(oauthService: OAuthService){
     MatProgressSpinnerModule,
     MatDividerModule,
     MatBadgeModule,
-    FlexLayoutModule
+    FlexLayoutModule,
   ],
-  providers: [{ provide: APP_INITIALIZER, useFactory: initAuth, deps: [OAuthService], multi: true }],
+  providers: [{ provide: APP_INITIALIZER, useFactory: initAuth, deps: [OAuthService], multi: true },
+              {provide: DatabaseToken, useClass: LocalDbService},
+              {provide: IndexedDbService, useClass: IndexedDbService}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

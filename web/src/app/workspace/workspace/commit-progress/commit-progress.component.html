@@ -1,4 +1,4 @@
 <div class="loading">
   <mat-spinner [strokeWidth]="3"></mat-spinner>
-  <div>{{_msg}}</div>
+  <div *ngFor="let msg of msgs">{{msg}}</div>
 </div>

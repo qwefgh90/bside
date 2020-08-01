@@ -1,5 +1,5 @@
 <div style="display:flex; flex-direction: column; width: 100%; flex: 1">
-  <div style="flex: 1"></div>
+  <div style="flex: 2"></div>
   <div style="justify-content:center; display: flex; width: 100%; flex: 8">
     <div style="text-align: center; height: 100%; " *ngIf="status == LoginStatus.Loading">
       <mat-spinner [strokeWidth]="10" style="display: inline-block"></mat-spinner>
@@ -7,12 +7,15 @@
     </div>
     <div style="text-align: center; height: 100%; " *ngIf="status == LoginStatus.Failure">
       <mat-card class="card" [class.mat-elevation-z8]="true">
-        <mat-card-title style="width: 100%; text-align: center">We'll fix this problem soon.</mat-card-title>
+        <mat-card-title>We'll fix this problem soon.</mat-card-title>
         <mat-card-content>
           <p>
             BSide is a platform to create and edit your static resources in Github.
           </p>
-          <br><br><br><br><br>
+          <p>
+            Have contact by <a href="https://github.com/qwefgh90/bside/issues" target="_blank">an issue board.</a>
+          </p>
+          <br><br><br>
         </mat-card-content>
         <mat-card-actions>
         </mat-card-actions>
@@ -20,7 +23,7 @@
     </div>
     <div style="text-align: center;height: 100%; " *ngIf="status == LoginStatus.Initialized">
       <mat-card class="card" [class.mat-elevation-z8]="true">
-        <mat-card-title style="width: 100%; text-align: center">Edit your contents</mat-card-title>
+        <mat-card-title>Skip boring tasks</mat-card-title>
         <mat-card-content>
           <p>
             Bside is a platform to create and edit your static resources in Github.
