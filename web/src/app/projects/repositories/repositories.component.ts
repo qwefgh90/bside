@@ -49,16 +49,17 @@ export class RepositoriesComponent implements OnInit, OnDestroy, AfterViewInit {
     let s0 = user$.subscribe(({dbready, user, userId}) => {
       if (user && dbready) {
         this.user = user;
-        if (userId) {
-          this.userId = userId;
+        // if (userId) {
+          this.userId = userId ?? this.user.login;
           this.wrapper.repositories(this.userId).then((result) => {
             this.initialRepositories = result;
             this.repositories = this.getSortedRepositories();
           }, () => {
             console.error("It fails to load repositories");
           });
-        } else
-          this.router.navigate(["repos", this.user.login]);
+        // } 
+        // else
+        //   this.router.navigate(["repos", this.user.login]);
       }
     });
 

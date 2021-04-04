@@ -52,7 +52,6 @@ export function initAuth(db: LocalDbService, store: Store) {
       indexedDB: indexedDBReducer
     }, {metaReducers}),
     AngularFireModule.initializeApp(environment.firebase),
-    
     ProjectsModule,
     // TemplatesModule,
     AuthModule,
