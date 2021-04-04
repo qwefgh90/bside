@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "bside-fef0d": {
+      "hosting": {
+        "web": [
+          "bside-fef0d"
+        ]
+      }
+    }
+  }
+}

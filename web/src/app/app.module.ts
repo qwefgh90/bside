@@ -16,11 +16,10 @@ import { WelcomeComponent } from './welcome/welcome.component';
 import { HttpClientModule } from '@angular/common/http';
 import { ProjectsModule } from './projects/projects.module';
 import { GithubModule } from './github/github.module';
-import { OAuthService } from './oauth/service/o-auth.service';
 import { WorkspaceModule } from './workspace/workspace.module';
-import { TemplatesModule } from './templates/templates.module';
+// import { TemplatesModule } from './templates/templates.module';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { StoreModule } from '@ngrx/store';
+import { Store, StoreModule } from '@ngrx/store';
 import { StoreRouterConnectingModule, routerReducer } from '@ngrx/router-store';
 import { metaReducers } from './app-routing.reducer';
 import { appReducer } from './app.reducer';
@@ -28,10 +27,18 @@ import { indexedDBReducer } from './db/indexed-db.reducer';
 import { DatabaseToken } from './db/database';
 import { LocalDbService } from './db/local-db.service';
 import { IndexedDbService } from './db/indexed-db.service';
+import { environment } from 'src/environments/environment';
+import { AngularFireModule } from '@angular/fire';
+import { AngularFireAuth } from '@angular/fire/auth';
+import { signIn } from './oauth/auth.actions';
 
-export function initAuth(oauthService: OAuthService){
-  return () => oauthService.initAccessTokenOnSession();
-}
+export function initAuth(db: LocalDbService, store: Store) {
+  return () => {
+    if(db.accessToken){
+      store.dispatch(signIn({accessToken: db.accessToken}));
+    }
+  }
+};
 @NgModule({
   declarations: [
     AppComponent,
@@ -44,8 +51,10 @@ export function initAuth(oauthService: OAuthService){
       app: appReducer,
       indexedDB: indexedDBReducer
     }, {metaReducers}),
+    AngularFireModule.initializeApp(environment.firebase),
+    
     ProjectsModule,
-    TemplatesModule,
+    // TemplatesModule,
     AuthModule,
     AppRoutingModule,
     StoreRouterConnectingModule.forRoot(),
@@ -62,7 +71,8 @@ export function initAuth(oauthService: OAuthService){
     MatBadgeModule,
     FlexLayoutModule,
   ],
-  providers: [{ provide: APP_INITIALIZER, useFactory: initAuth, deps: [OAuthService], multi: true },
+  providers: [
+    { provide: APP_INITIALIZER, useFactory: initAuth, deps: [LocalDbService, Store], multi: true },
               {provide: DatabaseToken, useClass: LocalDbService},
               {provide: IndexedDbService, useClass: IndexedDbService}],
   bootstrap: [AppComponent]

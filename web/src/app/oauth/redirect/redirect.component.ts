@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { OAuthService } from '../service/o-auth.service';
 import { TextUtil } from 'src/app/workspace/text/text-util';
 import { createFeatureSelector, select, Store } from '@ngrx/store';
 import { AuthState, authReducerKey } from '../auth.reducer';
@@ -17,7 +16,7 @@ export class RedirectComponent implements OnInit {
   //cache with ngrx
   redirectUrl = '';
   
-  constructor(private route: ActivatedRoute, private router: Router, public oauth: OAuthService, private store: Store<{}>) { 
+  constructor(private route: ActivatedRoute, private router: Router, private store: Store<{}>) { 
     let authSelector = createFeatureSelector<any, AuthState>(authReducerKey);
     let authState = store.pipe(select(authSelector));
     authState.subscribe(state => {
@@ -38,16 +37,16 @@ export class RedirectComponent implements OnInit {
       }
       this.state = map.get("state");
       this.code = map.get("code");
-      this.oauth.getAccessToken(this.state, this.code).then((value) => {
-        console.log("It succeeds to get access_token");
-        if(this.redirectUrl != '')
-          this.router.navigateByUrl(this.redirectUrl);
-        else
-          this.router.navigate(["/"]);
-      }, (reason) =>{
-        console.error("It fails to get access_token");
-        this.router.navigate(["/login"]);
-      });
+      // this.oauth.getAccessToken(this.state, this.code).then((value) => {
+      //   console.log("It succeeds to get access_token");
+      //   if(this.redirectUrl != '')
+      //     this.router.navigateByUrl(this.redirectUrl);
+      //   else
+      //     this.router.navigate(["/"]);
+      // }, (reason) =>{
+      //   console.error("It fails to get access_token");
+      //   this.router.navigate(["/login"]);
+      // });
     }else{
       this.router.navigate(["/login"]);
     }

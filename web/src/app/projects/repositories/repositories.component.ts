@@ -3,7 +3,6 @@ import { WrapperService, UserType, RepositoriesType, RepositoryType } from 'src/
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, combineLatest } from 'rxjs';
 import { FormControl } from '@angular/forms';
-import { OAuthService } from 'src/app/oauth/service/o-auth.service';
 import { Store, createSelector, createFeatureSelector } from '@ngrx/store';
 import { AppState } from 'src/app/app.reducer';
 import { selectQueryParam, State, selectRouteParam, selectCurrentRoute } from 'src/app/app-routing.reducer';

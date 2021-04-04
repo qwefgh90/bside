@@ -7,6 +7,11 @@ It also provides embedded tools and views to help the software developer to mana
 
 <img src="src/docs/screenshot.png">
 
+## TODO (2021 April)
+- implement auth with firebase (remove server application)
+- turn strict mode on
+- improve project structure, componenets
+
 ## Key features
 
 BSide try to provide new features which other services doesn't provide.

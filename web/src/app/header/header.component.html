@@ -5,8 +5,8 @@
         <img src="assets/logo.png" class="logo-img">BSide
       </button>
     </a>
-    <a [routerLink]="['templates']"><button mat-button class="menu-btn"><span
-          style="font-size: 1.2em; vertical-align: baseline;">Templates</span></button></a>
+    <!-- <a [routerLink]="['templates']"><button mat-button class="menu-btn"><span
+          style="font-size: 1.2em; vertical-align: baseline;">Templates</span></button></a> -->
     <a [routerLink]="user ? ['repos', user?.login] : ['repos']" ><button mat-button class="menu-btn"><span
           style="font-size: 1.2em; vertical-align: baseline;">Workspace</span></button></a>
     <span class="spacer"></span>
@@ -14,7 +14,7 @@
   <div>
     <!-- <mat-icon class="example-icon" aria-hidden="false" aria-label="Example heart icon">favorite</mat-icon> -->
     <a routerLink="/login" [fxHide.xs]="true" [fxHide.sm]="true"><button class="signin" mat-raised-button *ngIf="!isLogin && !redirecting">
-      <img style="height: 1.3em; margin-right: 0.3em" src="/assets/GitHub-Mark-32px.png"/>Sign
+      <img style="height: 1.3em; margin-right: 0.3em" src="assets/GitHub-Mark-32px.png"/>Sign
       in</button></a>
     <mat-icon [matMenuTriggerFor]="appMenu" *ngIf="!isLogin && !redirecting" [fxShow]="false" [fxShow.xs]="true" [fxShow.sm]="true" style="vertical-align: middle;">menu</mat-icon>
     <mat-menu #appMenu="matMenu">

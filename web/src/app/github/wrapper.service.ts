@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { OAuthService } from '../oauth/service/o-auth.service';
 import Github from 'github-api';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Blob } from './type/blob';

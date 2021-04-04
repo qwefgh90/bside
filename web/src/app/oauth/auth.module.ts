@@ -39,13 +39,12 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTreeModule } from '@angular/material/tree';
-import { OAuthService } from './service/o-auth.service';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { DatabaseToken } from '../db/database';
 import { LocalDbService } from '../db/local-db.service';
 import { CookieToken } from '../db/cookie';
-import { authReducerKey, authReducer } from './auth.reducer';
-import { StoreModule } from '@ngrx/store';
+import { authReducerKey, authReducer, AuthState } from './auth.reducer';
+import { createFeatureSelector, select, Store, StoreModule } from '@ngrx/store';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
 
 @NgModule({
@@ -65,6 +64,7 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
     FormsModule,
     ReactiveFormsModule,
   ],
-  providers: [{provide: LOCATION_TOKEN, useValue: window.location}, {provide: CookieToken, useClass: LocalDbService}]
+  providers: [
+  { provide: LOCATION_TOKEN, useValue: window.location }, { provide: CookieToken, useClass: LocalDbService }]
 })
 export class AuthModule { }

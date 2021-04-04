@@ -1,11 +1,13 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { OAuthService } from '../oauth/service/o-auth.service';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { Router, ActivatedRoute, NavigationStart } from '@angular/router';
 import { WrapperService } from '../github/wrapper.service';
 import { Subscription } from 'rxjs';
 import { Store, createFeatureSelector, select, createSelector, State } from '@ngrx/store';
 import { AuthState, authReducerKey } from '../oauth/auth.reducer';
 import { AppState } from '../app.reducer';
+import { AngularFireAuth } from '@angular/fire/auth';
+import { signOut } from '../oauth/auth.actions';
+import { Cookie, CookieToken } from '../db/cookie';
 
 @Component({
   selector: 'app-header',
@@ -14,7 +16,7 @@ import { AppState } from '../app.reducer';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
 
-  constructor(public oauth: OAuthService, private router: Router, private store: Store<{}>) {
+  constructor(private router: Router, @Inject(CookieToken) private cookie: Cookie, private store: Store<{}>, private auth: AngularFireAuth) {
   }
 
   subscriptions: Array<Subscription> = []
@@ -49,9 +51,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   logout(){
-    this.oauth.logout().then(() => {
-      this.router.navigate(["/"]);
-    });
+    this.store.dispatch(signOut({}));
+    this.cookie.accessToken = undefined;
+    this.router.navigate(["/"]);
+    // this.auth.signOut().then(() => {
+    // });
+    // this.oauth.logout().then(() => {
+    //   this.router.navigate(["/"]);
+    // });
   }
 
   ngOnDestroy(){

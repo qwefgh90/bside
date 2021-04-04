@@ -1,43 +1,58 @@
 import { Injectable, Inject } from '@angular/core';
 import { ActivatedRouteSnapshot, RouterStateSnapshot, CanActivate, Router } from '@angular/router';
 import { Observable, from } from 'rxjs';
-import { OAuthService } from '../service/o-auth.service';
+// import { OAuthService } from '../service/o-auth.service';
 import { CookieToken, Cookie } from 'src/app/db/cookie';
 import { Store, select, createFeatureSelector, createSelector } from '@ngrx/store';
 import { keepRedirectionUrl } from '../auth.actions';
 import { environment } from 'src/environments/environment';
 import { TextUtil } from 'src/app/workspace/text/text-util';
 import { authReducerKey, AuthState } from '../auth.reducer';
+import { AngularFireAuth } from '@angular/fire/auth';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LoginGuard implements CanActivate {
-  constructor(private oauthService: OAuthService, private router: Router, @Inject(CookieToken) private cookie: Cookie, private store: Store<{}>
-    ){
+  constructor(private router: Router, @Inject(CookieToken) private cookie: Cookie, private store: Store<{}>
+  , private auth: AngularFireAuth){
       let selector = createFeatureSelector<any, AuthState>(authReducerKey);
       let isLoginSelector = createSelector(selector, (state: AuthState) => state.isLogin);
-      // let isLogin$ = this.store.pipe(select(isLoginSelector));
-      // isLogin$.subscribe((isLogin: boolean) => {
-      //   this.isLogin = isLogin;
-      // });
+      let isLogin$ = this.store.pipe(select(isLoginSelector));
+      isLogin$.subscribe((isLogin: boolean) => {
+        this.isLogin = isLogin;
+      });
   }
 
-  // isLogin = false;
+  isLogin = false;
   canActivate(
     next: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot): Observable<boolean> {
+    state: RouterStateSnapshot): boolean {
     console.debug('LoginGuard#CanActivate called');
     let url: string = state.url;
-    let success = this.oauthService.checkConnectionWithBackend().then((success) => { // if session is invalid, execute checkLogin()
-      if(!success){
-        this.goLogin(url);
-        console.debug("guard!");
-        return false;
-      }else
-        return true;
-    });
-    return from(success);
+    if(!this.isLogin)
+      this.goLogin(url);
+    return this.isLogin;
+
+    // let url: string = state.url;
+    // let success = this.auth.currentUser.then(() => {
+    //   return true;
+    // }, () => {
+    //   this.goLogin(url);
+    //   console.debug("guard!");
+    //   return false;
+    // });
+    // return from(success);
+
+    // let success = this.oauthService.checkConnectionWithBackend().then((success) => { // if session is invalid, execute checkLogin()
+    //   if(!success){
+    //     this.goLogin(url);
+    //     console.debug("guard!");
+    //     return false;
+    //   }else
+    //     return true;
+    // });
+    // return from(success);
     // return this.checkLogin(url);  // It doesn't wait for checkSession()
   }
 
@@ -59,6 +74,7 @@ export class LoginGuard implements CanActivate {
   }
 
   private redirectURL(routeUrl: string) {
-    return `${environment.redirect_url}?route=${routeUrl ? TextUtil.stringToBase64(routeUrl) : ''}`;
+    // return `${environment.redirect_url}?route=${routeUrl ? TextUtil.stringToBase64(routeUrl) : ''}`;
+    return `${routeUrl ? TextUtil.stringToBase64(routeUrl) : ''}`;
   }
 }

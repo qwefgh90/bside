@@ -17,10 +17,11 @@ export class LocalDbService implements Database, Cookie {
   private initCookie() {
     this.autoLogin = localStorage.getItem(this.autoLoginKey) == "1" ? true : false;
     this.includingPrivate = localStorage.getItem(this.includingPrivateKey) == "1" ? true : false;
+    this.accessToken = localStorage.getItem(this.accessTokenKey);
   }
 
   autoLoginKey = "autoLogin";
-  _autoLogin: boolean;
+  private _autoLogin: boolean;
   set autoLogin(_autoLogin: boolean) {
     this._autoLogin = _autoLogin;
     localStorage.setItem(this.autoLoginKey, _autoLogin ? "1" : "0");
@@ -30,13 +31,28 @@ export class LocalDbService implements Database, Cookie {
   }
 
   includingPrivateKey = "includingPrivate";
-  _includingPrivate: boolean;
+  private _includingPrivate: boolean;
   set includingPrivate(_includingPrivate: boolean) {
     this._includingPrivate = _includingPrivate;
     localStorage.setItem(this.includingPrivateKey, _includingPrivate ? "1" : "0");
   }
   get includingPrivate() {
     return this._includingPrivate;
+  }
+
+  accessTokenKey = "_t";
+  private _accessToken: string;
+  set accessToken(_accessToken: string | undefined) {
+    this._accessToken = _accessToken;
+    if(!_accessToken){
+      this.storage.removeItem(this.accessTokenKey);
+      return;
+    }
+    localStorage.setItem(this.accessTokenKey, _accessToken);
+  }
+
+  get accessToken() {
+    return this._accessToken;
   }
 
   storage = window.localStorage;

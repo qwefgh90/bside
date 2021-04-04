@@ -1,15 +1,17 @@
 import { Component, OnInit, InjectionToken, Inject } from '@angular/core';
-import { OAuthService } from '../service/o-auth.service';
 import { environment } from 'src/environments/environment';
 import { TextUtil } from 'src/app/workspace/text/text-util';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CookieToken, Cookie } from 'src/app/db/cookie';
 import { MatCheckboxChange } from '@angular/material/checkbox';
-import { navigateHere, scopeChanged } from '../auth.actions';
+import { navigateHere, scopeChanged, signIn } from '../auth.actions';
 import { Store, createFeatureSelector, createSelector, select } from '@ngrx/store';
 import { AuthState, authReducerKey } from '../auth.reducer';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { AngularFireAuth } from '@angular/fire/auth';
+import firebase from 'firebase/app';
+
 
 export const LOCATION_TOKEN = new InjectionToken<Location>('Window location object');
 const SCOPE_KEY = "includingPrivate"
@@ -33,8 +35,8 @@ export class LoginComponent implements OnInit {
   autoLogin: boolean;
   includingPrivate: boolean;
   redirectUrl: string;
-  constructor(private oauthService: OAuthService, @Inject(LOCATION_TOKEN) private location: Location, private route: ActivatedRoute
-  , @Inject(CookieToken) private cookie: Cookie, private store: Store<{}>) { 
+  constructor(private router: Router, @Inject(LOCATION_TOKEN) private location: Location, private route: ActivatedRoute
+  , @Inject(CookieToken) private cookie: Cookie, private store: Store<{}>, public auth: AngularFireAuth) { 
     let authSelector = createFeatureSelector<any, AuthState>(authReducerKey);
     let authState = store.pipe(select(authSelector));
     authState.subscribe(state => { 
@@ -54,21 +56,22 @@ export class LoginComponent implements OnInit {
       autoLogin = this.route.snapshot.queryParamMap.get('autoLogin') == "true";
     }
     this.store.dispatch(navigateHere({autoLogin, isPrivate: includingPrivate}));
-    this.oauthService.intialOAuthInfo().then((info) => {
-      if(info == undefined){
-        this.status = LoginStatus.Failure;
-        console.error("We cannot get initial information from server.");
-      }else{
-        this.state = info.state;
-        this.client_id = info.client_id;
-        this.status = LoginStatus.Initialized;
-        if(this.autoLogin)
-          this.login();
-      }
-    }, (reason) => {
-      this.status = LoginStatus.Failure;
-      console.error("We cannot get initial information from server.", reason)
-    })
+    // this.oauthService.intialOAuthInfo().then((info) => {
+    //   if(info == undefined){
+    //     this.status = LoginStatus.Failure;
+    //     console.error("We cannot get initial information from server.");
+    //   }else{
+    //     this.state = info.state;
+    //     this.client_id = info.client_id;
+    //     this.status = LoginStatus.Initialized;
+    //     if(this.autoLogin)
+    //       this.login();
+    //   }
+    // }, (reason) => {
+    //   this.status = LoginStatus.Failure;
+    //   console.error("We cannot get initial information from server.", reason)
+    // });
+    this.status = LoginStatus.Initialized;
   }
   
   changeScope(event: MatCheckboxChange){
@@ -77,8 +80,17 @@ export class LoginComponent implements OnInit {
   }
 
   login(){
-    let scope = this.includingPrivate ? 'repo' : 'public_repo'
-    let authroizeUrl = `${environment.authorizeOriginUrl}?client_id=${this.client_id}&state=${this.state}&scope=${scope}&redirect_uri=${this.redirectUrl}`;
-    this.location.assign(authroizeUrl);
+    const provider = new firebase.auth.GithubAuthProvider();
+    provider.addScope(this.includingPrivate ? 'repo' : 'public_repo');
+    this.auth.signInWithPopup(provider).then((cred) => {
+      const accessToken = (cred.credential as any).accessToken;
+      this.store.dispatch(signIn({accessToken}));
+      this.cookie.accessToken = accessToken;
+      this.router.navigateByUrl(this.redirectUrl);
+    }, () => {
+    });
+    // let scope = this.includingPrivate ? 'repo' : 'public_repo'
+    // let authroizeUrl = `${environment.authorizeOriginUrl}?client_id=${this.client_id}&state=${this.state}&scope=${scope}&redirect_uri=${this.redirectUrl}`;
+    // this.location.assign(authroizeUrl);
   }
 }
